@@ -1,3 +1,4 @@
+import MySQLdb
 from django.shortcuts import get_object_or_404, render
 from django.http import HttpResponse
 from django.core.serializers import serialize
@@ -6,25 +7,40 @@ import smtplib
 from email.mime.text import MIMEText 
 from email.mime.multipart import MIMEMultipart
 from .models import *
-# Create your views here.
+from rest_framework.response import Response
+from rest_framework.decorators import api_view
+from .serializers import * 
 
+# Create your views here.
+@api_view(['GET'])
 def teacher_list(request):
     teachers = Enseignant.objects.all() #select * from enseignant
-    return render(request, 'teacherinfos/teachers.html', {'teachers': teachers})
+    serTeach = EnseignantSerializer(teachers, many=True)
+    return render(request, 'teacherinfos/teachers.html', {'teachers':  serTeach})
+@api_view(['GET'])
 def teacher_detail(request,teacher_id):
     teacher = get_object_or_404(Enseignant, pk=teacher_id)
+    serTeach = EnseignantSerializer(teacher,many=True)
     enseignes = Enseigne.objects.filter(Matric_id = teacher_id).values()
+    serEnseignes = EnseignantSerializer(enseignes,many=True)
     modules  = Module.objects.all()
+    serModules=ModuleSerializer( modules,many = True)
     absences = Abcence.objects.filter(IdProf_id = teacher_id).values()
-    return render(request, 'teacherinfos/techinfos.html', {'teacher': teacher,
-                                                           'enseignes':enseignes,
-                                                           'modules':modules,
-                                                           'absences':absences})
+    serAbceences=AbcenceSerializer(absences, many=True)
+    return render(request, 'teacherinfos/techinfos.html', {'teacher': serTeach,
+                                                           'enseignes':serEnseignes,
+                                                           'modules':serModules,
+                                                        'absences':serAbceences})
+
+@api_view(['GET'])
 def addAbsence(request,teacher_id):
     teacher = get_object_or_404(Enseignant, pk=teacher_id)
-    return render(request,'teacherinfos/addAbsence.html',{'teacher':teacher})
+    serTeach = EnseignantSerializer(teacher,many=True)
+    return render(request,'teacherinfos/addAbsence.html',{'teacher':serTeach})
+@api_view(['GET'])
 def insertAbsence(request,teacher_id):
     teacher = get_object_or_404(Enseignant, pk=teacher_id)
+    serTeach = EnseignantSerializer(teacher,many=True)
     date = request.POST['date']
     heureDeb = request.POST['start_time']
     HeureFin = request.POST['end_time']
@@ -32,35 +48,65 @@ def insertAbsence(request,teacher_id):
     abs = Abcence(DateAbs=date,HeureDebut=heureDeb,HeureFin=HeureFin,Motif=Motif,
                   IdProf=teacher)
     abs.save()
-    return render(request,'teacherinfos/index.html',{'teacher':teacher})
+    return render(request,'teacherinfos/index.html',{'teacher':serTeach})
+@api_view(['GET'])
 def deleteAbsence(request,teacher_id,abs_id):
     myAbs = get_object_or_404(Abcence, pk=abs_id)
     myAbs.delete()
     return teacher_detail(request,teacher_id)
-def addSeance(request,teacher_id):
+
+@api_view(['GET'])
+def addSeance(request, teacher_id):
     teacher = get_object_or_404(Enseignant, pk=teacher_id)
+
+    # Serialize Enseignant
+    serTeach = EnseignantSerializer(teacher)
+
+    # Serialize Seance Types
     seanceType = Seance.mySeanceTypes
+    serType = SeanceSerializer(seanceType, many=True)
+
+    # Serialize Seance Jours
     seanceJours = Seance.myJours
+    serJours = SeanceSerializer(seanceJours, many=True)
+
+    # Serialize Promotions
     promotions = Promotion.myPromotions
+    serPromotions = PromotionSerializer(promotions, many=True)
+
+    # Serialize Semesters
     semesters = Module.mySemesters
+    serSemesters = ModuleSerializer(semesters, many=True)
+
+    # Serialize Modules
     modules = Module.objects.all()
-    modules_json = serialize('json', modules)
-    promos = Promotion.objects.all()   
-    promos_json = serialize('json', promos) 
+    serModules = ModuleSerializer(modules, many=True)
+
+    # Serialize Promos
+    promos = Promotion.objects.all()
+    serPromos = PromotionSerializer(promos, many=True)
+
+    # Serialize Salles
     salles = Salle.objects.all()
-    salles_json = serialize('json', salles) 
+    serSalles = SalleSerializer(salles, many=True)
+
+    # Serialize Seance queryset
+    seances = Seance.objects.all()
+    serSeances = SeanceSerializer(seances, many=True)
+
+    return render(request, 'teacherinfos/addSeance.html', {
+        'teacher': serTeach.data,
+        'seanceType': serType.data,
+        'seanceJours': serJours.data,
+        'promotions': serPromotions.data,
+        'semesters': serSemesters.data,
+        'modules': serModules.data,
+        'promos': serPromos.data,
+        'salles': serSalles.data,
+        'seances': serSeances.data  # Serialized Seance queryset
+    })
 
 
-    return render(request,'teacherinfos/addSeance.html',{'teacher':teacher,
-                                                        'seanceType':seanceType,
-                                                         'seanceJours':seanceJours,
-                                                          'promotions':promotions ,
-                                                          'semesters':semesters,
-                                                          'modules':modules,
-                                                          'modules_json':modules_json,
-                                                          "promos" : promos_json,
-                                                          "salles_json":salles_json,
-                                                           })
 def insertSeance(request,teacher_id):
     type = request.POST['type']
     jour = request.POST['jour']
@@ -80,19 +126,13 @@ def insertSeance(request,teacher_id):
     seance.save()
     return addSeance(request,teacher_id) 
 
-
-
-
-
-
-
-
+@api_view(['GET'])
 def password_recovery(request):
     if request.method == 'POST':
         receiver_email = request.POST.get('email')  # Récupérer l'email depuis le formulaire
 
         # Connexion à la base de données MySQL
-        conn = mysql.connector.connect( 
+        conn = MySQLdb.connector.connect( 
             host="localhost", 
             user="root", 
             password="hiba", 

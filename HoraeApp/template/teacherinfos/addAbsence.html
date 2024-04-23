@@ -53,7 +53,7 @@
 </head>
 <body>
     <h2>Add Absence Information</h2>
-    <form action="/insertAbs/{{ teacher.Matricule }}/" method="post">
+    <form action="/insertAbs/{{  serTeach.Matricule }}/" method="post">
         {% csrf_token %}
         <label for="date">Date:</label>
         <input type="date" id="date" name="date" required>

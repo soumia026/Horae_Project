@@ -44,48 +44,48 @@
         <table>
             <tr>
                 <th>Matricule</th>
-                <td>{{ teacher.Matricule }}</td>
+                <td>{{  serTeach.Matricule }}</td>
             </tr>
             <tr>
                 <th>Nom</th>
-                <td>{{ teacher.Nom }}</td>
+                <td>{{  serTeach.Nom }}</td>
             </tr>
             <tr>
                 <th>Prénom</th>
-                <td>{{ teacher.Prénom }}</td>
+                <td>{{  serTeach.Prénom }}</td>
             </tr>
             <tr>
                 <th>Date de Naissance</th>
-                <td>{{ teacher.DateNaissance }}</td>
+                <td>{{  serTeach.DateNaissance }}</td>
             </tr>
             <tr>
                 <th>Adresse</th>
-                <td>{{ teacher.Adresse }}</td>
+                <td>{{  serTeach.Adresse }}</td>
             </tr>
             <tr>
                 <th>Email</th>
-                <td>{{ teacher.Email }}</td>
+                <td>{{  serTeach.Email }}</td>
             </tr>
             <tr>
                 <th>Numéro de Téléphone</th>
-                <td>{{ teacher.NumeroTelephone }}</td>
+                <td>{{  serTeach.NumeroTelephone }}</td>
             </tr>
             <tr>
                 <th>Fonction</th>
-                <td>{{ teacher.Fonction }}</td>
+                <td>{{  serTeach.Fonction }}</td>
             </tr>
             <tr>
                 <th>Grade</th>
-                <td>{{ teacher.Grade }}</td>
+                <td>{{  serTeach.Grade }}</td>
             </tr>
 
             <tr>
                 <th>Etablissement</th>
-                <td>{{ teacher.Etablissement }}</td>
+                <td>{{  serTeach.Etablissement }}</td>
             </tr>
             <tr>
                 <th>Mot de Passe</th>
-                <td>{{ teacher.MotDePasse }}</td>
+                <td>{{  serTeach.MotDePasse }}</td>
             </tr>
            <tr>
             <th>Modules</th>
@@ -98,7 +98,7 @@
             {% endfor %}
            </tr>
             <tr><th>Add Absence</th>
-            <td><a href="{% url 'addAbsence' teacher.Matricule %}">Add Absence</a></td>
+            <td><a href="{% url 'addAbsence'  serTeach.Matricule %}">Add Absence</a></td>
             </tr>
 
         </table>  
@@ -107,25 +107,25 @@
             {% for abs in absences %}
             <tr>
             <th>date :</th>
-             <td> {{abs.DateAbs}}</td></tr>
+             <td> {{serAbceences.DateAbs}}</td></tr>
              <tr>
             <th>heure debut : </th>
-             <td> {{abs.HeureDebut}}</td></tr>
+             <td> {{serAbceences.HeureDebut}}</td></tr>
              <tr>
             <th>heure fin : </th>
-            <td>heure fin :{{abs.HeureFin}}</td></tr>
+            <td>heure fin :{{serAbceences.HeureFin}}</td></tr>
             <tr>
             <th>motif : </th>
-            <td>motif : {{abs.Motif}}</td></tr>
+            <td>motif : {{serAbceences.Motif}}</td></tr>
             <tr>
-              <td>  <a href="{% url 'deleteAbsence' teacher.Matricule abs.IdAbs %}">Delete</a></td>
+              <td>  <a href="{% url 'deleteAbsence'  serTeach.Matricule serAbceences.IdAbs %}">Delete</a></td>
             {% endfor %}
         
           </tr>
         </table>
         <h1>Emploi</h1> 
         <table>    
-            <td><a href="{% url 'addSeance' teacher.Matricule %}">Add Seance</a></td>
+            <td><a href="{% url 'addSeance'  serTeach.Matricule %}">Add Seance</a></td>
         </table>
     </div>
 </body>

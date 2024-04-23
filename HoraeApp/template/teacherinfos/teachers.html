@@ -36,14 +36,14 @@
         </tr>
     </thead>
     <tbody>
-        {% for teacher in teachers %}
+        {% for  serTeacher in  serTeachers %}
         <tr>
-            <td>{{ teacher.Matricule }}</td>
-            <td>{{ teacher.Nom }}</td>
-            <td>{{ teacher.Prénom }}</td>
-            <td>{{ teacher.Grade }}</td>
-            <td>{{ teacher.Email }}</td>
-           <td><a href="{% url 'teacher_detail' teacher.Matricule %}">Show More</a></td> 
+            <td>{{  serTeach.Matricule }}</td>
+            <td>{{  serTeach.Nom }}</td>
+            <td>{{  serTeach.Prénom }}</td>
+            <td>{{  serTeach.Grade }}</td>
+            <td>{{  serTeach.Email }}</td>
+           <td><a href="{% url ' serTeacher_detail'  serTeach.Matricule %}">Show More</a></td> 
         </tr>
         {% endfor %}
     </tbody>
