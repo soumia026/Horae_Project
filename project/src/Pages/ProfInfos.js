@@ -6,6 +6,7 @@ import { Enseignant } from "../Constructors";
 import { useForm } from "react-hook-form";
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
+import { useRef } from "react";
 
 export function ProfInfos() {
 
@@ -93,9 +94,9 @@ export function ProfInfos() {
             {modifierProfileClicked &&
                 <ModifierProfile enseignant={enseignant} annulerModification={annulerModification} />
             }
-            
+
             {supprimerProfClicked &&
-              <SupprimerProfile annulerSuppression={annulerSuppression} />
+                <SupprimerProfile annulerSuppression={annulerSuppression} />
             }
 
         </div >
@@ -218,7 +219,7 @@ const ModifierProfile = (props) => {
         },
         {
             title: "ajouter sceance",
-            component: null,
+            component: <AjouterSeance enseignant={props.enseignant} annulerModification={props.annulerModification} />,
         },
         {
             title: "comptabilité",
@@ -227,11 +228,9 @@ const ModifierProfile = (props) => {
 
     ]
 
-
-
     return (
         <div className="container-modifier-profile">
-            <h2>modifier profile</h2>
+            <h2 className="title">modifier profile</h2>
             <div className="buttons-container">
                 <div className="infos-butns">
                     {modifierBtns.map((btn, index) => (
@@ -340,6 +339,173 @@ const ModifierInfosProf = (props) => {
                     <option value={"professeur"}>professeur</option>
                     <option value={"doctorat"}>doctorat</option>
                 </select>
+            </div>
+
+            <div className="update-profile-btns">
+                <button onClick={() => { props.annulerModification() }} >Annuler</button>
+                <button className='sauvegarder-absence'
+                    type="submit" > Sauvegarder</button>
+            </div>
+        </form>
+    )
+}
+
+const AjouterSeance = (props) => {
+
+    //to get the rest height and give it to the form
+    const formRef = useRef(null);
+
+    useEffect(() => {
+        function adjustFormHeight() {
+            const container = document.querySelector('.container-modifier-profile');
+            const titleElement = container.querySelector('.title');
+            const buttonsElement = container.querySelector('.buttons-container');
+
+            const titleAndButtonsHeight = titleElement.getBoundingClientRect().height +
+                buttonsElement.getBoundingClientRect().height;
+            const containerHeight = container.getBoundingClientRect().height;
+            const remainingHeight = containerHeight - titleAndButtonsHeight;
+            formRef.current.style.height = `${remainingHeight}px`;
+        }
+
+        window.addEventListener('resize', adjustFormHeight);
+        adjustFormHeight(); // Adjust height initially
+
+        return () => {
+            window.removeEventListener('resize', adjustFormHeight);
+        };
+    }, []);
+
+    const schema = yup.object().shape({
+        jour: yup.string().matches("", "veuillez saisie le jour de la scéance").required("veuillez saisie le jour de la scéance"),
+        heureDebut: yup.string().required("veuillez saisie l'heure début de scéance"),
+        heureFin: yup.string().required("veuillez saisie l'heure fin de scéance"),
+        cycle: yup.string().required("veuillez saisie le cycle "),
+        promotion: yup.string().required("veuillez saisie la promotion"),
+        semestre: yup.string().required("veuillez saisie le semestre"),
+        specialite: yup.string().required("veuillez saisie la specialité"),
+        module: yup.string().required("veuillez saisie le module"),
+        type: yup.string().required("veuillez saisie le type de scéance"),
+        salle: yup.string().required("veuillez spécifier la salle"),
+
+    });
+
+    const { register, handleSubmit, formState: { errors } } = useForm({
+        resolver: yupResolver(schema),
+    });
+
+
+    const onSubmit = (data) => {
+        console.log(data);
+    }
+
+    return (
+        <form className="form-ajouter-sceance" ref={formRef} onSubmit={handleSubmit(onSubmit)}>
+            <div className="input-container">
+                <div className="input-line">
+                    <label htmlFor="jour">jour</label>
+                    <select {...register('jour')}>
+                        <option value={"dimanche"}>dimanche</option>
+                        <option value={"lundi"}>lundi</option>
+                        <option value={"mardi"}>mardi</option>
+                        <option value={"mercredi"}>mercredi</option>
+                        <option value={"jeudi"}>jeudi</option>
+                    </select>
+                </div>
+                {errors.jour && <p>{errors.jour?.message}</p>}
+            </div>
+
+            <div className="input-container">
+                <div className="input-line">
+                    <label htmlFor="heureDebut">heure debut</label>
+                    <input
+                        type="time"
+                        {...register("heureDebut")}
+                    />
+                </div>
+                {errors.heureDebut && <p>{errors.heureDebut?.message}</p>}
+            </div>
+
+            <div className="input-container">
+                <div className="input-line">
+                    <label htmlFor="heureFin">heure fin</label>
+                    <input
+                        type="time"
+                        {...register("heureFin")}
+                    />
+                </div>
+                {errors.heureDebut && <p>{errors.heureDebut?.message}</p>}
+            </div>
+
+            <div className="input-container">
+                <div className="input-line">
+                    <label htmlFor="cycle">cycle</label>
+                    <select {...register('cycle')}>
+                        <option value={"1cpi"}>1CPI</option>
+                        <option value={"2cpi"}>2CPI</option>
+                        <option value={"1cs"}>1CS</option>
+                        <option value={"2cs"}>2CS</option>
+                        <option value={"3cs"}>3CS</option>
+                    </select>
+                </div>
+                {errors.cycle && <p>{errors.cycle?.message}</p>}
+            </div>
+
+            <div className="input-container">
+                <div className="input-line">
+                    <label htmlFor="promotion">promotion</label>
+                    <input
+                        type="text"
+                        {...register("heureFin")}
+                    />
+                </div>
+                {errors.promotion && <p>{errors.promotion?.message}</p>}
+            </div>
+
+            <div className="input-container">
+                <div className="input-line">
+                    <label htmlFor="specialite">specialité</label>
+                    <select {...register('specialite')}>
+                        <option value={"default"}></option>
+                        <option value={"siw"}>SIW</option>
+                        <option value={"isi"}>ISI</option>
+                        <option value={"ai"}>AI</option>
+                    </select>
+                </div>
+                {errors.specialite && <p>{errors.specialite?.message}</p>}
+            </div>
+            <div className="input-container">
+                <div className="input-line">
+                    <label htmlFor="module">module</label>
+                    <input
+                        type="text"
+                        {...register("module")}
+                    />
+                </div>
+                {errors.module && <p>{errors.module?.message}</p>}
+            </div>
+
+            <div className="input-container">
+                <div className="input-line">
+                    <label htmlFor="type">type scéance</label>
+                    <select {...register('type')}>
+                        <option value={"cours"}>cours</option>
+                        <option value={"td"}>TD</option>
+                        <option value={"tp"}>TP</option>
+                    </select>
+                </div>
+                {errors.type && <p>{errors.type?.message}</p>}
+            </div>
+
+            <div className="input-container">
+                <div className="input-line">
+                    <label htmlFor="salle">salle</label>
+                    <input
+                        type="text"
+                        {...register("salle")}
+                    />
+                </div>
+                {errors.heureDebut && <p>{errors.heureDebut?.message}</p>}
             </div>
 
             <div className="update-profile-btns">

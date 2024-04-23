@@ -224,6 +224,7 @@ table tr td span {
 .input-line label{
     color: var(--font-color);
     text-transform: capitalize;
+    font-size: 0.9rem;
 }
 
 .input-line input, select{
@@ -231,7 +232,7 @@ table tr td span {
     outline: none;
     border: none;
     padding: 0 10px;
-    height: 1.8rem;
+    height: 1.5rem;
     flex-grow: 1;
     text-transform: capitalize;
 }
@@ -247,10 +248,6 @@ table tr td span {
     background-color: #fff;
     color: #000;
     font-size: 0.85rem;
-}
-
-select.decorated option:hover {
-    box-shadow: 0 0 10px 100px #1882A8 inset;
 }
 
 input[type='time']{
@@ -274,7 +271,8 @@ input[type='time']{
     border-radius: 1rem;
     z-index: 10;
     gap: 1rem;
-    
+    max-height: 100%;
+    min-height: 400px;
 }
 .container-modifier-profile .infos-butns button{
     color: #000;
@@ -283,6 +281,8 @@ input[type='time']{
 .container-modifier-profile form{
      margin-top: 1rem;
      padding: 0.4rem 0;
+     flex-grow: 1;
+     overflow-y: auto;
 }
 .container-modifier-profile input, select{
     max-width: 250px;
@@ -356,8 +356,18 @@ input[type='time']{
     color: #fff;
 }
 
+/*--------------Ajouter Absence-------------*/
+
+.form-ajouter-sceance::-webkit-scrollbar{
+    display: none;
+}
+
 @media screen and (max-width: 800px) {
     .container-update-absence{
         min-width: 350px;
+    }
+
+    .input-line input, select{
+        height: 1.8rem;
     }
 }
