@@ -1,0 +1,46 @@
+.topbar-container {
+    padding: 0 1rem 0 0.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.topbar-container .user-name-container {
+    display: flex;
+    gap: 0.3rem;
+}
+
+.topbar-container span {
+    color: #000;
+    font-size: 1.5rem;
+    font-weight: 500;
+    margin-right: 0.3rem;
+}
+
+.topbar-container .svg-container {
+    margin-left: 8px;
+}
+
+.topbar-container .notification-container {
+    display: flex;
+    gap: 2rem;
+    justify-content: center;
+    align-items: center;
+}
+
+.notification-container .img-circle {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    position: relative;
+    overflow: hidden;
+}
+
+.notification-container .img-circle img {
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    object-fit: cover;
+    top: 0;
+    left: 0;
+}

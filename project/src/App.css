@@ -1,0 +1,100 @@
+:root {
+  --main-color: #B8CEF7;
+  --bg-color: #D9D9D950;
+  --font-main-color: #000;
+  --font-color: #00000060;
+  --font-weight: 400;
+  --main-font-size: 17px;
+  --info-font-size: 14px;
+  --small-font-size: 11px;
+  --padding-page: 60px;
+  --buttons-color: #CBCBCB;
+}
+
+.App {
+  width:100%;
+  height: 100vh;
+  display: grid;
+  grid-template-columns: minmax(100px, 200px) auto;
+  grid-template-rows: minmax(60px,80px) 1fr;
+  gap: 5px;
+}
+
+.main-container{
+  background-color: var(--bg-color);
+  height: calc(100vh - 80px);
+  border-top-left-radius: 1rem;
+  padding: 0 2rem ;
+  padding-top: 1.3rem; 
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  overflow-y: auto;
+  position: relative;
+}
+
+
+/* ----------Layouts--------------*/
+
+.links{
+  position: absolute;
+  display: flex;
+  width: 100%;
+  justify-content: space-around;
+  top: 50%;
+  color: black;
+  padding: 1rem;
+  transform: translateY(-50%);
+}
+
+.btn{
+  background-color: #B8CEF7;
+  padding: 1rem;
+  border-radius: 1rem;
+  color: black;
+}
+
+
+
+@media screen and (max-width: 800px) {
+  html{
+    font-size: 13px;
+  }
+
+  .buttons-container{
+    padding: 0 1rem;
+  }
+
+  .App{
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    gap: 5px;
+  }
+
+  .nav-container{
+    position: absolute;
+    height: 100vh;
+    max-width:200px;
+    transform: translateX(-100%);
+    visibility: hidden;
+    z-index: 10;
+  }
+
+  .topbar-container{
+    position: fixed;
+    width: 100%;
+    background-color: #fff;
+  }
+
+  .main-container{
+     height: calc(100vh - 60px);
+     margin-top: 60px;
+  }
+  
+}
+
+
+
+
+

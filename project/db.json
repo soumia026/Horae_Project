@@ -1,0 +1,75 @@
+{
+  "profs": [
+    {
+      "id": "1",
+      "nom": "derki",
+      "prenom": "ayet halima",
+      "email": "ah.derki@esi-sba.dz",
+      "numTelephone": "00000000",
+      "numCompte": "123456789",
+      "adress": "sidi Chahmi, Oran",
+      "dateNaissance": "2004-05-22",
+      "grade": "MCA",
+      "etablissement": "ESI-SBA",
+      "fonction": "chercheur",
+      "modules": [
+        "Analyse Numérique",
+        "Electronic",
+        "Probabilité"
+      ],
+      "motDePasse": "Ayet2004"
+    },
+    {
+      "id": "2",
+      "nom": "derki",
+      "prenom": "mouad ahmed yacine",
+      "email": "may.derki@esi-sba.dz",
+      "numTelephone": "1111111",
+      "numCompte": "123456789",
+      "adress": "sidi Chahmi, Oran",
+      "dateNaissance": "2006-03-23",
+      "grade": "MCA",
+      "etablissement": "ESI-SBA",
+      "fonction": "chercheur",
+      "modules": [
+        "Electronic",
+        "Probabilité"
+      ],
+      "motDePasse": "mouad2006"
+    }
+  ],
+  "absences": [
+    {
+      "id": "2",
+      "matricule": 1,
+      "date_absence": "2024-02-01",
+      "heureDebut": "10:00",
+      "heureFin": "16:00",
+      "motif": "etude"
+    },
+    {
+      "id": "3",
+      "matricule": 2,
+      "date_absence": "2024-01-25",
+      "heureDebut": "8:00",
+      "heureFin": "16:00",
+      "motif": "Malade"
+    },
+    {
+      "id": "f305",
+      "matricule": 1,
+      "date_absence": "2023-12-16",
+      "heureDebut": "12:00",
+      "heureFin": "18:00",
+      "motif": "malade"
+    },
+    {
+      "id": "3",
+      "matricule": 1,
+      "date_absence": "2024-02-09",
+      "heureDebut": "10:00",
+      "heureFin": "16:00",
+      "motif": "voyage"
+    }
+  ]
+}
