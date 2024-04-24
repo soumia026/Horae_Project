@@ -1,0 +1,58 @@
+/*App.css*/
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap');
+
+
+.everything {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    margin: 0%;
+    padding: 0%;
+}
+.band {
+    display: flex;
+    align-items: center;
+    flex: 0 1 auto;
+    font-family: 'DM sans';
+    height: 60px;
+    width: 100%;
+    background-color: #fff; 
+    border-radius: 5px;
+    margin-bottom: 5px;
+    justify-content: flex-end;
+}
+.wlcm {
+    position:absolute;
+    font-family: 'DM sans';
+    font-size: 3em;
+    font-weight: 500;
+    left : 250px;
+}
+.ELL {
+    margin-right: 10px;
+}
+.BLL {
+    position: absolute;
+    right: 100px;
+}
+.SML {
+    position: absolute;
+    right: 777px;
+    top: 40px;
+
+}
+.minus-band {
+    display: flex;
+    height: calc(100vh - 109px);
+}
+
+
+
+.Board {
+    display: flex;
+    flex: 1 1 auto;
+    font-family: 'DM sans';
+    margin-left: 5px;
+    background-color: #d9d9d97e;
+    border-radius: 10px;
+}

@@ -1,0 +1,56 @@
+/*Sidebar.css*/
+
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap');
+
+
+.sidebar {
+  display: flex;
+  flex: 0 1 200px;
+  background-color: white;
+  padding: 10px;
+  flex-direction: column;
+  border-radius: 8px;
+}
+
+.sidebar ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  flex-grow: 1; /* Grow to take remaining space */
+  margin-bottom: 20px; 
+}
+
+.sidebar ul li {
+  margin-bottom: 10px;
+}
+
+.sidebar ul li a {
+  text-decoration: none;
+  color: black;
+  font-family: 'DM sans', sans-serif;
+  font-size: larger;
+  display: block;
+  padding: 15px;
+  border-radius: 5px;
+}
+
+.sidebar ul li a:hover {
+  background-color: #B8CEF7;
+  border-radius: 8px;
+}
+
+.logout-btn {
+  font-family: 'DM sans', sans-serif;
+  padding: 10px;
+  color: #ada9a9c0;
+  font-size:17px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  text-align: center;
+  margin: auto;
+}
+.logout-icon{
+  margin-right: 3px;
+}

@@ -1,0 +1,121 @@
+/* LoginPage.css */
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap');
+
+
+.bckg {
+    height: 100vh;
+    width: 100%;
+    background-image: url(/bc.svg);
+    display: flex;
+    justify-content: flex-end;
+}
+.login-page-container {
+    background-color: #ECF2FF;
+    height: 100vh;
+    width: 30%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    
+   
+}
+
+.background-svg {
+    position: fixed; /* Changed */
+
+    z-index: -1;
+}
+
+.bienvenue {
+    font-family: 'DM Sans', sans-serif;
+    font-weight: bolder;
+    display: flex;
+    justify-content: center;
+    font-size: 5em;
+    color: #002993;
+}
+
+.email-input {
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items:flex-start;
+}
+
+.password-input {
+    padding-left: 0;
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items:flex-start;
+    position: relative; /* Added */
+}
+
+.input-label {
+    font-family: 'DM Sans', sans-serif;
+    font-weight: bold;
+    font-size: larger;
+    padding-left: 3px;
+    color: #002993;
+}
+
+.input-field {
+    font-family: 'DM Sans', sans-serif;
+    border: 1px solid rgb(165, 163, 163);
+    background-color: #ECF2FF;
+    border-radius: 10px;
+    margin-top: 5px;
+    padding: 10px;
+    width: 350px;
+}
+
+.submit-button {
+    font-family: 'DM Sans', sans-serif;
+    font-weight:900;
+    font-size: 1.2em;
+    padding: 10px 10px;
+    margin-top: 30px;
+    width: 370px;
+    background-color: #002993;
+    color: #FFF;
+    border-radius: 10px;
+    border: none;
+}
+
+.submit-button:hover {
+    background-color: #041030;
+}
+
+.password-toggle {
+    position: absolute;
+    right: 10px;
+    margin-top: 25px;
+    transform: translateY(-50%); /* Adjust vertically */
+    cursor: pointer;
+    user-select: none;
+    font-size: 1.2em;
+    color: #777;
+}
+
+
+
+.forgot-password-link {
+    margin-top: 10px;
+    display: flex;
+    justify-content: flex-end;
+    width: 100%;
+}
+
+.forgot-password-link a {
+    font-family: 'DM Sans', sans-serif;
+    font-weight: bold;
+    color: #042C54;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.forgot-password-link a:hover {
+    text-decoration: underline;
+}
