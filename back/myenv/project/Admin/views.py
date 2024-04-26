@@ -17,7 +17,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from .models import Enseignant
 from django.db import transaction
-
+from rest_framework import status
 # Create your views here.
 @api_view(['GET'])
 def teacher_list(request):
@@ -57,6 +57,24 @@ def modules_list(request):
     serModule = ModuleSerializer(modules, context = {'request' : request}, many=True)
     return Response(serModule.data)
 
+
+def delete_modules(request, codes_modules):
+    codes_modules_to_delete = [code_module.strip() for code_module in codes_modules.split(',') if code_module.strip()]
+    
+    if codes_modules_to_delete:
+        try:
+            with transaction.atomic():
+                # Supprimer d'abord les enregistrements de la table Seance qui référencent les modules à supprimer
+                Seance.objects.filter(Code_id__in=codes_modules_to_delete).delete()
+                
+                # Ensuite, supprimer les modules
+                Module.objects.filter(Code__in=codes_modules_to_delete).delete()
+                
+            return JsonResponse({'success': True, 'message': 'Les modules ont été supprimés avec succès.'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)}, status=500)
+    else:
+        return JsonResponse({'success': False, 'message': 'Aucun code de module fourni.'}, status=400)
 @api_view(['GET'])
 def salles_list(request):
     salles = salles.objects.all()
@@ -84,6 +102,22 @@ def delete_salles(request, ids_salles):
 
 
 
+def delete_seance(request, seance_id):
+    try:
+        # Rechercher la séance à supprimer
+        seance = Seance.objects.get(IdSeance=seance_id)
+        seance.delete()
+        return JsonResponse({'success': True, 'message': 'La séance a été supprimée avec succès.'})
+    except Seance.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'La séance spécifiée n\'existe pas.'}, status=404)
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)}, status=500)
+    
+
+
+
+
+
 
 @api_view(['GET'])
 def promotions_list(request):
@@ -91,17 +125,81 @@ def promotions_list(request):
     serPromotions = PromotionSerializer(promotions, context={'request': request}, many=True)
     return Response(serPromotions.data)
 
+
+
+def delete_promotion(request, nom_promo):
+    try:
+        with transaction.atomic():
+            # Trouver toutes les sections référençant cette promotion
+            sections_referencing_promo = section.objects.filter(nomP_id=nom_promo)
+
+            # Supprimer tous les groupes associés à ces sections
+            for section_ref in sections_referencing_promo:
+                Groupe.objects.filter(idSection_id=section_ref.idSection).delete()
+
+            # Ensuite, supprimer toutes les sections référençant cette promotion
+            sections_referencing_promo.delete()
+
+            # Ensuite, supprimer la promotion elle-même
+            Promotion.objects.filter(NomPromo=nom_promo).delete()
+            
+            return JsonResponse({'success': True, 'message': 'La promotion a été supprimée avec succès.'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)}, status=500)
 @api_view(['GET'])
 def sections_list(request):
     sections = section.objects.all()
     serSections = SectionSerializer(sections, context={'request': request}, many=True)
     return Response(serSections.data)
 
+
+
+
+def delete_sections(request, ids_sections):
+    ids_sections_to_delete = [id_section.strip() for id_section in ids_sections.split(',') if id_section.strip()]
+    
+    if ids_sections_to_delete:
+        try:
+            with transaction.atomic():
+                # Identifier les spécialités référençant les sections à supprimer
+                specialites_referencing_sections = Specialite.objects.filter(idSection_id__in=ids_sections_to_delete)
+                
+                if specialites_referencing_sections.exists():
+                    # Supprimer les spécialités référençant les sections à supprimer
+                    specialites_referencing_sections.delete()
+                
+                # Supprimer les sections
+                section.objects.filter(idSection__in=ids_sections_to_delete).delete()
+                
+            return JsonResponse({'success': True, 'message': 'Les sections et les spécialités associées ont été supprimées avec succès.'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)}, status=500)
+    else:
+        return JsonResponse({'success': False, 'message': 'Aucun identifiant de section fourni.'}, status=400)
+    
 @api_view(['GET'])
 def specialites_list(request):
     specialites = specialites.objects.all()
     serSpecialites =SpecialiteSerializer(specialites, context={'request': request}, many=True)
     return Response(serSpecialites.data)
+
+
+
+
+
+def delete_specialites(request, ids_specialites):
+    ids_specialites_to_delete = [id_specialite.strip() for id_specialite in ids_specialites.split(',') if id_specialite.strip()]
+    
+    if ids_specialites_to_delete:
+        try:
+            with transaction.atomic():
+                # Supprimer les spécialités
+                Specialite.objects.filter(idSpecialite__in=ids_specialites_to_delete).delete()
+            return JsonResponse({'success': True, 'message': 'Les spécialités ont été supprimées avec succès.'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)}, status=500)
+    else:
+        return JsonResponse({'success': False, 'message': 'Aucun identifiant de spécialité fourni.'}, status=400)
 
 @api_view(['GET'])
 def groupes_list(request):
@@ -109,6 +207,30 @@ def groupes_list(request):
     serGroupes = GroupeSerializer(groupes, context={'request': request}, many=True)
     return Response(serGroupes.data)
 
+
+
+
+def delete_groupes(request, ids_groupes):
+    ids_groupes_to_delete = [id_groupe.strip() for id_groupe in ids_groupes.split(',') if id_groupe.strip()]
+    
+    if ids_groupes_to_delete:
+        try:
+            with transaction.atomic():
+                # Identifier les séances référençant les groupes à supprimer
+                seances_referencing_groupes = Seance.objects.filter(idGroupe_id__in=ids_groupes_to_delete)
+                
+                if seances_referencing_groupes.exists():
+                    # Supprimer les séances référencant les groupes à supprimer
+                    seances_referencing_groupes.delete()
+                
+                # Supprimer les groupes
+                Groupe.objects.filter(idGroupe__in=ids_groupes_to_delete).delete()
+                
+            return JsonResponse({'success': True, 'message': 'Les groupes et les séances associées ont été supprimés avec succès.'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)}, status=500)
+    else:
+        return JsonResponse({'success': False, 'message': 'Aucun identifiant de groupe fourni.'}, status=400)
 
 @api_view(['GET'])
 def teacher_detail(request, teacher_id):
@@ -137,6 +259,28 @@ def insertAbsence(request, teacher_id):
         serializer.save(IdProf=teacher)
         return Response(serializer.data, status=201)
     return Response(serializer.errors, status=400)
+
+
+def delete_absences(request, ids_absences):
+    ids_absences_to_delete = [id_absence.strip() for id_absence in ids_absences.split(',') if id_absence.strip()]
+    
+    if ids_absences_to_delete:
+        try:
+            with transaction.atomic():
+                # Supprimer les absences
+                Abcence.objects.filter(IdAbs__in=ids_absences_to_delete).delete()
+            return JsonResponse({'success': True, 'message': 'Les absences ont été supprimées avec succès.'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)}, status=500)
+    else:
+        return JsonResponse({'success': False, 'message': 'Aucun identifiant d' 'absence fourni.'}, status=400)
+
+
+
+
+
+
+
 
 
 @api_view(['DELETE'])
