@@ -573,3 +573,164 @@ def deleteAbsence(request,teacher_id,abs_id):
 #     seance.save()
 #     return addSeance(request,teacher_id) 
 
+
+
+
+def modifier_enseignant(request, matricule): 
+    # Récupérer un enseignant par son matricule
+    enseignant = Enseignant.objects.get(Matricule=matricule) 
+
+    # Modifier les valeurs de tous les champs
+    enseignant.Nom = 'Nouveau Nom'
+    enseignant.Prenom = 'Nouveau Prenom'
+    enseignant.DateNaissance = '2024-01-01'  
+    enseignant.Adresse = 'Nouvelle Adresse'
+    enseignant.Email = 'nouveau@email.com'
+    enseignant.NumeroTelephone = 'Nouveau Téléphone'
+    enseignant.Fonction = 'Nouvelle Fonction'
+    enseignant.Grade = 'Nouveau Grade'
+    enseignant.Etablissement = 'Nouvel Etablissement'
+    enseignant.MotDePasse = 'Nouveau MotDePasse'
+
+    # Enregistrer les modifications
+    enseignant.save()
+
+    return HttpResponse("Les informations de l'enseignant ont été mises à jour avec succès.")
+
+
+
+
+def modifier_promotion(request, nom_promo):
+    # Récupérer la promotion par son nom
+    promotion = get_object_or_404(Promotion, NomPromo=nom_promo)
+
+    # Modifier les valeurs des champs
+    promotion.Departement = 'test'
+   
+
+    # Enregistrer les modifications
+    promotion.save()
+
+    return HttpResponse("Les informations de la promotion ont été mises à jour avec succès.")
+
+def modifier_section(request, section_id):
+    # Récupérer la section par son identifiant
+    Section = get_object_or_404(section, idSection=section_id)
+
+    # Modifier les valeurs des champs
+    Section.NomSection = 'D'
+    Section.nomP_id = '1CS'
+    # Enregistrer les modifications
+    Section.save()
+
+    return HttpResponse("Les informations de la section ont été mises à jour avec succès.")
+
+
+def modifier_specialite(request, specialite_id):
+    # Récupérer la spécialité par son identifiant
+    specialite = get_object_or_404(Specialite, idSpecialite=specialite_id)
+
+    # Modifier les valeurs des champs
+    specialite.NomSpecialite = 'nvSpec'
+    specialite.idSection_id = 3  
+
+    # Enregistrer les modifications
+    specialite.save()
+
+    return HttpResponse("Les informations de la spécialité ont été mises à jour avec succès.")
+
+def modifier_groupe(request, groupe_id):
+    # Récupérer le groupe par son identifiant
+    groupe = get_object_or_404(Groupe, idGroupe=groupe_id)
+
+    # Modifier les valeurs des champs
+    groupe.Numero = '5'
+    groupe.Specialite = 'IASD'
+    groupe.idSection_id = 2 
+
+    # Enregistrer les modifications
+    groupe.save()
+
+    return HttpResponse("Les informations du groupe ont été mises à jour avec succès.")
+
+def modifier_salle(request, salle_id):
+    # Récupérer la salle par son identifiant
+    salle = get_object_or_404(Salle, IdSalle=salle_id)
+
+    # Modifier les valeurs des champs
+    salle.NomSalle = 'Salle1'
+    salle.Zone = 'CS'
+    salle.NbrPlaces = 50  # Exemple de modification
+    salle.Type = 'Salle TD'
+
+    # Enregistrer les modifications
+    salle.save()
+
+    return HttpResponse("Les informations de la salle ont été mises à jour avec succès.")
+
+def modifier_module(request, code_module):
+    # Récupérer le module par son code
+    module = get_object_or_404(Module, Code=code_module)
+
+    # Modifier les valeurs des champs
+    module.NomModule = 'BDD'
+    module.Coefficient = 5
+    module.NbrHeures = 40
+    module.Semestre = 'Semestre 1'
+    module.nomP_id = '1CS'
+
+    # Enregistrer les modifications
+    module.save()
+
+    return HttpResponse("Les informations du module ont été mises à jour avec succès.")
+
+
+def modifier_heure(request, heure_id):
+    # Récupérer l'heure par son identifiant
+    Heure = get_object_or_404(heure,idHeure=heure_id)
+
+    # Modifier les valeurs des champs
+    Heure.defType = 'charge'
+    Heure.idSeance_id = 1 
+    # Enregistrer les modifications
+    Heure.save()
+
+    return HttpResponse("Les informations de l'heure ont été mises à jour avec succès.")
+
+def modifier_seance(request, seance_id):
+    # Récupérer la séance par son identifiant
+    seance = get_object_or_404(Seance, IdSeance=seance_id)
+
+    # Modifier les valeurs des champs
+    seance.NomS = 'ALG1'
+    seance.Type = 'TD'
+    seance.Jour = 'MARDI'
+    seance.HeureDebut = '13:30'
+    seance.HeureFin = '15:00'
+    seance.Semestre = 'Semestre 1'
+    seance.Code_id = 'code1'
+    seance.Matricule_id = '1'
+    seance.idGroupe_id = 4  
+    seance.idSalle_id = 4  
+    seance.idSection_id = 1  
+
+    # Enregistrer les modifications
+    seance.save()
+
+    return HttpResponse("Les informations de la séance ont été mises à jour avec succès.")
+
+def modifier_absence(request, absence_id):
+    # Récupérer l'absence par son identifiant
+    absence = get_object_or_404(Abcence, IdAbs=absence_id)
+
+    # Modifier les valeurs des champs
+    absence.DateAbs = '2024-04-17'
+    absence.HeureDebut = '09:00'
+    absence.HeureFin = '11:00'
+    absence.Motif = 'nouveau-motif'
+    absence.IdProf_id = '2'
+
+    # Enregistrer les modifications
+    absence.save()
+    
+    return HttpResponse("Les informations de l'absence ont été mises à jour avec succès.")

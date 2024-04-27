@@ -38,7 +38,21 @@ path('creer_absence/', views.creer_absence, name='creer_absence'),
 
 
 
+path('modifier_enseignant/<str:matricule>/', views.modifier_enseignant, name='modifier_enseignant'),
+path('modifier_promotion/<str:nom_promo>/', views.modifier_promotion, name='modifier_promotion'),
+path('modifier_section/<int:section_id>/', views.modifier_section, name='modifier_section'),
+path('modifier_specialite/<int:specialite_id>/', views.modifier_specialite, name='modifier_specialite'),
+path('modifier_groupe/<int:groupe_id>/', views.modifier_groupe, name='modifier_groupe'),
+path('modifier_salle/<int:salle_id>/', views.modifier_salle, name='modifier_salle'),
+path('modifier_module/<str:code_module>/', views.modifier_module, name='modifier_module'),
+path('modifier_heure/<int:heure_id>/', views.modifier_heure, name='modifier_heure'),
+path('modifier_seance/<int:seance_id>/', views.modifier_seance, name='modifier_seance'),
+path('modifier_absence/<int:absence_id>/', views.modifier_absence, name='modifier_absence'),
 ]
+
+
+
+
 
 
 
