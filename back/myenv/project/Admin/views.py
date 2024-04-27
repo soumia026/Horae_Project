@@ -10,7 +10,7 @@ from .models import *
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from .serializers import * 
-
+import json
 from django.http import JsonResponse
 from .models import Salle
 from django.http import JsonResponse
@@ -18,6 +18,13 @@ from django.views.decorators.csrf import csrf_exempt
 from .models import Enseignant
 from django.db import transaction
 from rest_framework import status
+from rest_framework.views import APIView
+from rest_framework import status
+from rest_framework.response import Response
+from .serializers import EnseignantSerializer
+from django.http import JsonResponse
+from .models import Enseignant
+
 # Create your views here.
 @api_view(['GET'])
 def teacher_list(request):
@@ -26,8 +33,37 @@ def teacher_list(request):
     return Response(serTeach.data)
 
 
+def creer_enseignant(request):
+    # Créer une instance d'enseignant avec des données prédéfinies
+    enseignant = Enseignant.objects.create(
+        Matricule="12TRY",
+        Nom="Nom TRY",
+        Prénom="Prénom de l'enseignantTRY",
+        DateNaissance="1990-01-01",
+        Adresse="Adresse de l'enseignantTRY",
+        Email="enseignantTRY@example.com",
+        NumeroTelephone="0123456789TRY",
+        Fonction="Fonction1TRY",
+        Grade="MCATRY",
+        Etablissement="Nom de l'établissementTRY",
+        MotDePasse="motdepasse123TRY"
+    )
 
+    # Construire une chaîne contenant toutes les informations de l'enseignant
+    enseignant_info = f"Matricule: {enseignant.Matricule}\n"
+    enseignant_info += f"Nom: {enseignant.Nom}\n"
+    enseignant_info += f"Prénom: {enseignant.Prénom}\n"
+    enseignant_info += f"Date de Naissance: {enseignant.DateNaissance}\n"
+    enseignant_info += f"Adresse: {enseignant.Adresse}\n"
+    enseignant_info += f"Email: {enseignant.Email}\n"
+    enseignant_info += f"Numéro de Téléphone: {enseignant.NumeroTelephone}\n"
+    enseignant_info += f"Fonction: {enseignant.Fonction}\n"
+    enseignant_info += f"Grade: {enseignant.Grade}\n"
+    enseignant_info += f"Etablissement: {enseignant.Etablissement}\n"
+    enseignant_info += f"Mot de Passe: {enseignant.MotDePasse}\n"
 
+    # Renvoyer la réponse HTTP avec les informations de l'enseignant
+    return HttpResponse(enseignant_info)
 
 
 
@@ -58,6 +94,30 @@ def modules_list(request):
     return Response(serModule.data)
 
 
+
+def creer_module(request):
+    # Créer une instance de module avec des données prédéfinies
+    module = Module.objects.create(
+        Code="code1",
+        NomModule="Nom du module1",
+        Coefficient=1,
+        NbrHeures=20,
+        Semestre="Semestre 1",
+        nomP_id="1CS"  # n'oubliez pas de respecter la cle etrangere nomP == nomPromotion li f la table Promotion
+    )
+
+    # Construire une chaîne contenant toutes les informations du module
+    module_info = f"Code: {module.Code}\n"
+    module_info += f"Nom du module: {module.NomModule}\n"
+    module_info += f"Coefficient: {module.Coefficient}\n"
+    module_info += f"Nombre d'heures: {module.NbrHeures}\n"
+    module_info += f"Semestre: {module.Semestre}\n"
+    module_info += f"ID du professeur: {module.nomP_id}\n"
+
+    # Renvoyer la réponse HTTP avec les informations du module
+    return HttpResponse(module_info)
+
+
 def delete_modules(request, codes_modules):
     codes_modules_to_delete = [code_module.strip() for code_module in codes_modules.split(',') if code_module.strip()]
     
@@ -75,6 +135,8 @@ def delete_modules(request, codes_modules):
             return JsonResponse({'success': False, 'message': str(e)}, status=500)
     else:
         return JsonResponse({'success': False, 'message': 'Aucun code de module fourni.'}, status=400)
+    
+
 @api_view(['GET'])
 def salles_list(request):
     salles = salles.objects.all()
@@ -82,7 +144,24 @@ def salles_list(request):
     return Response(serSalles.data)
 
 
+def creer_salle(request):
+    # Créer une instance de salle avec des données prédéfinies
+    salle = Salle.objects.create(
+        NomSalle="A",
+        Zone="cycle prepa",
+        NbrPlaces= 150 ,
+        Type="Amphi"
+    )
 
+    # Construire une chaîne contenant toutes les informations de la salle
+    salle_info = f"Nom de la salle: {salle.NomSalle}\n"
+    salle_info += f"ID de la salle: {salle.IdSalle}\n"
+    salle_info += f"Zone: {salle.Zone}\n"
+    salle_info += f"Nombre de places: {salle.NbrPlaces}\n"
+    salle_info += f"Type: {salle.Type}\n"
+
+    # Renvoyer la réponse HTTP avec les informations de la salle
+    return HttpResponse(salle_info)
 
 
 
@@ -125,6 +204,19 @@ def promotions_list(request):
     serPromotions = PromotionSerializer(promotions, context={'request': request}, many=True)
     return Response(serPromotions.data)
 
+def creer_promotion(request):
+    # Créer une instance de promotion avec des données prédéfinies
+    promotion = Promotion.objects.create(
+        NomPromo="3CS",
+        Departement="Second Cycle"
+    )
+
+    # Construire une chaîne contenant toutes les informations de la promotion
+    promotion_info = f"Nom de la promotion: {promotion.NomPromo}\n"
+    promotion_info += f"Département: {promotion.Departement}\n"
+
+    # Renvoyer la réponse HTTP avec les informations de la promotion
+    return HttpResponse(promotion_info)
 
 
 def delete_promotion(request, nom_promo):
@@ -146,6 +238,9 @@ def delete_promotion(request, nom_promo):
             return JsonResponse({'success': True, 'message': 'La promotion a été supprimée avec succès.'})
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)}, status=500)
+    
+
+
 @api_view(['GET'])
 def sections_list(request):
     sections = section.objects.all()
@@ -153,6 +248,21 @@ def sections_list(request):
     return Response(serSections.data)
 
 
+def creer_section(request):
+    # Créer une instance de section avec des données prédéfinies
+    nouvelle_section = section.objects.create(
+        idSection=3,  
+        NomSection="A",
+        nomP_id="1CS"  
+    )
+
+    # Construire une chaîne contenant toutes les informations de la section
+    section_info = f"ID de la section: {nouvelle_section.idSection}\n"
+    section_info += f"Nom de la section: {nouvelle_section.NomSection}\n"
+    section_info += f"ID du professeur: {nouvelle_section.nomP_id}\n"
+
+    # Renvoyer la réponse HTTP avec les informations de la section
+    return HttpResponse(section_info)
 
 
 def delete_sections(request, ids_sections):
@@ -183,6 +293,22 @@ def specialites_list(request):
     serSpecialites =SpecialiteSerializer(specialites, context={'request': request}, many=True)
     return Response(serSpecialites.data)
 
+def creer_specialite(request):
+    # Créer une instance de spécialité avec des données prédéfinies
+    nouvelle_specialite = Specialite.objects.create(
+        idSpecialite=4, 
+        NomSpecialite="nouvelle spécialité",
+        idSection_id=1  
+    )
+
+    # Construire une chaîne contenant toutes les informations de la spécialité
+    specialite_info = f"ID de la spécialité: {nouvelle_specialite.idSpecialite}\n"
+    specialite_info += f"Nom de la spécialité: {nouvelle_specialite.NomSpecialite}\n"
+    specialite_info += f"ID de la section associée: {nouvelle_specialite.idSection_id}\n"
+
+    # Renvoyer la réponse HTTP avec les informations de la spécialité
+    return HttpResponse(specialite_info)
+
 
 
 
@@ -207,6 +333,23 @@ def groupes_list(request):
     serGroupes = GroupeSerializer(groupes, context={'request': request}, many=True)
     return Response(serGroupes.data)
 
+def creer_groupe(request):
+    # Créer une instance de groupe avec des données prédéfinies
+    nouveau_groupe = Groupe.objects.create(
+        idGroupe=4,  
+        Numero="4",
+        Specialite="SIW",
+        idSection_id=1  
+    )
+
+    # Construire une chaîne contenant toutes les informations du groupe
+    groupe_info = f"ID du groupe: {nouveau_groupe.idGroupe}\n"
+    groupe_info += f"Numéro du groupe: {nouveau_groupe.Numero}\n"
+    groupe_info += f"Spécialité du groupe: {nouveau_groupe.Specialite}\n"
+    groupe_info += f"ID de la section associée: {nouveau_groupe.idSection_id}\n"
+
+    # Renvoyer la réponse HTTP avec les informations du groupe
+    return HttpResponse(groupe_info)
 
 
 
@@ -278,10 +421,80 @@ def delete_absences(request, ids_absences):
 
 
 
+def creer_seance(request):
+    # Créer une instance de séance avec des données prédéfinies
+    nouvelle_seance = Seance.objects.create(
+        IdSeance=10,  
+        NomS="SYS2",
+        Type="TD",
+        Jour="Lundi",
+        HeureDebut="08:00:00",
+        HeureFin="10:00:00",
+        Semestre="Semestre 2",
+        Code_id="code1",  
+        Matricule_id="1",  
+        idGroupe_id=1,  
+        idSalle_id=4,  
+        idSection_id=1,  
+        idSpecialite_id=1  
+    )
+
+    # Construire une chaîne contenant toutes les informations de la séance
+    seance_info = f"ID de la séance: {nouvelle_seance.IdSeance}\n"
+    seance_info += f"Nom de la séance: {nouvelle_seance.NomS}\n"
+    seance_info += f"Type de séance: {nouvelle_seance.Type}\n"
+    seance_info += f"Jour: {nouvelle_seance.Jour}\n"
+    seance_info += f"Heure de début: {nouvelle_seance.HeureDebut}\n"
+    seance_info += f"Heure de fin: {nouvelle_seance.HeureFin}\n"
+    seance_info += f"Semestre: {nouvelle_seance.Semestre}\n"
+    seance_info += f"ID du code associé: {nouvelle_seance.Code_id}\n"
+    seance_info += f"ID du matricule associé: {nouvelle_seance.Matricule_id}\n"
+    seance_info += f"ID du groupe associé: {nouvelle_seance.idGroupe_id}\n"
+    seance_info += f"ID de la salle associée: {nouvelle_seance.idSalle_id}\n"
+    seance_info += f"ID de la section associée: {nouvelle_seance.idSection_id}\n"
+    seance_info += f"ID de la spécialité associée: {nouvelle_seance.idSpecialite_id}\n"
+
+    # Renvoyer la réponse HTTP avec les informations de la séance
+    return HttpResponse(seance_info)
 
 
+def creer_heure(request):
+    # Créer une instance de heure avec des données prédéfinies
+    nouvelle_heure = heure.objects.create(
+        idHeure=10,  
+        defType="RSup",
+        idSeance_id=10,  
+    )
+
+    # Construire une chaîne contenant toutes les informations de l'heure
+    heure_info = f"ID de l'heure: {nouvelle_heure.idHeure}\n"
+    heure_info += f"Type de définition: {nouvelle_heure.defType}\n"
+    heure_info += f"ID de la séance associée: {nouvelle_heure.idSeance_id}\n"
+
+    # Renvoyer la réponse HTTP avec les informations de l'heure
+    return HttpResponse(heure_info)
 
 
+def creer_absence(request):
+    # Créer une instance d'absence avec des données prédéfinies
+    nouvelle_absence = Abcence.objects.create(
+        DateAbs="2024-04-27",
+        HeureDebut="08:00:00",
+        HeureFin="10:00:00",
+        Motif="Maladie",
+        IdProf_id="1"  
+    )
+
+    # Construire une chaîne contenant toutes les informations de l'absence
+    absence_info = f"ID de l'absence: {nouvelle_absence.IdAbs}\n"
+    absence_info += f"Date de l'absence: {nouvelle_absence.DateAbs}\n"
+    absence_info += f"Heure de début: {nouvelle_absence.HeureDebut}\n"
+    absence_info += f"Heure de fin: {nouvelle_absence.HeureFin}\n"
+    absence_info += f"Motif: {nouvelle_absence.Motif}\n"
+    absence_info += f"ID du professeur associé: {nouvelle_absence.IdProf_id}\n"
+
+    # Renvoyer la réponse HTTP avec les informations de l'absence
+    return HttpResponse(absence_info)
 
 @api_view(['DELETE'])
 def deleteAbsence(request,teacher_id,abs_id):

@@ -25,7 +25,17 @@ path('delete_absences/<str:ids_absences>/', views.delete_absences, name='delete_
 path('delete_promotion/<str:nom_promo>/', views.delete_promotion, name='delete_promotion'),
 path('delete_seance/<int:seance_id>/', views.delete_seance, name='delete_seance'),
 
- 
+path('creer_enseignant/', views.creer_enseignant, name='creer_enseignant'),
+path('creer_module/', views.creer_module, name='creer_module'),
+path('creer_salle/', views.creer_salle, name='creer_salle'),
+path('creer_promotion/', views.creer_promotion, name='creer_promotion'),
+path('creer_section/', views.creer_section, name='creer_section'),
+path('creer_specialite/', views.creer_specialite, name='creer_specialite'),
+path('creer_groupe/', views.creer_groupe, name='creer_groupe'),
+path('creer_seance/', views.creer_seance, name='creer_seance'),
+path('creer_heure/', views.creer_heure, name='creer_heure'),
+path('creer_absence/', views.creer_absence, name='creer_absence'),
+
 
 
 ]
