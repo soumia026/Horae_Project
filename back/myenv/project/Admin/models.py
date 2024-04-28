@@ -54,7 +54,7 @@ class Promotion(models.Model):
     class Meta:
         db_table =  "Promotion"
     def __str__(self) -> str:
-        return self.NomPromo
+        return self.Matricule
 
 
 class Module(models.Model):
@@ -72,7 +72,7 @@ class Module(models.Model):
     class Meta:
         db_table =  "Module" 
     def __str__(self) -> str:
-        return self.NomModule
+        return self.Code
 
 
 
@@ -117,7 +117,7 @@ class section(models.Model):
     class Meta:
         db_table =  "Section"
     def __str__(self) -> str:
-        return self.NomSection
+        return str(self.idSection)
     
 
 class Groupe(models.Model):
@@ -158,7 +158,7 @@ class Groupe(models.Model):
         db_table =  "Groupe"
         
     def __str__(self) -> str:
-        return self.idGroupe
+        return str(self.idGroupe)
 
 class Specialite(models.Model):
     idSpecialite = models.IntegerField(blank = True,primary_key = True)
@@ -168,7 +168,7 @@ class Specialite(models.Model):
     class Meta:
         db_table =  "Specialite"
     def __str__(self) -> str:
-        return self.idSpecialite
+        return str(self.idSpecialite)
 
 
     
@@ -179,7 +179,7 @@ class Enseigne(models.Model) :
         db_table =  "Enseigne"
         unique_together = ["Matric", "Codee"]
     def __str__(self) -> str:
-        return self.Matric
+        return str(self.Matric)
 
 class SpecPromo(models.Model):
     idSpecialite = models.ForeignKey(Specialite,default = None,on_delete=models.DO_NOTHING)
@@ -191,10 +191,10 @@ class SpecPromo(models.Model):
 
 class Abcence(models.Model):
     IdAbs = models.AutoField(primary_key = True)
-    DateAbs = models.DateField(default = None)
-    HeureDebut = models.TimeField(blank = True)
-    HeureFin = models.TimeField(blank = True)
-    Motif = models.CharField(max_length = 100, blank = True)
+    DateAbs = models.DateField(blank = True,default = None)
+    HeureDebut = models.TimeField(blank = True,default = None)
+    HeureFin = models.TimeField(blank = True,default = None)
+    Motif = models.CharField(max_length = 100, blank = True,default = None)
     IdProf = models.ForeignKey(Enseignant,default = None,on_delete=models.DO_NOTHING)
     class Meta:
         db_table =  "Absence"
@@ -221,13 +221,14 @@ class Seance(models.Model):
     Jour = models.CharField(max_length = 20,choices = myJours)
     HeureDebut = models.TimeField(blank = True)
     HeureFin = models.TimeField(blank = True)
-    Semestre = models.CharField(max_length = 20,choices = Module.mySemesters)
+    Semestre = models.CharField(max_length = 20,choices = Module.mySemesters,default = None)
     Matricule = models.ForeignKey(Enseignant,default = None,on_delete=models.DO_NOTHING)
-    Code = models.ForeignKey(Module,default = None,on_delete=models.DO_NOTHING)
-    idSalle = models.ForeignKey(Salle,default = None,on_delete=models.DO_NOTHING)
-    idSpecialite =  models.ForeignKey(Specialite,default = None,on_delete=models.DO_NOTHING)
+    Code = models.ForeignKey(Module,default = None,on_delete=models.DO_NOTHING,null= True)
+    idSalle = models.ForeignKey(Salle,default = None,on_delete=models.DO_NOTHING,null= True)
+    idPromo=  models.ForeignKey(Promotion,default = None,on_delete=models.DO_NOTHING,null = True)
     idGroupe =  models.ForeignKey(Groupe,default = None,on_delete=models.DO_NOTHING)
     idSection =  models.ForeignKey(section,default = None,on_delete=models.DO_NOTHING)
+    # idAbs = models.ForeignKey(Abcence,default=None,on_delete=models.DO_NOTHING,null=True)
     class Meta:
         db_table =  "Seance"
 
@@ -238,6 +239,7 @@ class Seance(models.Model):
 class Seances(models.Model) :
     date = models.ForeignKey(DateSeance,default=None,on_delete=models.DO_NOTHING)
     idSeance = models.ForeignKey(Seance,default=None,on_delete=models.DO_NOTHING)
+    present = models.BooleanField(default=True)
     class Meta:
         db_table =  "Seances"
 
