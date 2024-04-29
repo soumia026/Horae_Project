@@ -104,15 +104,9 @@ class DateSeance(models.Model) :
         return self.IddatteS
 
 
-class section(models.Model):
-        
-    mySections = [
-    ('A','A'),
-    ('B','B'),
-    ('C','C'),
-]
+class section(models.Model):     
     idSection = models.IntegerField(blank = True,primary_key = True)
-    NomSection = models.CharField(max_length = 20,choices = mySections)
+    NomSection = models.CharField(max_length = 20)
     nomP = models.ForeignKey(Promotion,default = None,on_delete=models.DO_NOTHING)
     class Meta:
         db_table =  "Section"
@@ -120,38 +114,23 @@ class section(models.Model):
         return str(self.idSection)
     
 
+
+class Specialite(models.Model):
+ 
+    idSpecialite = models.AutoField(blank = True,primary_key = True)
+    NomSpecialite = models.CharField(max_length = 20,blank = True)
+    # idSection = models.ForeignKey(section,default = None,on_delete=models.DO_NOTHING , null=True)
+
+    class Meta:
+        db_table =  "Specialite"
+    def __str__(self) -> str:
+        return str(self.idSpecialite)
+
 class Groupe(models.Model):
     
-    myGroups =[ 
-    ('1','1'),
-    ('2','2'),
-    ('3','3'),
-    ('4','4'),
-    ('5','5'),
-    ('6','6'),
-    ('7','7'),
-    ('8','8'),
-    ('9','9'),
-    ('10','10'),
-    ('11','11'),
-    ('12','12'),
-    ('13','13'),
-    ('14','14'),
-    ('15','15'),
-    ('16','16'),
-    ('17','17'),
-    ('18','18'),
-    ('19','19'),
-    ('20','20'),
-]
-    mySpesialite = [
-    ('ISI','ISI'),
-    ('SIW','SIW'),
-    ('IASD','IASD'),
-]
     idGroupe = models.IntegerField(blank = True,primary_key = True)
-    Numero = models.CharField(max_length = 20,choices = myGroups)
-    Specialite = models.CharField(max_length = 20,choices = mySpesialite, blank = True)
+    Numero = models.CharField(max_length = 20)
+    Specialite = models.CharField(max_length = 20, blank = True)
     idSection = models.ForeignKey(section,default = None,on_delete=models.DO_NOTHING)
 
     class Meta:
@@ -159,18 +138,6 @@ class Groupe(models.Model):
         
     def __str__(self) -> str:
         return str(self.idGroupe)
-
-class Specialite(models.Model):
-    idSpecialite = models.IntegerField(blank = True,primary_key = True)
-    NomSpecialite = models.CharField(max_length = 20,choices= Groupe.mySpesialite,blank = True)
-    idSection = models.ForeignKey(section,default = None,on_delete=models.DO_NOTHING)
-
-    class Meta:
-        db_table =  "Specialite"
-    def __str__(self) -> str:
-        return str(self.idSpecialite)
-
-
     
 class Enseigne(models.Model) :
     Matric = models.ForeignKey(Enseignant,default = None,on_delete=models.DO_NOTHING)
@@ -188,6 +155,14 @@ class SpecPromo(models.Model):
         db_table =  "SpecPromo"
         unique_together = ["idSpecialite", "nomP"]
 
+
+
+class SpecSection(models.Model):
+    idSpecialite =models.ForeignKey(Specialite,default = None,on_delete=models.DO_NOTHING)
+    idSection = models.ForeignKey(section,default = None,on_delete=models.DO_NOTHING , null=True)
+    class Meta:
+        db_table =  "SpecSection"
+        unique_together = ["idSpecialite", "idSection"]
 
 class Abcence(models.Model):
     IdAbs = models.AutoField(primary_key = True)
@@ -226,8 +201,8 @@ class Seance(models.Model):
     Code = models.ForeignKey(Module,default = None,on_delete=models.DO_NOTHING,null= True)
     idSalle = models.ForeignKey(Salle,default = None,on_delete=models.DO_NOTHING,null= True)
     idPromo=  models.ForeignKey(Promotion,default = None,on_delete=models.DO_NOTHING,null = True)
-    idGroupe =  models.ForeignKey(Groupe,default = None,on_delete=models.DO_NOTHING)
-    idSection =  models.ForeignKey(section,default = None,on_delete=models.DO_NOTHING)
+    idGroupe =  models.ForeignKey(Groupe,default = None,on_delete=models.DO_NOTHING,null = True)
+    idSection =  models.ForeignKey(section,default = None,on_delete=models.DO_NOTHING,null = True)
     # idAbs = models.ForeignKey(Abcence,default=None,on_delete=models.DO_NOTHING,null=True)
     class Meta:
         db_table =  "Seance"
