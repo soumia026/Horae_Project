@@ -8,6 +8,8 @@ path('teachers',views.teacher_list,name='teacher_list'),
 path('insertAbs/<str:teacher_id>/',views.insertAbs,name='insertAbs'),
 path('insertEnseignant/',views.insertEnseignant,name='insertEnseignant'),
 path('deleteAbsence/<str:teacher_id>/<int:abs_id>/',views.deleteAbsence,name='deleteAbsence'),
+
+
 path('modules',views.modules_list,name='modules_list'),
 path('salles',views.salles_list,name='salles_list'),
 path('specialites',views.specialites_list,name='specialites_list'),
@@ -27,6 +29,9 @@ path('delete_seance/<int:seance_id>/', views.delete_seance, name='delete_seance'
 path('insertSection/<str:idPromo>/', views.insertSection, name='insertSection'),
 path('insertGroupe/<int:idSection>/', views.insertGroupe, name='insertGroupe'),
 
+
+path('insertHeure/<int:idSeance>/', views.insertHeure, name='insertHeure'),
+path('deleteHeure/<int:ids_Heures>/', views.deleteHeure, name='deleteHeure'),
 
 ]
 

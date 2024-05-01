@@ -15,6 +15,8 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.db import transaction
 from rest_framework import status
+from django.utils import timezone
+from datetime import datetime, time
 
 @api_view(['GET'])
 def teacher_list(request):
@@ -71,7 +73,7 @@ def delete_modules(request, code):
         
 @api_view(['GET'])
 def salles_list(request):
-    salles = salles.objects.all()
+    salles = Salle.objects.all()
     serSalles = SalleSerializer(salles, context={'request': request}, many=True)
     return Response(serSalles.data)
 
@@ -109,7 +111,22 @@ def delete_groupes(request, ids_groupes):
         return JsonResponse({'success': False, 'message': 'Aucun identifiant de groupe fourni.'}, status=400)
     
 
+@api_view(['DELETE'])
+def deleteHeure(request, ids_Heures):
+   
+    
+    if ids_Heures:
+        try:
+            with transaction.atomic():
 
+              heure.objects.filter(idHeure = ids_Heures).delete()
+            
+            return JsonResponse({'success': True, 'message': 'Les groupes et les séances associées ont été supprimés avec succès.'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)}, status=500)
+    else:
+        return JsonResponse({'success': False, 'message': 'Aucun identifiant de groupe fourni.'}, status=400)
+    
 @api_view(['DELETE'])
 def delete_seance(request, seance_id):
     try:
@@ -201,7 +218,7 @@ def delete_sections(request, section_id):
     
 @api_view(['GET'])
 def specialites_list(request):
-    specialites = specialites.objects.all()
+    specialites = Specialite.objects.all()
     serSpecialites =SpecialiteSerializer(specialites, context={'request': request}, many=True)
     return Response(serSpecialites.data)
 
@@ -310,12 +327,63 @@ def deleteAbsence(request,teacher_id,abs_id):
         return Response({'success': True, 'message': 'L absence a été supprimée avec succès.'})
 
     
+
+
+# @api_view(['POST','GET'])
+# @permission_classes([IsAuthenticated])
+# def insertSeance(request, teacher_id,semestre):
+#     if request.method == 'POST':
+#         serializer = SeanceSerializer(data=request.data)
+#         if serializer.is_valid():
+#             serializer.validated_data['Matricule_id'] = teacher_id
+#             serializer.validated_data['Semestre'] = semestre
+#             serializer.save()
+#             return Response(serializer.data, status=201)
+#         return Response(serializer.errors, status=400)
+#     elif request.method == 'GET':
+#         # Handle GET request if needed
+#         seances = Seance.objects.filter(Matricule_id=teacher_id,Semestre = semestre)
+#         serializer = SeanceSerializer(seances, many=True)
+#         return Response(serializer.data, status=200)
+#     else:
+#         return Response({"message": "Method not allowed"}, status=405)
+
+
+
+
+
+
 @api_view(['POST','GET'])
 @permission_classes([IsAuthenticated])
-def insertSeance(request, teacher_id,semestre):
+def insertSeance(request, teacher_id, semestre):
     if request.method == 'POST':
+        heure_debut = timezone.make_aware(datetime.combine(datetime.now().date(), time(8, 0)))
+        heure_fin_limite = timezone.make_aware(datetime.combine(datetime.now().date(), time(17, 30)))
+
         serializer = SeanceSerializer(data=request.data)
         if serializer.is_valid():
+            heure_debut_seance_str = serializer.validated_data['HeureDebut']
+            if isinstance(heure_debut_seance_str, str):
+                heure_debut_seance = timezone.make_aware(datetime.strptime(heure_debut_seance_str, "%H:%M:%S").time())
+            else:
+                heure_debut_seance = timezone.make_aware(datetime.combine(datetime.now().date(), heure_debut_seance_str))
+
+            heure_fin_seance_str = serializer.validated_data['HeureFin']
+            if isinstance(heure_fin_seance_str, str):
+                heure_fin_seance = timezone.make_aware(datetime.strptime(heure_fin_seance_str, "%H:%M:%S").time())
+            else:
+                heure_fin_seance = timezone.make_aware(datetime.combine(datetime.now().date(), heure_fin_seance_str))
+
+            # Vérification des heures de début et de fin
+            error_messages = []
+            if heure_debut_seance < heure_debut:
+                error_messages.append("L'heure de début doit être après 8:00 AM.")
+            if heure_fin_seance > heure_fin_limite:
+                error_messages.append("L'heure de fin doit être avant 5:30 PM.")
+
+            if error_messages:
+                return Response({"message": ", ".join(error_messages)}, status=400)
+
             serializer.validated_data['Matricule_id'] = teacher_id
             serializer.validated_data['Semestre'] = semestre
             serializer.save()
@@ -328,6 +396,12 @@ def insertSeance(request, teacher_id,semestre):
         return Response(serializer.data, status=200)
     else:
         return Response({"message": "Method not allowed"}, status=405)
+
+
+
+
+
+
 
 
 @api_view(['POST'])
@@ -400,6 +474,20 @@ def insertSection(request,idPromo):
         if serializer.is_valid():
             # Add the new choice to the list
             serializer.validated_data['nomP_id'] = idPromo
+            serializer.save()
+            return Response(serializer.data, status=201)
+        return Response(serializer.errors, status=400)
+    
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def insertHeure(request,idSeance):
+    if request.method == 'POST':
+        serializer = HeureSerializer(data=request.data)
+        if serializer.is_valid():
+            # Add the new choice to the list
+            serializer.validated_data['idSeance_id'] = idSeance
             serializer.save()
             return Response(serializer.data, status=201)
         return Response(serializer.errors, status=400)
