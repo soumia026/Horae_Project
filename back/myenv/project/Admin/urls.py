@@ -32,6 +32,14 @@ path('insertGroupe/<int:idSection>/', views.insertGroupe, name='insertGroupe'),
 
 path('insertHeure/<int:idSeance>/', views.insertHeure, name='insertHeure'),
 path('deleteHeure/<int:ids_Heures>/', views.deleteHeure, name='deleteHeure'),
+path('updateHeure/<int:idHeure>/',views.updateHeure, name='update_heure'),
+path('updateGroupe/<int:idGroupe>/', views.updateGroupe, name='update_groupe'),
+path('updateSpecialite/<int:idSpecialite>/', views.updateSpecialite, name='update_specialite'),
+path('updateSection/<int:idSection>/', views.updateSection, name='update_section'),
+path('updateEnseignant/<str:matricule>/', views.updateEnseignant, name='update_enseignant'),
+path('updateAbsence/<int:idAbs>/', views.updateAbsence, name='update_absence'),
+
+
 
 ]
 

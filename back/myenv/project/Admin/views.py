@@ -17,6 +17,8 @@ from django.db import transaction
 from rest_framework import status
 from django.utils import timezone
 from datetime import datetime, time
+from django.db import IntegrityError
+
 
 @api_view(['GET'])
 def teacher_list(request):
@@ -417,12 +419,52 @@ def insertSpecialite(request):
    
 
 
+# @api_view(['POST', 'GET'])
+# @permission_classes([IsAuthenticated])
+# def insertEnseignant(request):
+#     if request.method == 'POST':
+#         serializer = EnseignantSerializer(data=request.data)
+#         if serializer.is_valid():
+#             teacher = serializer.save()
+#             selected_modules_ids = request.data.get('modules', [])
+#             teacher_id = teacher.Matricule  # Assuming Matricule is the primary key of the Enseignant model
+#             for module_id in selected_modules_ids:
+#                 try:
+#                     module = Module.objects.get(Code=module_id)
+#                     Enseigne.objects.create(Matric_id=teacher_id, Codee_id=module_id)
+#                 except Module.DoesNotExist:
+#                     print(f"Module with ID {module_id} does not exist.")
+#                     return Response({"error": f"Module with ID {module_id} does not exist."}, status=400)
+#                 except Exception as e:
+#                     print(f"An error occurred while creating Enseigne: {e}")
+#                     return Response({"error": f"An error occurred while creating Enseigne: {e}"}, status=500)
+#             return Response(serializer.data, status=201)
+#         return Response(serializer.errors, status=400)
+#     elif request.method == 'GET':
+#         # Handle GET request if needed
+#         enseignants = Enseignant.objects.all()
+#         serializer = EnseignantSerializer(enseignants, many=True)
+#         return Response(serializer.data, status=200)
+#     else:
+#         return Response({"message": "Method not allowed"}, status=405)
+
+
 @api_view(['POST', 'GET'])
 @permission_classes([IsAuthenticated])
 def insertEnseignant(request):
     if request.method == 'POST':
         serializer = EnseignantSerializer(data=request.data)
         if serializer.is_valid():
+            email = serializer.validated_data.get('Email')
+            
+            # Vérification si l'email existe déjà dans la base de données
+            if Enseignant.objects.filter(Email=email).exists():
+                return Response({"error": f"L'email {email} est déjà utilisé."}, status=400)
+            
+            # Vérification si l'email se termine par '@esi-sba.dz'
+            if not email.endswith('@esi-sba.dz'):
+                return Response({"error": "L'email doit se terminer par '@esi-sba.dz'."}, status=400)
+            
             teacher = serializer.save()
             selected_modules_ids = request.data.get('modules', [])
             teacher_id = teacher.Matricule  # Assuming Matricule is the primary key of the Enseignant model
@@ -445,6 +487,13 @@ def insertEnseignant(request):
         return Response(serializer.data, status=200)
     else:
         return Response({"message": "Method not allowed"}, status=405)
+
+
+
+
+
+
+
 
 @api_view(['POST','GET'])
 @permission_classes([IsAuthenticated])
@@ -503,3 +552,118 @@ def insertGroupe(request,idSection):
             serializer.save()
             return Response(serializer.data, status=201)
         return Response(serializer.errors, status=400)
+    
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def updateHeure(request, idHeure):
+    try:
+        Heure = heure.objects.get(pk=idHeure)
+    except heure.DoesNotExist:
+        return Response({"error": "Heure non trouvée"}, status=404)
+
+    if request.method == 'PUT':
+        serializer = HeureSerializer(Heure, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=200)
+        return Response(serializer.errors, status=400)
+
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def updateGroupe(request, idGroupe):
+    if request.method == 'PUT':
+        try:
+            groupe = Groupe.objects.get(pk=idGroupe)
+        except Groupe.DoesNotExist:
+            return Response({"error": "Groupe not found"}, status=404)
+
+        serializer = GroupeSerializer(groupe, data=request.data)
+        if serializer.is_valid():
+            serializer.save()  # Ceci sauvegarde les modifications dans le modèle Groupe
+            return Response(serializer.data, status=200)
+        return Response(serializer.errors, status=400)
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def updateSpecialite(request, idSpecialite):
+    try:
+        specialite = Specialite.objects.get(idSpecialite=idSpecialite)
+    except Specialite.DoesNotExist:
+        return Response({"error": "La spécialité spécifiée n'existe pas."}, status=404)
+
+    if request.method == 'PUT':
+        serializer = SpecialiteSerializer(specialite, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=200)
+        return Response(serializer.errors, status=400)
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def updateSection(request, idSection):
+    try:
+        Section = section.objects.get(idSection=idSection)
+    except section.DoesNotExist:
+        return Response({"error": "La section spécifiée n'existe pas."}, status=404)
+
+    if request.method == 'PUT':
+        serializer = SectionSerializer(Section, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=200)
+        return Response(serializer.errors, status=400)
+    
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def updateEnseignant(request, matricule):
+    try:
+        enseignant = Enseignant.objects.get(Matricule=matricule)
+    except Enseignant.DoesNotExist:
+        return Response({"error": "L'enseignant spécifié n'existe pas."}, status=404)
+
+    if request.method == 'PUT':
+        serializer = EnseignantSerializer(enseignant, data=request.data, partial=True)
+        if serializer.is_valid():
+            # Vérifier si le champ Email est modifié et s'il se termine par "esi-sba.dz"
+            if 'Email' in serializer.validated_data:
+                email = serializer.validated_data['Email']
+                if not email.endswith('esi-sba.dz'):
+                    return Response({"error": "L'email doit se terminer par 'esi-sba.dz'."}, status=400)
+
+            serializer.save()
+            return Response(serializer.data, status=200)
+        return Response(serializer.errors, status=400)
+
+
+
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def updateAbsence(request, idAbs):
+    try:
+        absence = Abcence.objects.get(IdAbs=idAbs)
+    except Abcence.DoesNotExist:
+        return Response({"error": "L'absence spécifiée n'existe pas."}, status=404)
+
+    if request.method == 'PUT':
+        serializer = AbcenceSerializer(absence, data=request.data)
+        if serializer.is_valid():
+            heure_debut = serializer.validated_data.get('HeureDebut')
+            heure_fin = serializer.validated_data.get('HeureFin')
+
+            # Vérification de l'heure de début et de fin
+            if heure_debut and heure_debut < time(8, 0):
+                return Response({"error": "L'heure de début doit être a partir du  08:00 am."}, status=400)
+            if heure_fin and heure_fin > time(17, 30):
+                return Response({"error": "L'heure de fin doit être avant 17:30 pm."}, status=400)
+
+            try:
+                serializer.save()
+                return Response(serializer.data, status=200)
+            except IntegrityError:
+                return Response({"error": "Erreur lors de la sauvegarde des données."}, status=400)
+        return Response(serializer.errors, status=400)
+

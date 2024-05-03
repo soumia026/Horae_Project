@@ -2,11 +2,12 @@
 from rest_framework import serializers
 from .models import *
 
+
 class EnseignantSerializer(serializers.ModelSerializer):
     class Meta:
         model = Enseignant
         fields = '__all__'
-
+        
 class PromotionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Promotion
