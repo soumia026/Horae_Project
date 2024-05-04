@@ -382,6 +382,8 @@ def insertSeance(request, teacher_id, semestre):
                 error_messages.append("L'heure de début doit être après 8:00 AM.")
             if heure_fin_seance > heure_fin_limite:
                 error_messages.append("L'heure de fin doit être avant 5:30 PM.")
+            if heure_fin_seance <= heure_debut_seance:
+                return Response({"error": "L'heure de debut doit etre inferieur au heure fin "}, status=400)
 
             if error_messages:
                 return Response({"message": ", ".join(error_messages)}, status=400)
@@ -659,7 +661,8 @@ def updateAbsence(request, idAbs):
                 return Response({"error": "L'heure de début doit être a partir du  08:00 am."}, status=400)
             if heure_fin and heure_fin > time(17, 30):
                 return Response({"error": "L'heure de fin doit être avant 17:30 pm."}, status=400)
-
+            if heure_fin <= heure_debut:
+                return Response({"error": "L'heure de debut doit etre inferieur au heure fin "}, status=400)
             try:
                 serializer.save()
                 return Response(serializer.data, status=200)
@@ -667,3 +670,86 @@ def updateAbsence(request, idAbs):
                 return Response({"error": "Erreur lors de la sauvegarde des données."}, status=400)
         return Response(serializer.errors, status=400)
 
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def updateSalle(request, id_salle):
+    try:
+        salle = Salle.objects.get(IdSalle=id_salle)
+    except Salle.DoesNotExist:
+        return Response({"error": "La salle spécifiée n'existe pas."}, status=404)
+
+    if request.method == 'PUT':
+        serializer = SalleSerializer(salle, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=200)
+        return Response(serializer.errors, status=400)
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def updateModule(request, code):
+    try:
+        module = Module.objects.get(Code=code)
+    except Module.DoesNotExist:
+        return Response({"error": "Le module spécifié n'existe pas."}, status=404)
+
+    if request.method == 'PUT':
+        serializer = ModuleSerializer(module, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=200)
+        return Response(serializer.errors, status=400)
+    
+
+
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def updateSeance(request, idSeance):
+    try:
+        seance = Seance.objects.get(IdSeance=idSeance)
+    except Seance.DoesNotExist:
+        return Response({"error": "La séance spécifiée n'existe pas."}, status=404)
+
+    if request.method == 'PUT':
+        serializer = SeanceSerializer(seance, data=request.data, partial=True)
+        if serializer.is_valid():
+            NouveauIdSalle = serializer.validated_data.get('idSalle')
+            NouveauJour= serializer.validated_data.get('Jour')
+            NouveauHRdeb = serializer.validated_data.get('HeureDebut')
+            NouveauHRfin= serializer.validated_data.get('HeureFin')
+            NouveauIdSection= serializer.validated_data.get('idSection')
+            NouveauIdGroupe= serializer.validated_data.get('idGroupe')
+            matr = seance.Matricule
+          # Vérification de l'heure de début et de fin
+            if NouveauHRdeb and NouveauHRdeb < time(8, 0):
+                return Response({"error": "L'heure de début doit être à partir de 08:00 am."}, status=400)
+            if NouveauHRfin and NouveauHRfin > time(17, 30):
+                return Response({"error": "L'heure de fin doit être avant 17:30 pm."}, status=400)
+            # if NouveauHRdeb and NouveauHRfin and NouveauHRfin <= NouveauHRdeb:
+            #     return Response({"error": "L'heure de début doit être antérieure à l'heure de fin."}, status=400)
+            if NouveauIdGroupe :
+                heure_debut = seance.HeureDebut
+                heure_fin =seance.HeureFin
+                jour = seance.Jour
+                seanGroup = Seance.objects.filter(IdGroupe = NouveauIdGroupe,HeureDebut =heure_debut ,HeureFin = heure_fin ,Jour = jour)
+                if seanGroup :
+                    return Response({"error": "Ce groupe a une seanca cette datte ."}, status=400)
+                
+            if NouveauJour and NouveauHRdeb and NouveauHRfin :
+                seanSJour = Seance.objects.filter(Matricule=matr,Jour = NouveauJour ,HeureDebut =NouveauHRdeb ,HeureFin = NouveauHRfin)
+                if seanSJour :
+                    return Response({"error": "impossible."}, status=400)
+            if NouveauIdSalle != None :
+                heure_debut = seance.HeureDebut
+                heure_fin =seance.HeureFin
+                jour = seance.Jour
+                seanSalle = Seance.objects.filter(idSalle=NouveauIdSalle,HeureDebut =heure_debut ,HeureFin = heure_fin ,Jour = jour )
+                if seanSalle :
+                    return Response({"error": "Cette salle est déjà réservée pour une autre séance à ce moment. Veuillez choisir une autre salle pour cette séance."}, status=400)
+                
+
+            serializer.save()
+            return Response(serializer.data, status=200)
+        return Response(serializer.errors, status=400)

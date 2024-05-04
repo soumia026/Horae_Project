@@ -21,7 +21,7 @@ path('delete_enseignants/<str:matricule>/', views.delete_enseignants, name='dele
 path('delete_salles/<str:id_salle>/', views.delete_salles, name='delete_salles'),
 path('delete_specialites/<str:ids_specialites>/', views.delete_specialites, name='delete_specialites'),
 path('delete_sections/<int:section_id>/', views.delete_sections, name='delete_sections'),
- path('delete_groupes/<str:ids_groupes>/', views.delete_groupes, name='delete_groupes'),
+path('delete_groupes/<str:ids_groupes>/', views.delete_groupes, name='delete_groupes'),
 path('delete_modules/<str:code>/', views.delete_modules, name='delete_modules'),
 path('insertSpecialite/', views.insertSpecialite, name='insertSpecialite'),
 path('delete_promotion/<str:nom_promo>/', views.delete_promotion, name='delete_promotion'),
@@ -39,7 +39,9 @@ path('updateSection/<int:idSection>/', views.updateSection, name='update_section
 path('updateEnseignant/<str:matricule>/', views.updateEnseignant, name='update_enseignant'),
 path('updateAbsence/<int:idAbs>/', views.updateAbsence, name='update_absence'),
 
-
+path('updateSalle/<int:id_salle>/', views.updateSalle, name='update_salle'),
+path('updateModule/<str:code>/', views.updateModule, name='update_module'),
+path('updateSeance/<int:idSeance>/',views.updateSeance, name='update_seance'),
 
 ]
 
