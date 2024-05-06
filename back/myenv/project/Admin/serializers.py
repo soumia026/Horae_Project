@@ -2,11 +2,12 @@
 from rest_framework import serializers
 from .models import *
 
+
 class EnseignantSerializer(serializers.ModelSerializer):
     class Meta:
         model = Enseignant
         fields = '__all__'
-
+        
 class PromotionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Promotion
@@ -86,4 +87,3 @@ class AbcenceSerializer(serializers.ModelSerializer):
         if value is None:
             raise serializers.ValidationError("La date d'absence ne peut pas être nulle.")
         return value
-

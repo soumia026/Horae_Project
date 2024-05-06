@@ -1,38 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { LineInfos } from "./LineInfos";
+import {Modules} from "./Modules";
 import { AbsenceLine } from "./AbsenceLine";
-import axios from 'axios';
+import axios, { Axios } from 'axios';
 import { useNavigate } from "react-router-dom"
 export const InfosPersonnelles = (props) => {
 
-    const [absences, setAbsences] = useState([]);
-
-    //pour mise a jour les abscences si li ya une modification
-
-    const updateListeAbsences = () =>{
-       axios.get('http://localhost:3000/absences')
-       .then(res =>{
-        setAbsences(res.data.filter(absence => absence.matricule === props.enseignant.id))
-       })
-       .catch(err => console.log(err))
-    }
-
-    useEffect(() => {
-        const fetchAbsences = async () => {
-            try {
-                const response = await axios.get('http://localhost:3000/absences');
-                const filteredAbsences = response.data.filter(absence => absence.matricule === props.enseignant.id);
-                setAbsences(filteredAbsences);
-                console.log(filteredAbsences);
-            } catch (error) {
-                console.error('Error fetching data:', error);
-            }
-        };
-
-        fetchAbsences();
-    }, []);
 
     const [updateAbsence, setUpdateAbsence] = useState(null);
+    
     return (
         <div className="infos-box">
             <div className="enseignant-infos data-container">
@@ -42,29 +18,28 @@ export const InfosPersonnelles = (props) => {
                         <table className="enseignant-infos-table">
                             <LineInfos
                                 firstTitle={"matricule"}
-                                firstValue={props.enseignant.id}
+                                firstValue={props.enseignant.Matricule}
                                 secondTitle={"adresse email"}
-                                secondValue={props.enseignant.email}
+                                secondValue={props.enseignant.Email}
                                 thirdTitle={"date de naissance"}
-                                thirdValue={props.enseignant.dateNaissance}
+                                thirdValue={props.enseignant.DateNaissance}
                                 fourthTitle={"numéro telephone"}
-                                fourthValue={props.enseignant.numTelephone}
+                                fourthValue={props.enseignant.NumeroTelephone}
                             />
                             <LineInfos
                                 firstTitle={"adresse"}
-                                firstValue={props.enseignant.adress}
+                                firstValue={props.enseignant.Adresse}
                                 secondTitle={"grade"}
-                                secondValue={props.enseignant.grade}
-                                thirdTitle={"numéro compte"}
-                                thirdValue={props.enseignant.numCompte}
+                                secondValue={props.enseignant.Grade}
+                                thirdTitle={"fonction"}
+                                thirdValue={props.enseignant.Fonction}
                                 fourthTitle={"etablissement"}
-                                fourthValue={props.enseignant.etablissement}
+                                fourthValue={props.enseignant.Etablissement}
                             />
 
-                            {/* <Modules
-                                modules={props.enseignant.modules}
-                                fonctions={props.enseignant.fonction}
-                            /> */}
+                            <Modules
+                                modules={props.modules}
+                            />
                         </table>
 
                     </div>
@@ -76,18 +51,18 @@ export const InfosPersonnelles = (props) => {
                 <div className="table-container">
                     <div className="infos-table">
                         <table className="abscences-table">
-                            {absences.map((absence) => (
+                            {props.absences.map((absence) => (
                                 <AbsenceLine
                                     firstTitle={"date"}
-                                    firstValue={absence.date_absence}
+                                    firstValue={absence.DateAbs}
                                     secondTitle={"heure debut"}
-                                    secondValue={absence.heureDebut}
+                                    secondValue={absence.HeureDebut.substring(0, 5)}
                                     thirdTitle={"heure fin"}
-                                    thirdValue={absence.heureFin}
+                                    thirdValue={absence.HeureFin.substring(0, 5)}
                                     fourthTitle={"motif"}
-                                    fourthValue={absence.motif}
+                                    fourthValue={absence.Motif}
                                     handleAbsence={() => setUpdateAbsence(absence)}
-                                    deletedObject = {absence.id}
+                                    deletedObject = {absence.IdAbs}
                                 />
                             ))}
 
@@ -110,28 +85,25 @@ export const InfosPersonnelles = (props) => {
 
 const ModifierAbsence = (props) => {
     const [updatedAbsence, setUpdatedAbsence] = useState({
-        id: props.absence.id,
-        matricule: props.absence.matricule,
-        date_absence: props.absence.date_absence,
-        heureDebut: props.absence.heureDebut,
-        heureFin: props.absence.heureFin,
-        motif: props.absence.motif
+        IdAbs: props.absence.IdAbs,
+        DateAbs: props.absence.DateAbs,
+        HeureDebut: props.absence.HeureDebut,
+        HeureFin: props.absence.HeureFin,
+        Motif: props.absence.Motif,
+        IdProf: props.absence.IdProf
     });
 
     const navigate = useNavigate();
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        axios.put('http://localhost:3000/absences/' + props.absence.id, updatedAbsence)
+        axios.put(`http://127.0.0.1:8000/Administration/updateAbsence/${updatedAbsence.IdAbs}/` , updatedAbsence)
             .then(res => {
-                navigate('/admin');
+                window.location.reload(); 
             })
             .catch(err => console.log(err));
     };
-    const handleReload = () => {
-        window.location.reload(); // Reload the page
-      };
-
+   
 
     return (
         <div className="container-update-absence">
@@ -142,33 +114,33 @@ const ModifierAbsence = (props) => {
                     <label htmlFor="date">Date</label>
                     <input
                         type="date"
-                        value={updatedAbsence.date_absence}
-                        onChange={(e) => setUpdatedAbsence({ ...updatedAbsence, date_absence: e.target.value })}
+                        value={updatedAbsence.DateAbs}
+                        onChange={(e) => setUpdatedAbsence({ ...updatedAbsence, DateAbs: e.target.value })}
                     />
                 </div>
                 <div className="input-line">
                     <label htmlFor="heureDebut">heure debut</label>
                     <input
                         type="time"
-                        value={updatedAbsence.heureDebut}
-                        onChange={(e) => setUpdatedAbsence({ ...updatedAbsence, heureDebut: e.target.value })}
+                        value={updatedAbsence.HeureDebut}
+                        onChange={(e) => setUpdatedAbsence({ ...updatedAbsence, HeureDebut: e.target.value })}
                     />
                 </div>
                 <div className="input-line">
                     <label htmlFor="heureFin">heure fin</label>
                     <input
                         type="time"
-                        value={updatedAbsence.heureFin}
-                        onChange={(e) => setUpdatedAbsence({ ...updatedAbsence, heureFin: e.target.value })}
+                        value={updatedAbsence.HeureFin}
+                        onChange={(e) => setUpdatedAbsence({ ...updatedAbsence, HeureFin: e.target.value })}
                     />
                 </div>
                 <div className="input-line">
                     <label htmlFor="motif">motif</label>
                     <select
                         className="options"
-                        value={updatedAbsence.motif.toLowerCase()}
-                        onChange={(e) => setUpdatedAbsence({ ...updatedAbsence, motif: e.target.value })}>
-                        <option value="malade">maladie</option>
+                        value={updatedAbsence.Motif.toLowerCase()}
+                        onChange={(e) => setUpdatedAbsence({ ...updatedAbsence, Motif: e.target.value })}>
+                        <option value="maladie">maladie</option>
                         <option value="voyage">voyage</option>
                         <option value="etude">etude</option>
                     </select>
@@ -178,7 +150,7 @@ const ModifierAbsence = (props) => {
                         props.annulerUpdate();
                         }}>Annuler</button>
                     <button className='sauvegarder-absence'
-                     type="submit" onClick={() => handleReload()} > Sauvegarder</button>
+                     type="submit"  > Sauvegarder</button>
                 </div>
             </form>
         </div>

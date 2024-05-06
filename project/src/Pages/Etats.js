@@ -1,9 +1,10 @@
 import React from "react";
+import ProgressBar from "@ramonak/react-progress-bar";
 
 export function Etats() {
     return (
         <div className="main-container">
-            <h1>etats</h1>
+            <ProgressBar completed={60} />
         </div>
     )
 }

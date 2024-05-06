@@ -59,7 +59,7 @@
     color: var(--font-main-color);
     text-transform: capitalize;
     width: 100%;
-    padding: 1rem 2rem;
+    padding: 1rem 2vw;
     display: flex;
     align-items: center;
     transition: background-color 0.5s ease;

@@ -9,12 +9,6 @@ export const Modules = (props) => {
                     <p>{module}</p>
                 ))}
             </td>
-            <td>
-                <span>fonctions</span>
-                {props.fonctions.map((fonction) => (
-                    <p>{fonction}</p>
-                ))}
-            </td>
         </tr>
     )
 }

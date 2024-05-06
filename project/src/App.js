@@ -2,7 +2,6 @@ import { BrowserRouter as Router, Routes, Route, Outlet, Link } from "react-rout
 import { NavBar } from './Components/NavBar';
 import { WelcomeBar } from "./Components/WelcomeBar";
 import './App.css'
-import { ProfProvider } from "./Pages/ProfInfos";
 import { Dashboard } from "./Pages/Dashboard";
 import { Calendrier } from "./Pages/Calendrier";
 import { Enseignants } from "./Pages/Enseignants";
@@ -24,10 +23,10 @@ function App() {
           <Route path='/' element={<Links />} />
 
           <Route path="/admin" element={<AdminLayout />} >
-            <Route index element={<ProfInfos />} />
+            <Route index element={<Dashboard/>} />
             <Route path="calendrier" element={<Calendrier />} />
             <Route path="enseignants" element={<Enseignants />} />
-            {/* <Route path="enseignants/enseignant:id" element={} /> */}
+            <Route path="enseignants/:id" element={<ProfInfos />} />
             <Route path="etats" element={<Etats />} />
             <Route path="reclamations" element={<Reclamations />} />
             <Route path="archive" element={<Archive />} />
@@ -42,7 +41,7 @@ function App() {
 
         </Routes>
       </Router>
-      {/* </ProfProvider> */}
+
       
     </div>
   );
@@ -51,7 +50,7 @@ function App() {
 const AdminLayout = () => {
   const navAdmin = [
     { name: 'dashboard', path: 'admin' },
-    { name: 'calendrier', path: 'admin/calendrier' },
+    { name: 'calcul', path: 'admin/calendrier' },
     { name: 'enseignants', path: 'admin/enseignants' },
     { name: 'etats', path: 'admin/etats' },
     { name: 'reclamations', path: 'admin/reclamations' },

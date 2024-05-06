@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    "corsheaders",
 ]
 
 MIDDLEWARE = [
@@ -50,12 +51,22 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    
+    "corsheaders.middleware.CorsMiddleware",
+    "django.middleware.common.CommonMiddleware",
  
 
 ]
 
 ROOT_URLCONF = 'project.urls'
+CORS_ALLOW_ALL_ORIGINS= True
+CORS_ALLOW_METHODS = (
+    "DELETE",
+    "GET",
+    "OPTIONS",
+    "PATCH",
+    "POST",
+    "PUT",
+)
 
 TEMPLATES = [
     {
@@ -131,12 +142,9 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'R_Sup',
-        'USER' : 'root',
-        'PASSWORD' : 'hiba',
+        'USER' : 'ayet',
+        'PASSWORD' : '2004',
         'HOST' : 'localhost',
         'PORT' : '3306'
-
-
-
     }
 }

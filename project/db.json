@@ -70,6 +70,14 @@
       "heureDebut": "10:00",
       "heureFin": "16:00",
       "motif": "voyage"
+    },
+    {
+      "id": "4",
+      "matricule": 1,
+      "date_absence": "2024-04-24",
+      "heureDebut": "11:30",
+      "heureFin": "17:00",
+      "motif": "malade"
     }
   ]
 }

@@ -1,31 +1,25 @@
-import MySQLdb
+from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404, render
+from django.db.models import Q
 from django.http import HttpResponse
 from django.core.serializers import serialize
-# import _mysql_connector
 import smtplib 
 from email.mime.text import MIMEText 
 from email.mime.multipart import MIMEMultipart
 from .models import *
 from rest_framework.response import Response
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from .serializers import * 
-import json
 from django.http import JsonResponse
-from .models import Salle
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from .models import Enseignant
 from django.db import transaction
 from rest_framework import status
-from rest_framework.views import APIView
-from rest_framework import status
-from rest_framework.response import Response
-from .serializers import EnseignantSerializer
-from django.http import JsonResponse
-from .models import Enseignant
+from django.utils import timezone
+from datetime import datetime, time
+from django.db import IntegrityError
 
-# Create your views here.
+
 @api_view(['GET'])
 def teacher_list(request):
     teachers = Enseignant.objects.all() #select * from enseignant
@@ -33,59 +27,22 @@ def teacher_list(request):
     return Response(serTeach.data)
 
 
-def creer_enseignant(request):
-    # Créer une instance d'enseignant avec des données prédéfinies
-    enseignant = Enseignant.objects.create(
-        Matricule="12TRY",
-        Nom="Nom TRY",
-        Prénom="Prénom de l'enseignantTRY",
-        DateNaissance="1990-01-01",
-        Adresse="Adresse de l'enseignantTRY",
-        Email="enseignantTRY@example.com",
-        NumeroTelephone="0123456789TRY",
-        Fonction="Fonction1TRY",
-        Grade="MCATRY",
-        Etablissement="Nom de l'établissementTRY",
-        MotDePasse="motdepasse123TRY"
-    )
+@api_view(['DELETE'])
+def delete_enseignants(request, matricule): 
+        if matricule:
+            try:
+                with transaction.atomic():
+                    # Supprimer les lignes correspondantes dans la table 'enseigne'
+                    Enseigne.objects.filter(Matric_id__in=matricule).delete()
+                    # Supprimer les enseignants
+                    Enseignant.objects.filter(Matricule__in=matricule).delete()
+                return Response({'success': True, 'message': 'Les enseignants ont été supprimés avec succès.'})
+            except Exception as e:
+                return Response({'success': False, 'message': str(e)}, status=500)
+        else:
+            return Response({'success': False, 'message': 'Aucun matricule fourni.'}, status=400)
 
-    # Construire une chaîne contenant toutes les informations de l'enseignant
-    enseignant_info = f"Matricule: {enseignant.Matricule}\n"
-    enseignant_info += f"Nom: {enseignant.Nom}\n"
-    enseignant_info += f"Prénom: {enseignant.Prénom}\n"
-    enseignant_info += f"Date de Naissance: {enseignant.DateNaissance}\n"
-    enseignant_info += f"Adresse: {enseignant.Adresse}\n"
-    enseignant_info += f"Email: {enseignant.Email}\n"
-    enseignant_info += f"Numéro de Téléphone: {enseignant.NumeroTelephone}\n"
-    enseignant_info += f"Fonction: {enseignant.Fonction}\n"
-    enseignant_info += f"Grade: {enseignant.Grade}\n"
-    enseignant_info += f"Etablissement: {enseignant.Etablissement}\n"
-    enseignant_info += f"Mot de Passe: {enseignant.MotDePasse}\n"
-
-    # Renvoyer la réponse HTTP avec les informations de l'enseignant
-    return HttpResponse(enseignant_info)
-
-
-
-def delete_enseignants(request, matricules):
-    matricules_to_delete = [matricule.strip() for matricule in matricules.split(',') if matricule.strip()]
     
-    if matricules_to_delete:
-        try:
-            with transaction.atomic():
-                # Supprimer les lignes correspondantes dans la table 'enseigne'
-                Enseigne.objects.filter(Matric_id__in=matricules_to_delete).delete()
-                # Supprimer les enseignants
-                Enseignant.objects.filter(Matricule__in=matricules_to_delete).delete()
-            return JsonResponse({'success': True, 'message': 'Les enseignants ont été supprimés avec succès.'})
-        except Exception as e:
-            return JsonResponse({'success': False, 'message': str(e)}, status=500)
-    else:
-        return JsonResponse({'success': False, 'message': 'Aucun matricule fourni.'}, status=400)
-
-
-
-
 
 @api_view(['GET'])
 def modules_list(request):
@@ -94,106 +51,100 @@ def modules_list(request):
     return Response(serModule.data)
 
 
-
-def creer_module(request):
-    # Créer une instance de module avec des données prédéfinies
-    module = Module.objects.create(
-        Code="code1",
-        NomModule="Nom du module1",
-        Coefficient=1,
-        NbrHeures=20,
-        Semestre="Semestre 1",
-        nomP_id="1CS"  # n'oubliez pas de respecter la cle etrangere nomP == nomPromotion li f la table Promotion
-    )
-
-    # Construire une chaîne contenant toutes les informations du module
-    module_info = f"Code: {module.Code}\n"
-    module_info += f"Nom du module: {module.NomModule}\n"
-    module_info += f"Coefficient: {module.Coefficient}\n"
-    module_info += f"Nombre d'heures: {module.NbrHeures}\n"
-    module_info += f"Semestre: {module.Semestre}\n"
-    module_info += f"ID du professeur: {module.nomP_id}\n"
-
-    # Renvoyer la réponse HTTP avec les informations du module
-    return HttpResponse(module_info)
-
-
-def delete_modules(request, codes_modules):
-    codes_modules_to_delete = [code_module.strip() for code_module in codes_modules.split(',') if code_module.strip()]
-    
-    if codes_modules_to_delete:
-        try:
-            with transaction.atomic():
-                # Supprimer d'abord les enregistrements de la table Seance qui référencent les modules à supprimer
-                Seance.objects.filter(Code_id__in=codes_modules_to_delete).delete()
-                
-                # Ensuite, supprimer les modules
-                Module.objects.filter(Code__in=codes_modules_to_delete).delete()
-                
-            return JsonResponse({'success': True, 'message': 'Les modules ont été supprimés avec succès.'})
-        except Exception as e:
-            return JsonResponse({'success': False, 'message': str(e)}, status=500)
+@api_view(['DELETE'])
+def delete_modules(request, code): 
+    if request.method == 'DELETE':
+        if code:
+            try:
+                with transaction.atomic():
+                    # Supprimer les lignes enseigne
+                    Enseigne.objects.filter(Codee_id=code).delete()  # Assuming Codee_id is the correct field name
+                    # Supprimer les séances
+                    Seance.objects.filter(Code_id=code).update(Code_id=None)  
+                    # Supprimer le module
+                    Module.objects.filter(Code=code).delete()
+                return Response({'success': True, 'message': 'Le module a été supprimé avec succès.'})
+            except Exception as e:
+                return Response({'success': False, 'message': str(e)}, status=500)
+        else:
+            return Response({'success': False, 'heureessage': 'Aucun code fourni.'}, status=400)
     else:
-        return JsonResponse({'success': False, 'message': 'Aucun code de module fourni.'}, status=400)
-    
+        return Response({'success': False, 'deleteessage': 'delete-heureéthode non autorisée.'}, status=405)
 
+
+        
 @api_view(['GET'])
 def salles_list(request):
-    salles = salles.objects.all()
+    salles = Salle.objects.all()
     serSalles = SalleSerializer(salles, context={'request': request}, many=True)
     return Response(serSalles.data)
 
-
-def creer_salle(request):
-    # Créer une instance de salle avec des données prédéfinies
-    salle = Salle.objects.create(
-        NomSalle="A",
-        Zone="cycle prepa",
-        NbrPlaces= 150 ,
-        Type="Amphi"
-    )
-
-    # Construire une chaîne contenant toutes les informations de la salle
-    salle_info = f"Nom de la salle: {salle.NomSalle}\n"
-    salle_info += f"ID de la salle: {salle.IdSalle}\n"
-    salle_info += f"Zone: {salle.Zone}\n"
-    salle_info += f"Nombre de places: {salle.NbrPlaces}\n"
-    salle_info += f"Type: {salle.Type}\n"
-
-    # Renvoyer la réponse HTTP avec les informations de la salle
-    return HttpResponse(salle_info)
-
-
-
-def delete_salles(request, ids_salles):
-    ids_salles_to_delete = [id_salle.strip() for id_salle in ids_salles.split(',') if id_salle.strip()]
-    
-    if ids_salles_to_delete:
+@api_view(['DELETE'])
+def delete_salles(request, id_salle):
+    if id_salle:
         try:
             with transaction.atomic():
+                Seance.objects.filter(idSalle_id=id_salle).update(idSalle_id=None)  
                 # Supprimer les salles
-                Salle.objects.filter(IdSalle__in=ids_salles_to_delete).delete()
-            return JsonResponse({'success': True, 'message': 'Les salles ont été supprimées avec succès.'})
+                Salle.objects.filter(IdSalle__in=id_salle).delete()
+            return Response({'success': True, 'message': 'Les salles ont été supprimées avec succès.'})
+        except Exception as e:
+            return Response({'success': False, 'message': str(e)}, status=500)
+    else:
+        return Response({'success': False, 'message': 'Aucun identifiant de salle fourni.'}, status=400)
+
+
+@api_view(['DELETE'])
+def delete_groupes(request, ids_groupes):
+   
+    
+    if ids_groupes:
+        try:
+            with transaction.atomic():
+                
+                Seance.objects.filter(idGroupe_id = ids_groupes).update(idGroupe_id=None)
+                # Supprimer les groupes
+                Groupe.objects.filter(idGroupe__in=ids_groupes).delete()
+                
+            return JsonResponse({'success': True, 'message': 'Les groupes et les séances associées ont été supprimés avec succès.'})
         except Exception as e:
             return JsonResponse({'success': False, 'message': str(e)}, status=500)
     else:
-        return JsonResponse({'success': False, 'message': 'Aucun identifiant de salle fourni.'}, status=400)
+        return JsonResponse({'success': False, 'message': 'Aucun identifiant de groupe fourni.'}, status=400)
+    
 
+@api_view(['DELETE'])
+def deleteHeure(request, ids_Heures):
+   
+    
+    if ids_Heures:
+        try:
+            with transaction.atomic():
 
-
+              heure.objects.filter(idHeure = ids_Heures).delete()
+            
+            return JsonResponse({'success': True, 'message': 'Les groupes et les séances associées ont été supprimés avec succès.'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)}, status=500)
+    else:
+        return JsonResponse({'success': False, 'message': 'Aucun identifiant de groupe fourni.'}, status=400)
+    
+@api_view(['DELETE'])
 def delete_seance(request, seance_id):
     try:
-        # Rechercher la séance à supprimer
-        seance = Seance.objects.get(IdSeance=seance_id)
-        seance.delete()
-        return JsonResponse({'success': True, 'message': 'La séance a été supprimée avec succès.'})
+       with transaction.atomic():
+
+        heure.objects.filter(idSeance_id=seance_id).delete()
+        Seances.objects.filter(idSeance_id=seance_id).delete()
+        Seance.objects.get(IdSeance=seance_id).delete()
+        
+       
+        return Response({'success': True, 'message': 'La séance a été supprimée avec succès.'})
     except Seance.DoesNotExist:
-        return JsonResponse({'success': False, 'message': 'La séance spécifiée n\'existe pas.'}, status=404)
+        return Response({'success': False, 'message': 'La séance spécifiée n\'existe pas.'}, status=404)
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)}, status=500)
     
-
-
 
 
 
@@ -204,19 +155,6 @@ def promotions_list(request):
     serPromotions = PromotionSerializer(promotions, context={'request': request}, many=True)
     return Response(serPromotions.data)
 
-def creer_promotion(request):
-    # Créer une instance de promotion avec des données prédéfinies
-    promotion = Promotion.objects.create(
-        NomPromo="3CS",
-        Departement="Second Cycle"
-    )
-
-    # Construire une chaîne contenant toutes les informations de la promotion
-    promotion_info = f"Nom de la promotion: {promotion.NomPromo}\n"
-    promotion_info += f"Département: {promotion.Departement}\n"
-
-    # Renvoyer la réponse HTTP avec les informations de la promotion
-    return HttpResponse(promotion_info)
 
 
 def delete_promotion(request, nom_promo):
@@ -238,9 +176,6 @@ def delete_promotion(request, nom_promo):
             return JsonResponse({'success': True, 'message': 'La promotion a été supprimée avec succès.'})
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)}, status=500)
-    
-
-
 @api_view(['GET'])
 def sections_list(request):
     sections = section.objects.all()
@@ -248,84 +183,65 @@ def sections_list(request):
     return Response(serSections.data)
 
 
-def creer_section(request):
-    # Créer une instance de section avec des données prédéfinies
-    nouvelle_section = section.objects.create(
-        idSection=3,  
-        NomSection="A",
-        nomP_id="1CS"  
-    )
 
-    # Construire une chaîne contenant toutes les informations de la section
-    section_info = f"ID de la section: {nouvelle_section.idSection}\n"
-    section_info += f"Nom de la section: {nouvelle_section.NomSection}\n"
-    section_info += f"ID du professeur: {nouvelle_section.nomP_id}\n"
-
-    # Renvoyer la réponse HTTP avec les informations de la section
-    return HttpResponse(section_info)
-
-
-def delete_sections(request, ids_sections):
-    ids_sections_to_delete = [id_section.strip() for id_section in ids_sections.split(',') if id_section.strip()]
+@api_view(['DELETE'])
+def delete_sections(request, section_id):
+    try:
+        with transaction.atomic():
+            Seance.objects.filter(idSection_id = section_id ).update(idGroupe_id = None)
+            Seance.objects.filter(idSection_id = section_id ).update(idSection_id = None)
+            Specialite.objects.filter(idSection_id = section_id ).delete()
+            Groupe.objects.filter(idSection_id=section_id).delete()
+            section.objects.get(idSection = section_id ).delete()
+            
+        return Response({'success': True, 'message': 'La section a été supprimée avec succès.'})
+    except Exception as e:
+        return Response({'success': False, 'message': str(e)}, status=500)
+   
     
-    if ids_sections_to_delete:
-        try:
-            with transaction.atomic():
-                # Identifier les spécialités référençant les sections à supprimer
-                specialites_referencing_sections = Specialite.objects.filter(idSection_id__in=ids_sections_to_delete)
-                
-                if specialites_referencing_sections.exists():
-                    # Supprimer les spécialités référençant les sections à supprimer
-                    specialites_referencing_sections.delete()
-                
-                # Supprimer les sections
-                section.objects.filter(idSection__in=ids_sections_to_delete).delete()
-                
-            return JsonResponse({'success': True, 'message': 'Les sections et les spécialités associées ont été supprimées avec succès.'})
-        except Exception as e:
-            return JsonResponse({'success': False, 'message': str(e)}, status=500)
-    else:
-        return JsonResponse({'success': False, 'message': 'Aucun identifiant de section fourni.'}, status=400)
+# @api_view(['DELETE'])
+# def delete_sections(request, ids_sections):
+#     try:
+#        with transaction.atomic():
+
+#         # Identifier les spécialités référençant les sections à supprimer
+#         Specialite.objects.filter(idSection_id=ids_sections).update(idSection_id=None)
+#         Seance.objects.filter(idSection_id=ids_sections).update(idSection_id=None)
+#         Seance.objects.filter(idSection_id = ids_sections).update(idGroupe_id=None)
+#         Groupe.objects.filter(idSection_id=ids_sections).delete()
+#         section.objects.filter(idSection=ids_sections).delete()
+       
+#         return Response({'success': True, 'message': 'La section a été supprimée avec succès.'})
+#     except Exception as e:
+#      return Response({'success': False, 'message': str(e)}, status=500)
+    
+
+
     
 @api_view(['GET'])
 def specialites_list(request):
-    specialites = specialites.objects.all()
+    specialites = Specialite.objects.all()
     serSpecialites =SpecialiteSerializer(specialites, context={'request': request}, many=True)
     return Response(serSpecialites.data)
 
-def creer_specialite(request):
-    # Créer une instance de spécialité avec des données prédéfinies
-    nouvelle_specialite = Specialite.objects.create(
-        idSpecialite=4, 
-        NomSpecialite="nouvelle spécialité",
-        idSection_id=1  
-    )
 
-    # Construire une chaîne contenant toutes les informations de la spécialité
-    specialite_info = f"ID de la spécialité: {nouvelle_specialite.idSpecialite}\n"
-    specialite_info += f"Nom de la spécialité: {nouvelle_specialite.NomSpecialite}\n"
-    specialite_info += f"ID de la section associée: {nouvelle_specialite.idSection_id}\n"
-
-    # Renvoyer la réponse HTTP avec les informations de la spécialité
-    return HttpResponse(specialite_info)
-
-
-
-
+@api_view(['DELETE'])
 
 def delete_specialites(request, ids_specialites):
-    ids_specialites_to_delete = [id_specialite.strip() for id_specialite in ids_specialites.split(',') if id_specialite.strip()]
-    
-    if ids_specialites_to_delete:
+   
+    if ids_specialites:
         try:
             with transaction.atomic():
                 # Supprimer les spécialités
-                Specialite.objects.filter(idSpecialite__in=ids_specialites_to_delete).delete()
-            return JsonResponse({'success': True, 'message': 'Les spécialités ont été supprimées avec succès.'})
+                SpecPromo.objects.filter(idSpecialite_id= ids_specialites).delete()
+                Specialite.objects.get(idSpecialite = ids_specialites).delete()
+
+               
+            return Response({'success': True, 'message': 'Les spécialités ont été supprimées avec succès.'})
         except Exception as e:
-            return JsonResponse({'success': False, 'message': str(e)}, status=500)
+            return Response({'success': False, 'message': str(e)}, status=500)
     else:
-        return JsonResponse({'success': False, 'message': 'Aucun identifiant de spécialité fourni.'}, status=400)
+        return Response({'success': False, 'message': 'Aucun identifiant de spécialité fourni.'}, status=400)
 
 @api_view(['GET'])
 def groupes_list(request):
@@ -333,47 +249,7 @@ def groupes_list(request):
     serGroupes = GroupeSerializer(groupes, context={'request': request}, many=True)
     return Response(serGroupes.data)
 
-def creer_groupe(request):
-    # Créer une instance de groupe avec des données prédéfinies
-    nouveau_groupe = Groupe.objects.create(
-        idGroupe=4,  
-        Numero="4",
-        Specialite="SIW",
-        idSection_id=1  
-    )
 
-    # Construire une chaîne contenant toutes les informations du groupe
-    groupe_info = f"ID du groupe: {nouveau_groupe.idGroupe}\n"
-    groupe_info += f"Numéro du groupe: {nouveau_groupe.Numero}\n"
-    groupe_info += f"Spécialité du groupe: {nouveau_groupe.Specialite}\n"
-    groupe_info += f"ID de la section associée: {nouveau_groupe.idSection_id}\n"
-
-    # Renvoyer la réponse HTTP avec les informations du groupe
-    return HttpResponse(groupe_info)
-
-
-
-def delete_groupes(request, ids_groupes):
-    ids_groupes_to_delete = [id_groupe.strip() for id_groupe in ids_groupes.split(',') if id_groupe.strip()]
-    
-    if ids_groupes_to_delete:
-        try:
-            with transaction.atomic():
-                # Identifier les séances référençant les groupes à supprimer
-                seances_referencing_groupes = Seance.objects.filter(idGroupe_id__in=ids_groupes_to_delete)
-                
-                if seances_referencing_groupes.exists():
-                    # Supprimer les séances référencant les groupes à supprimer
-                    seances_referencing_groupes.delete()
-                
-                # Supprimer les groupes
-                Groupe.objects.filter(idGroupe__in=ids_groupes_to_delete).delete()
-                
-            return JsonResponse({'success': True, 'message': 'Les groupes et les séances associées ont été supprimés avec succès.'})
-        except Exception as e:
-            return JsonResponse({'success': False, 'message': str(e)}, status=500)
-    else:
-        return JsonResponse({'success': False, 'message': 'Aucun identifiant de groupe fourni.'}, status=400)
 
 @api_view(['GET'])
 def teacher_detail(request, teacher_id):
@@ -389,348 +265,525 @@ def teacher_detail(request, teacher_id):
     # Sérialiser les données liées à l'enseignant
     serModules = ModuleSerializer(modules, many=True)
     serAbceences = AbcenceSerializer(absences, many=True)
-
+    seances = Seance.objects.filter(Matricule_id = teacher_id)
+    serSeances = SeanceSerializer(seances,many = True)   
     # Renvoyer les données sérialisées
-    return Response({"teacher": serTeach.data, "modules": serModules.data, "absences": serAbceences.data})
+    return Response({"teacher": serTeach.data, "modules": serModules.data, "absences": serAbceences.data,"seances":serSeances.data})
+
+@api_view(['GET'])
+def addSeance(request, teacher_id,semestre):
+    # Récupérer l'enseignant avec l'identifiant spécifié
+    teacher = get_object_or_404(Enseignant, pk=teacher_id)
+    # Sérialiser les données de l'enseignant
+    serTeach = EnseignantSerializer(teacher)
+    enseignes = Enseigne.objects.filter(Matric_id=teacher_id)
+    modules = Module.objects.filter(
+    Q(Code__in=enseignes.values_list('Codee_id', flat=True)) & Q(Semestre=semestre)
+).distinct()
+    serModules = ModuleSerializer(modules, many=True)
+    seanceType = Seance.mySeanceTypes
+    seanceJours = Seance.myJours
+    promos = Promotion.objects.all()
+    serPromos = PromotionSerializer(promos, many=True)
+    salles = Salle.objects.all()
+    serSalles = SalleSerializer(salles, many=True)
+    groupes = Groupe.objects.all()
+    serGroupes = GroupeSerializer(groupes, many=True)
+
+    sections = section.objects.all()
+    serSections = SectionSerializer(sections, many=True)
+
+    specialites = Specialite.objects.all()
+    serSpecialites = SpecialiteSerializer(specialites, many=True)
+
+    return Response({"teacher": serTeach.data, "modules": serModules.data,"seanceType":seanceType,
+    "seanceJours":seanceJours,"promos":serPromos.data,"salles":serSalles.data,"specialites":serSpecialites.data,"sections":serSections.data,"groupes":serGroupes.data} )
+   
 
 
-@api_view(['POST'])
-def insertAbsence(request, teacher_id):
-    teacher = Enseignant.objects.get(Matricule=teacher_id)
-    serializer = AbcenceSerializer(data=request.data)
-    if serializer.is_valid():
-        serializer.save(IdProf=teacher)
-        return Response(serializer.data, status=201)
-    return Response(serializer.errors, status=400)
 
-
-def delete_absences(request, ids_absences):
-    ids_absences_to_delete = [id_absence.strip() for id_absence in ids_absences.split(',') if id_absence.strip()]
+# def delete_absences(request, ids_absences):
+#     ids_absences_to_delete = [id_absence.strip() for id_absence in ids_absences.split(',') if id_absence.strip()]
     
-    if ids_absences_to_delete:
-        try:
-            with transaction.atomic():
-                # Supprimer les absences
-                Abcence.objects.filter(IdAbs__in=ids_absences_to_delete).delete()
-            return JsonResponse({'success': True, 'message': 'Les absences ont été supprimées avec succès.'})
-        except Exception as e:
-            return JsonResponse({'success': False, 'message': str(e)}, status=500)
-    else:
-        return JsonResponse({'success': False, 'message': 'Aucun identifiant d' 'absence fourni.'}, status=400)
+#     if ids_absences_to_delete:
+#         try:
+#             with transaction.atomic():
+#                 # Supprimer les absences
+#                 Abcence.objects.filter(IdAbs__in=ids_absences_to_delete).delete()
+#             return JsonResponse({'success': True, 'message': 'Les absences ont été supprimées avec succès.'})
+#         except Exception as e:
+#             return JsonResponse({'success': False, 'message': str(e)}, status=500)
+#     else:
+#         return JsonResponse({'success': False, 'message': 'Aucun identifiant d' 'absence fourni.'}, status=400)
 
 
 
-
-def creer_seance(request):
-    # Créer une instance de séance avec des données prédéfinies
-    nouvelle_seance = Seance.objects.create(
-        IdSeance=10,  
-        NomS="SYS2",
-        Type="TD",
-        Jour="Lundi",
-        HeureDebut="08:00:00",
-        HeureFin="10:00:00",
-        Semestre="Semestre 2",
-        Code_id="code1",  
-        Matricule_id="1",  
-        idGroupe_id=1,  
-        idSalle_id=4,  
-        idSection_id=1,  
-        idSpecialite_id=1  
-    )
-
-    # Construire une chaîne contenant toutes les informations de la séance
-    seance_info = f"ID de la séance: {nouvelle_seance.IdSeance}\n"
-    seance_info += f"Nom de la séance: {nouvelle_seance.NomS}\n"
-    seance_info += f"Type de séance: {nouvelle_seance.Type}\n"
-    seance_info += f"Jour: {nouvelle_seance.Jour}\n"
-    seance_info += f"Heure de début: {nouvelle_seance.HeureDebut}\n"
-    seance_info += f"Heure de fin: {nouvelle_seance.HeureFin}\n"
-    seance_info += f"Semestre: {nouvelle_seance.Semestre}\n"
-    seance_info += f"ID du code associé: {nouvelle_seance.Code_id}\n"
-    seance_info += f"ID du matricule associé: {nouvelle_seance.Matricule_id}\n"
-    seance_info += f"ID du groupe associé: {nouvelle_seance.idGroupe_id}\n"
-    seance_info += f"ID de la salle associée: {nouvelle_seance.idSalle_id}\n"
-    seance_info += f"ID de la section associée: {nouvelle_seance.idSection_id}\n"
-    seance_info += f"ID de la spécialité associée: {nouvelle_seance.idSpecialite_id}\n"
-
-    # Renvoyer la réponse HTTP avec les informations de la séance
-    return HttpResponse(seance_info)
-
-
-def creer_heure(request):
-    # Créer une instance de heure avec des données prédéfinies
-    nouvelle_heure = heure.objects.create(
-        idHeure=10,  
-        defType="RSup",
-        idSeance_id=10,  
-    )
-
-    # Construire une chaîne contenant toutes les informations de l'heure
-    heure_info = f"ID de l'heure: {nouvelle_heure.idHeure}\n"
-    heure_info += f"Type de définition: {nouvelle_heure.defType}\n"
-    heure_info += f"ID de la séance associée: {nouvelle_heure.idSeance_id}\n"
-
-    # Renvoyer la réponse HTTP avec les informations de l'heure
-    return HttpResponse(heure_info)
-
-
-def creer_absence(request):
-    # Créer une instance d'absence avec des données prédéfinies
-    nouvelle_absence = Abcence.objects.create(
-        DateAbs="2024-04-27",
-        HeureDebut="08:00:00",
-        HeureFin="10:00:00",
-        Motif="Maladie",
-        IdProf_id="1"  
-    )
-
-    # Construire une chaîne contenant toutes les informations de l'absence
-    absence_info = f"ID de l'absence: {nouvelle_absence.IdAbs}\n"
-    absence_info += f"Date de l'absence: {nouvelle_absence.DateAbs}\n"
-    absence_info += f"Heure de début: {nouvelle_absence.HeureDebut}\n"
-    absence_info += f"Heure de fin: {nouvelle_absence.HeureFin}\n"
-    absence_info += f"Motif: {nouvelle_absence.Motif}\n"
-    absence_info += f"ID du professeur associé: {nouvelle_absence.IdProf_id}\n"
-
-    # Renvoyer la réponse HTTP avec les informations de l'absence
-    return HttpResponse(absence_info)
 
 @api_view(['DELETE'])
 def deleteAbsence(request,teacher_id,abs_id):
-    myAbs = get_object_or_404(Abcence, pk=abs_id)
-    myAbs.delete()
-    return teacher_detail(request,teacher_id)
+    if request.method == 'DELETE':
+        myAbs = get_object_or_404(Abcence, pk=abs_id)
+        date = DateSeance.objects.get(date = myAbs.DateAbs)
+        Seances.objects.filter(date_id = date.IddatteS).update(present = True)
+        myAbs.delete()
+        return Response({'success': True, 'message': 'L absence a été supprimée avec succès.'})
 
-# @api_view(['GET'])
-# def addSeance(request, teacher_id):
-#     teacher = get_object_or_404(Enseignant, pk=teacher_id)
+    
 
-#     # Serialize Enseignant
-#     serTeach = EnseignantSerializer(teacher)
 
-#     # Serialize Seance Types
-#     seanceType = Seance.mySeanceTypes
-#     serType = SeanceSerializer(seanceType, many=True)
-
-#     # Serialize Seance Jours
-#     seanceJours = Seance.myJours
-#     serJours = SeanceSerializer(seanceJours, many=True)
-
-#     # Serialize Promotions
-#     promotions = Promotion.myPromotions
-#     serPromotions = PromotionSerializer(promotions, many=True)
-
-#     # Serialize Semesters
-#     semesters = Module.mySemesters
-#     serSemesters = ModuleSerializer(semesters, many=True)
-
-#     # Serialize Modules
-#     modules = Module.objects.all()
-#     serModules = ModuleSerializer(modules, many=True)
-
-#     # Serialize Promos
-#     promos = Promotion.objects.all()
-#     serPromos = PromotionSerializer(promos, many=True)
-
-#     # Serialize Salles
-#     salles = Salle.objects.all()
-#     serSalles = SalleSerializer(salles, many=True)
-
-#     # Serialize Seance queryset
-#     seances = Seance.objects.all()
-#     serSeances = SeanceSerializer(seances, many=True)
-
-#     return render(request, 'teacherinfos/addSeance.html', {
-#         'serTeach': serTeach.data,
-#         'serType': serType.data,
-#         'serJours': serJours.data,
-#         'serPromotions': serPromotions.data,
-#         'serSemesters': serSemesters.data,
-#         'serModules': serModules.data,
-#         'serPromos': serPromos.data,
-#         'serSalles': serSalles.data,
-#         'serSeances': serSeances.data  # Serialized Seance queryset
-#     })
-
-# @api_view(['POST'])
-# def insertSeance(request,teacher_id):
-#     type = request.POST['type']
-#     jour = request.POST['jour']
-#     heureDeb = request.POST['heureDebut']
-#     heureFin = request.POST['heureFin']
-#     promo = request.POST['promo']
-#     promotion = Promotion.objects.get(NomPromo = promo)
-#     depart = promotion.Departement
-#     semestre = request.POST['semestre']
-#     module = request.POST['module']
-#     salle_name = request.POST['Salle']
-#     modulee = Module.objects.get(NomModule = module, Semestre = semestre,nomP_id = promo)
-#     module_code = modulee.Code
-#     sallee = Salle.objects.get(NomSalle = salle_name, Zone = depart)
-#     IdSalle = sallee.IdSalle
-#     seance = Seance(Type = type,Jour = jour,HeureDebut = heureDeb,HeureFin = heureFin,Semestre = semestre,Code_id = module_code,Matricule_id = teacher_id,idSalle_id = IdSalle, NomS = module)
-#     seance.save()
-#     return addSeance(request,teacher_id) 
+# @api_view(['POST','GET'])
+# @permission_classes([IsAuthenticated])
+# def insertSeance(request, teacher_id,semestre):
+#     if request.method == 'POST':
+#         serializer = SeanceSerializer(data=request.data)
+#         if serializer.is_valid():
+#             serializer.validated_data['Matricule_id'] = teacher_id
+#             serializer.validated_data['Semestre'] = semestre
+#             serializer.save()
+#             return Response(serializer.data, status=201)
+#         return Response(serializer.errors, status=400)
+#     elif request.method == 'GET':
+#         # Handle GET request if needed
+#         seances = Seance.objects.filter(Matricule_id=teacher_id,Semestre = semestre)
+#         serializer = SeanceSerializer(seances, many=True)
+#         return Response(serializer.data, status=200)
+#     else:
+#         return Response({"message": "Method not allowed"}, status=405)
 
 
 
 
-def modifier_enseignant(request, matricule): 
-    # Récupérer un enseignant par son matricule
-    enseignant = Enseignant.objects.get(Matricule=matricule) 
-
-    # Modifier les valeurs de tous les champs
-    enseignant.Nom = 'Nouveau Nom'
-    enseignant.Prenom = 'Nouveau Prenom'
-    enseignant.DateNaissance = '2024-01-01'  
-    enseignant.Adresse = 'Nouvelle Adresse'
-    enseignant.Email = 'nouveau@email.com'
-    enseignant.NumeroTelephone = 'Nouveau Téléphone'
-    enseignant.Fonction = 'Nouvelle Fonction'
-    enseignant.Grade = 'Nouveau Grade'
-    enseignant.Etablissement = 'Nouvel Etablissement'
-    enseignant.MotDePasse = 'Nouveau MotDePasse'
-
-    # Enregistrer les modifications
-    enseignant.save()
-
-    return HttpResponse("Les informations de l'enseignant ont été mises à jour avec succès.")
 
 
+@api_view(['POST','GET'])
+@permission_classes([IsAuthenticated])
+def insertSeance(request, teacher_id, semestre):
+    if request.method == 'POST':
+        heure_debut = timezone.make_aware(datetime.combine(datetime.now().date(), time(8, 0)))
+        heure_fin_limite = timezone.make_aware(datetime.combine(datetime.now().date(), time(17, 30)))
+
+        serializer = SeanceSerializer(data=request.data)
+        if serializer.is_valid():
+            heure_debut_seance_str = serializer.validated_data['HeureDebut']
+            if isinstance(heure_debut_seance_str, str):
+                heure_debut_seance = timezone.make_aware(datetime.strptime(heure_debut_seance_str, "%H:%M:%S").time())
+            else:
+                heure_debut_seance = timezone.make_aware(datetime.combine(datetime.now().date(), heure_debut_seance_str))
+
+            heure_fin_seance_str = serializer.validated_data['HeureFin']
+            if isinstance(heure_fin_seance_str, str):
+                heure_fin_seance = timezone.make_aware(datetime.strptime(heure_fin_seance_str, "%H:%M:%S").time())
+            else:
+                heure_fin_seance = timezone.make_aware(datetime.combine(datetime.now().date(), heure_fin_seance_str))
+
+            # Vérification des heures de début et de fin
+            error_messages = []
+            if heure_debut_seance < heure_debut:
+                error_messages.append("L'heure de début doit être après 8:00 AM.")
+            if heure_fin_seance > heure_fin_limite:
+                error_messages.append("L'heure de fin doit être avant 5:30 PM.")
+            if heure_fin_seance <= heure_debut_seance:
+                return Response({"error": "L'heure de debut doit etre inferieur au heure fin "}, status=400)
+
+            if error_messages:
+                return Response({"message": ", ".join(error_messages)}, status=400)
+
+            serializer.validated_data['Matricule_id'] = teacher_id
+            serializer.validated_data['Semestre'] = semestre
+            serializer.save()
+            return Response(serializer.data, status=201)
+        return Response(serializer.errors, status=400)
+    elif request.method == 'GET':
+        # Handle GET request if needed
+        seances = Seance.objects.filter(Matricule_id=teacher_id,Semestre = semestre)
+        serializer = SeanceSerializer(seances, many=True)
+        return Response(serializer.data, status=200)
+    else:
+        return Response({"message": "Method not allowed"}, status=405)
 
 
-def modifier_promotion(request, nom_promo):
-    # Récupérer la promotion par son nom
-    promotion = get_object_or_404(Promotion, NomPromo=nom_promo)
 
-    # Modifier les valeurs des champs
-    promotion.Departement = 'test'
+
+
+
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def insertSpecialite(request):
+    if request.method == 'POST':
+        serializer = SpecialiteSerializer(data=request.data)
+        if serializer.is_valid():
+            # Add the new choice to the list
+            serializer.save()
+            return Response(serializer.data, status=201)
+        return Response(serializer.errors, status=400)
    
 
-    # Enregistrer les modifications
-    promotion.save()
 
-    return HttpResponse("Les informations de la promotion ont été mises à jour avec succès.")
-
-def modifier_section(request, section_id):
-    # Récupérer la section par son identifiant
-    Section = get_object_or_404(section, idSection=section_id)
-
-    # Modifier les valeurs des champs
-    Section.NomSection = 'D'
-    Section.nomP_id = '1CS'
-    # Enregistrer les modifications
-    Section.save()
-
-    return HttpResponse("Les informations de la section ont été mises à jour avec succès.")
-
-
-def modifier_specialite(request, specialite_id):
-    # Récupérer la spécialité par son identifiant
-    specialite = get_object_or_404(Specialite, idSpecialite=specialite_id)
-
-    # Modifier les valeurs des champs
-    specialite.NomSpecialite = 'nvSpec'
-    specialite.idSection_id = 3  
-
-    # Enregistrer les modifications
-    specialite.save()
-
-    return HttpResponse("Les informations de la spécialité ont été mises à jour avec succès.")
-
-def modifier_groupe(request, groupe_id):
-    # Récupérer le groupe par son identifiant
-    groupe = get_object_or_404(Groupe, idGroupe=groupe_id)
-
-    # Modifier les valeurs des champs
-    groupe.Numero = '5'
-    groupe.Specialite = 'IASD'
-    groupe.idSection_id = 2 
-
-    # Enregistrer les modifications
-    groupe.save()
-
-    return HttpResponse("Les informations du groupe ont été mises à jour avec succès.")
-
-def modifier_salle(request, salle_id):
-    # Récupérer la salle par son identifiant
-    salle = get_object_or_404(Salle, IdSalle=salle_id)
-
-    # Modifier les valeurs des champs
-    salle.NomSalle = 'Salle1'
-    salle.Zone = 'CS'
-    salle.NbrPlaces = 50  # Exemple de modification
-    salle.Type = 'Salle TD'
-
-    # Enregistrer les modifications
-    salle.save()
-
-    return HttpResponse("Les informations de la salle ont été mises à jour avec succès.")
-
-def modifier_module(request, code_module):
-    # Récupérer le module par son code
-    module = get_object_or_404(Module, Code=code_module)
-
-    # Modifier les valeurs des champs
-    module.NomModule = 'BDD'
-    module.Coefficient = 5
-    module.NbrHeures = 40
-    module.Semestre = 'Semestre 1'
-    module.nomP_id = '1CS'
-
-    # Enregistrer les modifications
-    module.save()
-
-    return HttpResponse("Les informations du module ont été mises à jour avec succès.")
+# @api_view(['POST', 'GET'])
+# @permission_classes([IsAuthenticated])
+# def insertEnseignant(request):
+#     if request.method == 'POST':
+#         serializer = EnseignantSerializer(data=request.data)
+#         if serializer.is_valid():
+#             teacher = serializer.save()
+#             selected_modules_ids = request.data.get('modules', [])
+#             teacher_id = teacher.Matricule  # Assuming Matricule is the primary key of the Enseignant model
+#             for module_id in selected_modules_ids:
+#                 try:
+#                     module = Module.objects.get(Code=module_id)
+#                     Enseigne.objects.create(Matric_id=teacher_id, Codee_id=module_id)
+#                 except Module.DoesNotExist:
+#                     print(f"Module with ID {module_id} does not exist.")
+#                     return Response({"error": f"Module with ID {module_id} does not exist."}, status=400)
+#                 except Exception as e:
+#                     print(f"An error occurred while creating Enseigne: {e}")
+#                     return Response({"error": f"An error occurred while creating Enseigne: {e}"}, status=500)
+#             return Response(serializer.data, status=201)
+#         return Response(serializer.errors, status=400)
+#     elif request.method == 'GET':
+#         # Handle GET request if needed
+#         enseignants = Enseignant.objects.all()
+#         serializer = EnseignantSerializer(enseignants, many=True)
+#         return Response(serializer.data, status=200)
+#     else:
+#         return Response({"message": "Method not allowed"}, status=405)
 
 
-def modifier_heure(request, heure_id):
-    # Récupérer l'heure par son identifiant
-    Heure = get_object_or_404(heure,idHeure=heure_id)
+@api_view(['POST', 'GET'])
+@permission_classes([IsAuthenticated])
+def insertEnseignant(request):
+    if request.method == 'POST':
+        serializer = EnseignantSerializer(data=request.data)
+        if serializer.is_valid():
+            email = serializer.validated_data.get('Email')
+            
+            # Vérification si l'email existe déjà dans la base de données
+            if Enseignant.objects.filter(Email=email).exists():
+                return Response({"error": f"L'email {email} est déjà utilisé."}, status=400)
+            
+            # Vérification si l'email se termine par '@esi-sba.dz'
+            if not email.endswith('@esi-sba.dz'):
+                return Response({"error": "L'email doit se terminer par '@esi-sba.dz'."}, status=400)
+            
+            teacher = serializer.save()
+            selected_modules_ids = request.data.get('modules', [])
+            teacher_id = teacher.Matricule  # Assuming Matricule is the primary key of the Enseignant model
+            for module_id in selected_modules_ids:
+                try:
+                    module = Module.objects.get(Code=module_id)
+                    Enseigne.objects.create(Matric_id=teacher_id, Codee_id=module_id)
+                except Module.DoesNotExist:
+                    print(f"Module with ID {module_id} does not exist.")
+                    return Response({"error": f"Module with ID {module_id} does not exist."}, status=400)
+                except Exception as e:
+                    print(f"An error occurred while creating Enseigne: {e}")
+                    return Response({"error": f"An error occurred while creating Enseigne: {e}"}, status=500)
+            return Response(serializer.data, status=201)
+        return Response(serializer.errors, status=400)
+    elif request.method == 'GET':
+        # Handle GET request if needed
+        enseignants = Enseignant.objects.all()
+        serializer = EnseignantSerializer(enseignants, many=True)
+        return Response(serializer.data, status=200)
+    else:
+        return Response({"message": "Method not allowed"}, status=405)
 
-    # Modifier les valeurs des champs
-    Heure.defType = 'charge'
-    Heure.idSeance_id = 1 
-    # Enregistrer les modifications
-    Heure.save()
 
-    return HttpResponse("Les informations de l'heure ont été mises à jour avec succès.")
 
-def modifier_seance(request, seance_id):
-    # Récupérer la séance par son identifiant
-    seance = get_object_or_404(Seance, IdSeance=seance_id)
 
-    # Modifier les valeurs des champs
-    seance.NomS = 'ALG1'
-    seance.Type = 'TD'
-    seance.Jour = 'MARDI'
-    seance.HeureDebut = '13:30'
-    seance.HeureFin = '15:00'
-    seance.Semestre = 'Semestre 1'
-    seance.Code_id = 'code1'
-    seance.Matricule_id = '1'
-    seance.idGroupe_id = 4  
-    seance.idSalle_id = 4  
-    seance.idSection_id = 1  
 
-    # Enregistrer les modifications
-    seance.save()
 
-    return HttpResponse("Les informations de la séance ont été mises à jour avec succès.")
 
-def modifier_absence(request, absence_id):
-    # Récupérer l'absence par son identifiant
-    absence = get_object_or_404(Abcence, IdAbs=absence_id)
 
-    # Modifier les valeurs des champs
-    absence.DateAbs = '2024-04-17'
-    absence.HeureDebut = '09:00'
-    absence.HeureFin = '11:00'
-    absence.Motif = 'nouveau-motif'
-    absence.IdProf_id = '2'
-
-    # Enregistrer les modifications
-    absence.save()
+@api_view(['POST','GET'])
+@permission_classes([IsAuthenticated])
+def insertAbs(request, teacher_id):
+    if request.method == 'POST':
+        serializer = AbcenceSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.validated_data['IdProf_id'] = teacher_id
+            date = DateSeance.objects.get(date = request.data.get('DateAbs'))
+            Seances.objects.filter(date_id = date.IddatteS).update(present = False)
+            serializer.save()
+            return Response(serializer.data, status=201)
+        return Response(serializer.errors, status=400)
+    elif request.method == 'GET':
+        # Handle GET request if needed
+        absences = Abcence.objects.filter(IdProf_id=teacher_id)
+        serializer = AbcenceSerializer(absences, many=True)
+        return Response(serializer.data, status=200)
+    else:
+        return Response({"message": "Method not allowed"}, status=405)
     
-    return HttpResponse("Les informations de l'absence ont été mises à jour avec succès.")
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def insertSection(request,idPromo):
+    if request.method == 'POST':
+        serializer = SectionSerializer(data=request.data)
+        if serializer.is_valid():
+            # Add the new choice to the list
+            serializer.validated_data['nomP_id'] = idPromo
+            serializer.save()
+            return Response(serializer.data, status=201)
+        return Response(serializer.errors, status=400)
+    
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def insertHeure(request,idSeance):
+    if request.method == 'POST':
+        serializer = HeureSerializer(data=request.data)
+        if serializer.is_valid():
+            # Add the new choice to the list
+            serializer.validated_data['idSeance_id'] = idSeance
+            serializer.save()
+            return Response(serializer.data, status=201)
+        return Response(serializer.errors, status=400)
+    
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def insertGroupe(request,idSection):
+    if request.method == 'POST':
+        serializer = GroupeSerializer(data=request.data)
+        if serializer.is_valid():
+            # Add the new choice to the list
+            serializer.validated_data['idSection_id'] = idSection
+            serializer.save()
+            return Response(serializer.data, status=201)
+        return Response(serializer.errors, status=400)
+    
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def updateHeure(request, idHeure):
+    try:
+        Heure = heure.objects.get(pk=idHeure)
+    except heure.DoesNotExist:
+        return Response({"error": "Heure non trouvée"}, status=404)
+
+    if request.method == 'PUT':
+        serializer = HeureSerializer(Heure, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=200)
+        return Response(serializer.errors, status=400)
+
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def updateGroupe(request, idGroupe):
+    if request.method == 'PUT':
+        try:
+            groupe = Groupe.objects.get(pk=idGroupe)
+        except Groupe.DoesNotExist:
+            return Response({"error": "Groupe not found"}, status=404)
+
+        serializer = GroupeSerializer(groupe, data=request.data)
+        if serializer.is_valid():
+            serializer.save()  # Ceci sauvegarde les modifications dans le modèle Groupe
+            return Response(serializer.data, status=200)
+        return Response(serializer.errors, status=400)
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def updateSpecialite(request, idSpecialite):
+    try:
+        specialite = Specialite.objects.get(idSpecialite=idSpecialite)
+    except Specialite.DoesNotExist:
+        return Response({"error": "La spécialité spécifiée n'existe pas."}, status=404)
+
+    if request.method == 'PUT':
+        serializer = SpecialiteSerializer(specialite, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=200)
+        return Response(serializer.errors, status=400)
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def updateSection(request, idSection):
+    try:
+        Section = section.objects.get(idSection=idSection)
+    except section.DoesNotExist:
+        return Response({"error": "La section spécifiée n'existe pas."}, status=404)
+
+    if request.method == 'PUT':
+        serializer = SectionSerializer(Section, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=200)
+        return Response(serializer.errors, status=400)
+    
+
+
+
+from datetime import datetime, timedelta
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def updateEnseignant(request, matricule):
+    try:
+        enseignant = Enseignant.objects.get(Matricule=matricule)
+    except Enseignant.DoesNotExist:
+        return Response({"error": "L'enseignant spécifié n'existe pas."}, status=404)
+
+    if request.method == 'PUT':
+        serializer = EnseignantSerializer(enseignant, data=request.data, partial=True)
+        if serializer.is_valid():
+            # Vérifier si le champ Email est modifié et s'il se termine par "esi-sba.dz"
+            if 'Email' in serializer.validated_data:
+                email = serializer.validated_data['Email']
+                if not email.endswith('esi-sba.dz'):
+                    return Response({"error": "L'email doit se terminer par 'esi-sba.dz'."}, status=400)
+
+            # Vérifier si le champ NumeroTelephone est modifié et s'il contient uniquement des chiffres
+            if 'NumeroTelephone' in serializer.validated_data:
+                numero_telephone = serializer.validated_data['NumeroTelephone']
+                if not numero_telephone.isdigit():
+                    return Response({"error": "Le numéro de téléphone ne doit contenir que des chiffres."}, status=400)
+
+            # Vérifier si le champ DateNaissance est modifié et s'il est inférieur à 25 ans
+            if 'DateNaissance' in serializer.validated_data:
+                date_naissance = serializer.validated_data['DateNaissance']
+                # Convertir la date de naissance en objet datetime
+                date_naissance = datetime.combine(date_naissance, datetime.min.time())
+                age_minimum = datetime.now() - timedelta(days=25*365)  # calculer la date il y a 25 ans
+                if date_naissance > age_minimum:
+                    return Response({"error": "L'enseignant doit avoir au moins 25 ans."}, status=400)
+
+            serializer.save()
+            return Response(serializer.data, status=200)
+        return Response(serializer.errors, status=400)
+
+
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def updateAbsence(request, idAbs):
+    try:
+        absence = Abcence.objects.get(IdAbs=idAbs)
+    except Abcence.DoesNotExist:
+        return Response({"error": "L'absence spécifiée n'existe pas."}, status=404)
+
+    if request.method == 'PUT':
+        serializer = AbcenceSerializer(absence, data=request.data)
+        if serializer.is_valid():
+            heure_debut = serializer.validated_data.get('HeureDebut')
+            heure_fin = serializer.validated_data.get('HeureFin')
+
+            # Vérification de l'heure de début et de fin
+            if heure_debut and heure_debut < time(8, 0):
+                return Response({"error": "L'heure de début doit être a partir du  08:00 am."}, status=400)
+            if heure_fin and heure_fin > time(17, 30):
+                return Response({"error": "L'heure de fin doit être avant 17:30 pm."}, status=400)
+            if heure_fin <= heure_debut:
+                return Response({"error": "L'heure de debut doit etre inferieur au heure fin "}, status=400)
+            try:
+                serializer.save()
+                return Response(serializer.data, status=200)
+            except IntegrityError:
+                return Response({"error": "Erreur lors de la sauvegarde des données."}, status=400)
+        return Response(serializer.errors, status=400)
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def updateSalle(request, id_salle):
+    try:
+        salle = Salle.objects.get(IdSalle=id_salle)
+    except Salle.DoesNotExist:
+        return Response({"error": "La salle spécifiée n'existe pas."}, status=404)
+
+    if request.method == 'PUT':
+        serializer = SalleSerializer(salle, data=request.data, partial=True)
+        if serializer.is_valid():
+            new_nom_salle = serializer.validated_data.get('NomSalle', salle.NomSalle)
+            new_zone_salle = serializer.validated_data.get('Zone', salle.Zone)
+            
+            # Vérifier si une autre salle avec le même nom existe déjà dans la même zone
+            if new_nom_salle != salle.NomSalle:  # Vérifier si le nom de la salle a été modifié
+                if Salle.objects.exclude(IdSalle=id_salle).filter(NomSalle=new_nom_salle, Zone=new_zone_salle).exists():
+                    return Response({"error": "Une salle avec le même nom existe déjà dans la même zone."}, status=400)
+
+            serializer.save()
+            return Response(serializer.data, status=200)
+        return Response(serializer.errors, status=400)
+
+        return Response(serializer.errors, status=400)
+
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def updateModule(request, code):
+    try:
+        module = Module.objects.get(Code=code)
+    except Module.DoesNotExist:
+        return Response({"error": "Le module spécifié n'existe pas."}, status=404)
+
+    if request.method == 'PUT':
+        serializer = ModuleSerializer(module, data=request.data, partial=True)
+        if serializer.is_valid():
+            new_nom_module = serializer.validated_data.get('NomModule')
+            # Vérifier si le nom du module est déjà utilisé par un autre module
+            if new_nom_module and Module.objects.exclude(Code=code).filter(NomModule=new_nom_module).exists():
+                return Response({"error": "Ce nom de module est déjà utilisé par un autre module."}, status=400)
+            
+            serializer.save()
+            return Response(serializer.data, status=200)
+        return Response(serializer.errors, status=400)
+
+
+
+
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def updateSeance(request, idSeance):
+    try:
+        seance = Seance.objects.get(IdSeance=idSeance)
+    except Seance.DoesNotExist:
+        return Response({"error": "La séance spécifiée n'existe pas."}, status=404)
+
+    if request.method == 'PUT':
+        serializer = SeanceSerializer(seance, data=request.data, partial=True)
+        if serializer.is_valid():
+            NouveauIdSalle = serializer.validated_data.get('idSalle')
+            NouveauJour= serializer.validated_data.get('Jour')
+            NouveauHRdeb = serializer.validated_data.get('HeureDebut')
+            NouveauHRfin= serializer.validated_data.get('HeureFin')
+            NouveauIdSection= serializer.validated_data.get('idSection')
+            NouveauIdGroupe= serializer.validated_data.get('idGroupe')
+            matr = seance.Matricule
+          # Vérification de l'heure de début et de fin
+            if NouveauHRdeb and NouveauHRdeb < time(8, 0):
+                return Response({"error": "L'heure de début doit être à partir de 08:00 am."}, status=400)
+            if NouveauHRfin and NouveauHRfin > time(17, 30):
+                return Response({"error": "L'heure de fin doit être avant 17:30 pm."}, status=400)
+            # if NouveauHRdeb and NouveauHRfin and NouveauHRfin <= NouveauHRdeb:
+            #     return Response({"error": "L'heure de début doit être antérieure à l'heure de fin."}, status=400)
+            if NouveauIdGroupe :
+                heure_debut = seance.HeureDebut
+                heure_fin =seance.HeureFin
+                jour = seance.Jour
+                seanGroup = Seance.objects.filter(IdGroupe = NouveauIdGroupe,HeureDebut =heure_debut ,HeureFin = heure_fin ,Jour = jour)
+                if seanGroup :
+                    return Response({"error": "Ce groupe a une seanca cette datte ."}, status=400)
+                
+            if NouveauJour and NouveauHRdeb and NouveauHRfin :
+                seanSJour = Seance.objects.filter(Matricule=matr,Jour = NouveauJour ,HeureDebut =NouveauHRdeb ,HeureFin = NouveauHRfin)
+                if seanSJour :
+                    return Response({"error": "impossible."}, status=400)
+            if NouveauIdSalle != None :
+                heure_debut = seance.HeureDebut
+                heure_fin =seance.HeureFin
+                jour = seance.Jour
+                seanSalle = Seance.objects.filter(idSalle=NouveauIdSalle,HeureDebut =heure_debut ,HeureFin = heure_fin ,Jour = jour )
+                if seanSalle :
+                    return Response({"error": "Cette salle est déjà réservée pour une autre séance à ce moment. Veuillez choisir une autre salle pour cette séance."}, status=400)
+                
+
+            serializer.save()
+            return Response(serializer.data, status=200)
+        return Response(serializer.errors, status=400)

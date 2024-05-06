@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import '../Styles/Profinfos.css'
 import { InfosPersonnelles } from "../Components/InfosPersonnelles";
-import axios, { Axios } from "axios";
-import { Enseignant } from "../Constructors";
+import axios from "axios";
+import { teacher } from "../Constructors";
 import { useForm } from "react-hook-form";
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
@@ -10,17 +10,23 @@ import { useRef } from "react";
 
 export function ProfInfos() {
 
-    const matricule = 1;
+    const matricule = "bb";
 
-    const [enseignant, setEnseignant] = useState(new Enseignant(matricule));
+    const [enseignant, setEnseignant] = useState(new teacher(matricule));
+
+    const [absences, setAbsences] = useState([]);
+
+    const [modules, setModules] = useState([]);
 
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const uri = `http://localhost:3000/profs/${encodeURIComponent(matricule)}`; // Construct the URI with proper URL encoding
+                const uri = `http://127.0.0.1:8000/Administration/teachinfos/${matricule}/?format=json`; // Construct the URI with proper URL encoding
                 console.log("URI:", uri); // Log the URI
                 const response = await axios.get(uri); // Make the HTTP request
-                setEnseignant(response.data);
+                setEnseignant(response.data.teacher);
+                setAbsences(response.data.absences);
+                setModules(response.data.modules);
                 console.log(response.data);
             } catch (error) {
                 console.error('Error fetching data: ', error);
@@ -34,7 +40,7 @@ export function ProfInfos() {
     const btns = [
         {
             title: "infos personnelles",
-            component: <InfosPersonnelles enseignant={enseignant} />,
+            component: <InfosPersonnelles enseignant={enseignant} absences={absences} modules={modules} />,
         },
         {
             title: "charge horaire",
@@ -72,7 +78,7 @@ export function ProfInfos() {
     return (
         <div className="main-container dynamic-container prof-infos-container">
             <div className="profile-flex-container">
-                <h2>{`${enseignant.nom} ${enseignant.prenom}`}</h2>
+                <h2>{`${enseignant.Nom} ${enseignant.Prénom}`}</h2>
                 <div className="update-btns">
                     <button className="update" onClick={() => setModifierProfileClicked(true)}>modifier profile</button>
                     <button className="update" onClick={() => setAjouterAbscenceClicked(true)}>ajouter abscence</button>
@@ -109,41 +115,22 @@ const AjouterAbsence = (props) => {
 
     const [selectSize, setSelectSize] = useState(1);//for the select tag
 
-    const [Absences, setAbsences] = useState([]);
-
-    useEffect(() => {
-        axios.get('http://localhost:3000/absences')
-            .then(res => {
-                setAbsences(res.data);
-            })
-            .catch(err => {
-                console.error(err);
-            });
-    }, []);
-
     const [newAbsence, setNewAbsence] = useState({
-        id: '',
-        matricule: props.matricule,
-        date_absence: '',
-        heureDebut: '',
-        heureFin: '',
-        motif: ''
+        DateAbs: "",
+        HeureDebut: "",
+        HeureFin: "",
+        Motif: "",
+        IdProf: props.matricule,
     });
 
     //pour etre sure que le id != 0 par ce que useEffect prend un temps pour fetcher 
 
-    useEffect(() => {
-        setNewAbsence(prevState => ({
-            ...prevState,
-            id: Absences.length.toString()
-        }));
-    }, [Absences]);
-
     const handleSubmit = (e) => {
         e.preventDefault();
-        axios.post('http://localhost:3000/absences', newAbsence)
+        axios.post(`http://127.0.0.1:8000/Administration/insertAbs/${newAbsence.IdProf}/`, newAbsence)
             .then(res => {
-                console.log(res)
+                console.log(res);
+                window.location.reload();
             })
             .catch(err => console.log(err));
     }
@@ -152,6 +139,35 @@ const AjouterAbsence = (props) => {
         window.location.reload(); // Reload the page
     };
 
+    const [inputType, setInputType] = useState('text');
+
+    const handleFocus = () => {
+        setInputType('date');
+    };
+
+    const handleBlur = () => {
+        setInputType('text');
+    };
+
+    const [inputType1, setInputType1] = useState('text');
+
+    const handleFocus1 = () => {
+        setInputType1('time');
+    };
+
+    const handleBlur1 = () => {
+        setInputType1('text');
+    };
+
+    const [inputType2, setInputType2] = useState('text');
+
+    const handleFocus2 = () => {
+        setInputType2('time');
+    };
+
+    const handleBlur2 = () => {
+        setInputType2('text');
+    };
     return (
         <div className="container-update-absence container-ajouter-absence">
             <h2>Ajouter Absence</h2>
@@ -160,22 +176,29 @@ const AjouterAbsence = (props) => {
                 <div className="input-line">
                     <label htmlFor="date">Date</label>
                     <input
-                        type="date"
-                        onChange={(e) => setNewAbsence({ ...newAbsence, date_absence: e.target.value })}
+                        style={{ textTransform: 'lowercase'} }
+                        type={inputType} placeholder=""
+                        onFocus={handleFocus}
+                        onBlur={handleBlur}
+                        onChange={(e) => setNewAbsence({ ...newAbsence, DateAbs: e.target.value })}
                     />
                 </div>
                 <div className="input-line">
                     <label htmlFor="heureDebut">heure debut</label>
                     <input
-                        type="time"
-                        onChange={(e) => setNewAbsence({ ...newAbsence, heureDebut: e.target.value })}
+                        type={inputType1} placeholder=""
+                        onFocus={handleFocus1}
+                        onBlur={handleBlur1}
+                        onChange={(e) => setNewAbsence({ ...newAbsence, HeureDebut: e.target.value })}
                     />
                 </div>
                 <div className="input-line">
                     <label htmlFor="heureFin">heure fin</label>
                     <input
-                        type="time"
-                        onChange={(e) => setNewAbsence({ ...newAbsence, heureFin: e.target.value })}
+                        type={inputType2} placeholder=""
+                        onFocus={handleFocus2}
+                        onBlur={handleBlur2}
+                        onChange={(e) => setNewAbsence({ ...newAbsence, HeureFin: e.target.value })}
                     />
                 </div>
                 <div className="input-line">
@@ -184,7 +207,7 @@ const AjouterAbsence = (props) => {
                         size={selectSize}
                         onBlur={() => setSelectSize(1)}
                         className="options"
-                        onChange={(e) => setNewAbsence({ ...newAbsence, motif: e.target.value })}
+                        onChange={(e) => setNewAbsence({ ...newAbsence, Motif: e.target.value })}
                     >
                         <option value=""></option>
                         <option value="malade">maladie</option>
@@ -195,7 +218,7 @@ const AjouterAbsence = (props) => {
                 <div className="update-absence-btns">
                     <button onClick={() => props.handleAnnuler()}>Annuler</button>
                     <button className='sauvegarder-absence'
-                        type="submit" onClick={() => handleReload()} > Sauvegarder</button>
+                        type="submit"  > Sauvegarder</button>
                 </div>
             </form>
         </div>
@@ -252,7 +275,7 @@ const ModifierInfosProf = (props) => {
         numTelephone: yup.number()
             .positive("Phone number must be positive")
             .integer("Phone number must be an integer")
-            .min(1000000000, "Le numero telephone est de 10 chiffres")
+            .min(100000000, "Le numero telephone est de 10 chiffres")
             .max(9999999999, "Le numero telephone est de 10 chiffres")
             .required("Le numero telephone est obligatoire"),
     });
@@ -272,7 +295,7 @@ const ModifierInfosProf = (props) => {
                     <label htmlFor="nom">nom</label>
                     <input
                         type="text"
-                        value={props.enseignant.nom}
+                        value={props.enseignant.Nom}
                         {...register("nom")}
                     />
                 </div>
@@ -284,7 +307,7 @@ const ModifierInfosProf = (props) => {
                     <label htmlFor="prenom">prénom</label>
                     <input
                         type="text"
-                        value={props.enseignant.prenom}
+                        value={props.enseignant.Prénom}
                         {...register("prenom")}
                     />
                 </div>
@@ -295,7 +318,8 @@ const ModifierInfosProf = (props) => {
                 <label htmlFor="dateNaissance">date Naissance</label>
                 <input
                     type="date"
-                    value={props.enseignant.dateNaissance}
+                    style={{ textTransform: 'lowercase'} }
+                    value={props.enseignant.DateNaissance}
                 />
             </div>
 
@@ -305,6 +329,7 @@ const ModifierInfosProf = (props) => {
                     <input
                         type="text"
                         {...register('adress')}
+                        value={props.enseignant.Adresse}
                     />
                 </div>
                 {errors.adress && <p>{errors.adress?.message}</p>}
@@ -315,7 +340,8 @@ const ModifierInfosProf = (props) => {
                     <label htmlFor="numTel">Numéro telephone</label>
                     <input
                         type="text"
-                        value={props.enseignant.numTelephone}
+                        value={props.enseignant.NumeroTelephone}
+                        onChange={(e) => e.target.value}
                         {...register('numTelephone')}
                     />
                 </div>
@@ -326,14 +352,14 @@ const ModifierInfosProf = (props) => {
                 <label htmlFor="grade">grade</label>
                 <input
                     type="text"
-                    value={props.enseignant.grade}
+                    value={props.enseignant.Grade}
                 />
             </div>
 
             <div className="input-line">
                 <label htmlFor="fonctions">fonction</label>
                 <select
-                    value={props.enseignant.fonction.toLowerCase()}
+                    value={props.enseignant.Fonction.toLowerCase()}
                 >
                     <option value={"chercheur"}>chercheur</option>
                     <option value={"professeur"}>professeur</option>
@@ -343,7 +369,7 @@ const ModifierInfosProf = (props) => {
 
             <div className="update-profile-btns">
                 <button onClick={() => { props.annulerModification() }} >Annuler</button>
-                <button className='sauvegarder-absence'
+                <button className='sauvegarder-btn'
                     type="submit" > Sauvegarder</button>
             </div>
         </form>
@@ -399,6 +425,26 @@ const AjouterSeance = (props) => {
         console.log(data);
     }
 
+    const [inputType, setInputType] = useState('text');
+
+    const handleFocus = () => {
+        setInputType('time');
+    };
+
+    const handleBlur = () => {
+        setInputType('text');
+    };
+
+    const [inputType1, setInputType1] = useState('text');
+
+    const handleFocus1 = () => {
+        setInputType1('time');
+    };
+
+    const handleBlur1 = () => {
+        setInputType1('text');
+    };
+
     return (
         <form className="form-ajouter-sceance" ref={formRef} onSubmit={handleSubmit(onSubmit)}>
             <div className="input-container">
@@ -419,7 +465,9 @@ const AjouterSeance = (props) => {
                 <div className="input-line">
                     <label htmlFor="heureDebut">heure debut</label>
                     <input
-                        type="time"
+                        type={inputType} placeholder=""
+                        onFocus={handleFocus}
+                        onBlur={handleBlur}
                         {...register("heureDebut")}
                     />
                 </div>
@@ -430,7 +478,9 @@ const AjouterSeance = (props) => {
                 <div className="input-line">
                     <label htmlFor="heureFin">heure fin</label>
                     <input
-                        type="time"
+                        type={inputType1} placeholder=""
+                        onFocus={handleFocus1}
+                        onBlur={handleBlur1}
                         {...register("heureFin")}
                     />
                 </div>
@@ -510,7 +560,7 @@ const AjouterSeance = (props) => {
 
             <div className="update-profile-btns">
                 <button onClick={() => { props.annulerModification() }} >Annuler</button>
-                <button className='sauvegarder-absence'
+                <button className='sauvegarder-btn'
                     type="submit" > Sauvegarder</button>
             </div>
         </form>

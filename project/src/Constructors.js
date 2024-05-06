@@ -1,18 +1,16 @@
-export class Enseignant {
+export class teacher {
     constructor(matricule) {
-        this.id = matricule;
-        this.nom = '';
-        this.prenom = '';
-        this.email = '';
-        this.numTelephone = '';
-        this.numCompte = '';
-        this.adress = '';
-        this.dateNaissance = '';
-        this.grade = '';
-        this.etablissement = '';
-        this.fonction = [];
-        this.modules = [];
-        this.motDePasse = '';
+        this.Matricule = matricule;
+        this.Nom = '';
+        this.Prénom = '';
+        this.DateNaissance = '';
+        this.Adresse = '';
+        this.Email = '';
+        this.NumeroTelephone = '';
+        this.Fonction = '';
+        this.Grade = '';
+        this.Etablissement = '';
+        this.MotDePasse = '';
     }
 }
 

@@ -1,9 +1,6 @@
 import React from "react";
+import DataTable from "./DataTable";
 
 export function Enseignants() {
-    return (
-        <div className="main-container">
-            <h1>enseignants</h1>
-        </div>
-    )
+    return <DataTable></DataTable>
 }
