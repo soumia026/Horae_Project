@@ -46,5 +46,3 @@ print(calculerHeuresSup(9,4,0,8,1.5,1,0.75)) #4
 print(calculerHeuresSup(9,2,3,4,1.5,1,0.75)) #0
 print(calculerHeuresSup(9,2,3,7,1.5,1,0.75)) #3
 
-
-   

@@ -618,6 +618,10 @@ def updateSection(request, idSection):
         return Response(serializer.errors, status=400)
     
 
+
+
+from datetime import datetime, timedelta
+
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated])
 def updateEnseignant(request, matricule):
@@ -635,10 +639,24 @@ def updateEnseignant(request, matricule):
                 if not email.endswith('esi-sba.dz'):
                     return Response({"error": "L'email doit se terminer par 'esi-sba.dz'."}, status=400)
 
+            # Vérifier si le champ NumeroTelephone est modifié et s'il contient uniquement des chiffres
+            if 'NumeroTelephone' in serializer.validated_data:
+                numero_telephone = serializer.validated_data['NumeroTelephone']
+                if not numero_telephone.isdigit():
+                    return Response({"error": "Le numéro de téléphone ne doit contenir que des chiffres."}, status=400)
+
+            # Vérifier si le champ DateNaissance est modifié et s'il est inférieur à 25 ans
+            if 'DateNaissance' in serializer.validated_data:
+                date_naissance = serializer.validated_data['DateNaissance']
+                # Convertir la date de naissance en objet datetime
+                date_naissance = datetime.combine(date_naissance, datetime.min.time())
+                age_minimum = datetime.now() - timedelta(days=25*365)  # calculer la date il y a 25 ans
+                if date_naissance > age_minimum:
+                    return Response({"error": "L'enseignant doit avoir au moins 25 ans."}, status=400)
+
             serializer.save()
             return Response(serializer.data, status=200)
         return Response(serializer.errors, status=400)
-
 
 
 
@@ -670,7 +688,6 @@ def updateAbsence(request, idAbs):
                 return Response({"error": "Erreur lors de la sauvegarde des données."}, status=400)
         return Response(serializer.errors, status=400)
 
-
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated])
 def updateSalle(request, id_salle):
@@ -682,9 +699,20 @@ def updateSalle(request, id_salle):
     if request.method == 'PUT':
         serializer = SalleSerializer(salle, data=request.data, partial=True)
         if serializer.is_valid():
+            new_nom_salle = serializer.validated_data.get('NomSalle', salle.NomSalle)
+            new_zone_salle = serializer.validated_data.get('Zone', salle.Zone)
+            
+            # Vérifier si une autre salle avec le même nom existe déjà dans la même zone
+            if new_nom_salle != salle.NomSalle:  # Vérifier si le nom de la salle a été modifié
+                if Salle.objects.exclude(IdSalle=id_salle).filter(NomSalle=new_nom_salle, Zone=new_zone_salle).exists():
+                    return Response({"error": "Une salle avec le même nom existe déjà dans la même zone."}, status=400)
+
             serializer.save()
             return Response(serializer.data, status=200)
         return Response(serializer.errors, status=400)
+
+        return Response(serializer.errors, status=400)
+
 
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated])
@@ -697,10 +725,16 @@ def updateModule(request, code):
     if request.method == 'PUT':
         serializer = ModuleSerializer(module, data=request.data, partial=True)
         if serializer.is_valid():
+            new_nom_module = serializer.validated_data.get('NomModule')
+            # Vérifier si le nom du module est déjà utilisé par un autre module
+            if new_nom_module and Module.objects.exclude(Code=code).filter(NomModule=new_nom_module).exists():
+                return Response({"error": "Ce nom de module est déjà utilisé par un autre module."}, status=400)
+            
             serializer.save()
             return Response(serializer.data, status=200)
         return Response(serializer.errors, status=400)
-    
+
+
 
 
 
