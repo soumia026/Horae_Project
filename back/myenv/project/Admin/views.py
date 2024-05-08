@@ -787,3 +787,61 @@ def updateSeance(request, idSeance):
             serializer.save()
             return Response(serializer.data, status=200)
         return Response(serializer.errors, status=400)
+
+
+@api_view(['GET'])
+def calculerHeuresSup(request,nbrHeuresCharge,nbrHeuresCours,nbrHeuresTd,nbrHeuresTp,TauxCours,TauxTd,TauxTp):
+    nbrHeuresCharge = float(nbrHeuresCharge)
+    nbrHeuresCours = float(nbrHeuresCours)
+    nbrHeuresTd = float(nbrHeuresTd)
+    nbrHeuresTp = float(nbrHeuresTp)
+    TauxCours = float(TauxCours)
+    TauxTd = float(TauxTd)
+    TauxTp = float(TauxTp)
+    transNbrHeuresCours = nbrHeuresCours * TauxCours
+    transNbrHeuresTD = nbrHeuresTd * TauxTd
+    transNbrHeuresTp = nbrHeuresTp *TauxTp
+    nbrHeuresSup = 0
+    calculCharge = 0
+    calculCharge += transNbrHeuresCours
+    if calculCharge >= nbrHeuresCharge :
+        nbrHeuresSupCours = (transNbrHeuresCours - nbrHeuresCharge)/TauxCours
+        nbrHeuresSup += nbrHeuresSupCours + nbrHeuresTd + nbrHeuresTp
+    else :
+        nbrChargeRest = nbrHeuresCharge - calculCharge
+        calculCharge += transNbrHeuresTD
+        if calculCharge >= nbrHeuresCharge :
+            nbrHeuresSupTd = (transNbrHeuresTD - nbrChargeRest)/TauxTd
+            nbrHeuresSup += nbrHeuresSupTd + nbrHeuresTp
+        else :
+            nbrChargeRest = nbrHeuresCharge - calculCharge
+            calculCharge += transNbrHeuresTp
+            nbrHeuresSupTp = (transNbrHeuresTp - nbrChargeRest)/TauxTp
+            if calculCharge <= nbrHeuresCharge :
+                nbrHeuresSup = 0
+            else :
+                nbrHeuresSup += nbrHeuresSupTp
+
+
+    return Response(nbrHeuresSup)
+
+# import datetime 
+# import schedule
+# now = datetime.datetime.now()
+# today =   now.strftime("%A") 
+# print(today)
+# print("The current time is:", now)
+
+# def createDate(now):
+#     date_seance = DateSeance.objects.create(date_field=now)
+
+
+# def createSeances(today,now):
+#     seances = Seance.objects.filter(Jour=today)
+#     dateId = DateSeance.objects.get(date=now).IddateS
+#     for seance in seances :
+#         Seances.objects.create(date=dateId, idSeance=seance.IdSeance , present=True)
+        
+       
+# schedule.every().day.do(createDate(now))
+# schedule.every().day.do(createSeances(today,now))

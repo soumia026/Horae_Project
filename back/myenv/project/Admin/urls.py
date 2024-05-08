@@ -42,6 +42,8 @@ path('updateAbsence/<int:idAbs>/', views.updateAbsence, name='update_absence'),
 path('updateSalle/<int:id_salle>/', views.updateSalle, name='update_salle'),
 path('updateModule/<str:code>/', views.updateModule, name='update_module'),
 path('updateSeance/<int:idSeance>/',views.updateSeance, name='update_seance'),
+path('calculerHeuresSup/<str:nbrHeuresCharge>/<str:nbrHeuresCours>/<str:nbrHeuresTd>/<str:nbrHeuresTp>/<str:TauxCours>/<str:TauxTd>/<str:TauxTp>/',views.calculerHeuresSup, name='calculerHeuresSup'),
+
 
 ]
 
