@@ -14,6 +14,7 @@ path('inscription/', views.inscription, name='inscription'),
 path('deleteAbsence/<str:teacher_id>/<int:abs_id>/',views.deleteAbsence,name='deleteAbsence'),
 
 
+
 path('modules',views.modules_list,name='modules_list'),
 path('salles',views.salles_list,name='salles_list'),
 path('specialites',views.specialites_list,name='specialites_list'),
@@ -50,8 +51,11 @@ path('calculerHeuresSup/<str:nbrHeuresCharge>/<str:TauxCours>/<str:TauxTd>/<str:
 # path('calculer_montant/<str:debut_semestre>/<str:fin_semestre>/<str:PU_MAB>/<str:PU_MAA>/<str:PU_MCB>/<str:PU_MCA>/<str:PU_Professeur>/',views.calculer_rsup_mois,name="calculer_rsup_mois")
 path('inscription_ecole_administration/', views.inscription_ecole_administration, name='inscription_ecole_administration'),
 path('changer_mot_de_passe/', views.changer_mot_de_passe_ecole_administration, name='changer_mot_de_passe_ecole_administration'),
- path('changer_mot_de_passe_enseignant/', views.changer_mot_de_passe_enseignant, name='changer_mot_de_passe_enseignant'),
+path('changer_mot_de_passe_enseignant/', views.changer_mot_de_passe_enseignant, name='changer_mot_de_passe_enseignant'),
+path('insert_ecole_administration/', views.insert_ecole_administration, name='insert_ecole_administration'),
+path('delete_ecole_administration/<str:matricule>/', views.delete_ecole_administration, name='delete_ecole_administration'),
 ]
+
 
 
 

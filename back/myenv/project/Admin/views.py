@@ -577,6 +577,43 @@ def changer_mot_de_passe_ecole_administration(request):
 
 
 
+@api_view(['POST', 'GET'])
+def insert_ecole_administration(request):
+    if request.method == 'POST':
+        serializer = EcoleAdministrationSerializer(data=request.data)
+        if serializer.is_valid():
+            email = serializer.validated_data.get('Email')
+            
+            # Vérification si l'email existe déjà dans la base de données
+            if EcoleAdministration.objects.filter(Email=email).exists():
+                return Response({"error": f"L'email {email} est déjà utilisé."}, status=400)
+            
+            # Insérer l'école d'administration dans la base de données
+            ecole_administration = serializer.save()
+
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    elif request.method == 'GET':
+        # Handle GET request if needed
+        ecole_administrations = EcoleAdministration.objects.all()
+        serializer = EcoleAdministrationSerializer(ecole_administrations, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    else:
+        return Response({"message": "Méthode non autorisée"}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+
+
+
+@api_view(['DELETE'])
+def delete_ecole_administration(request, matricule):
+    try:
+        ecole_administration = EcoleAdministration.objects.get(matricule=matricule)
+    except EcoleAdministration.DoesNotExist:
+        return Response({"error": f"L'école d'administration avec le matricule {matricule} n'existe pas."}, status=status.HTTP_404_NOT_FOUND)
+
+    ecole_administration.delete()
+    return Response({"message": f"L'école d'administration avec le matricule {matricule} a été supprimée."}, status=status.HTTP_204_NO_CONTENT)
+
 
 @api_view(['POST','GET'])
   

@@ -238,7 +238,7 @@ class heure(models.Model):
 
 
 class EcoleAdministration(models.Model):
-    matricule = models.CharField(max_length=20)
+    matricule = models.CharField(max_length = 20,blank = True,primary_key = True)
     nom = models.CharField(max_length=50)
     prenom = models.CharField(max_length=50)
     mot_de_passe = models.CharField(max_length=20)
