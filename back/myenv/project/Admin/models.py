@@ -1,8 +1,6 @@
 
 from django.db import models
 
-
-
 class Enseignant(models.Model):
     myFunctions = [
     ('Fonction1','Fonction1'),
@@ -11,7 +9,6 @@ class Enseignant(models.Model):
     myGrades = [
     ('MCA','MCA'),
     ('MCB','MCB'),
-    ('Teacher','Teacher'),
     ('LectureA','LectureA'),
     ('LectureB','LectureB'),
     ('Professor','Professor'),
@@ -217,6 +214,7 @@ class Seances(models.Model) :
     present = models.BooleanField(default=True)
     class Meta:
         db_table =  "Seances"
+        unique_together = ["date", "idSeance"]
 
     # presence = models.BooleanField(default=True)
     
@@ -228,10 +226,79 @@ class heure(models.Model):
     ('Charge','Charge'),
 ]
 
-    idHeure = models.IntegerField(blank = True,primary_key = True)
+    idHeure = models.AutoField(primary_key = True)
     defType = models.CharField(max_length = 20,choices= Types)
     idSeance = models.ForeignKey(Seance,default = None,on_delete=models.DO_NOTHING)
+    duree = models.DurationField(null=True)
     class Meta:
         db_table =  "Heure"
     def __str__(self) -> str:
         return self.defType
+    
+
+
+class EcoleAdministration(models.Model):
+    matricule = models.CharField(max_length=20)
+    nom = models.CharField(max_length=50)
+    prenom = models.CharField(max_length=50)
+    mot_de_passe = models.CharField(max_length=20)
+    Email = models.EmailField(max_length = 30,blank = True)
+
+    class Meta:
+        db_table = 'EcoleAdministration'
+    def __str__(self) -> str:
+        return self.Nom
+
+class Montant(models.Model):
+    idMontant = models.AutoField(primary_key=True)
+
+    SEMESTRE_CHOICES = (
+            ('S1','S1'),
+            ('S2','S2'),
+
+    )
+    
+    somme = models.FloatField(default = None)
+    anneeUniversiatire = models.CharField(max_length=50, default = None) 
+    semestre = models.CharField(max_length=20, choices=SEMESTRE_CHOICES)
+    matricule = models.ForeignKey(Enseignant, on_delete=models.DO_NOTHING , default = None)
+    class Meta:
+        db_table =  "Montant"
+
+    def __str__(self):
+        return str(self.idMontant)
+
+
+
+
+
+
+
+
+
+# class Montant(models.Model):
+#     idMontant = models.AutoField(primary_key=True)
+#     TYPE_CHOICES = (
+#         ('Banque', 'Banque'),
+#         ('CCP', 'CCP'),
+#     )
+#     SEMESTRE_CHOICES = (
+#             ('S1','S1'),
+#             ('S2','S2'),
+
+#     )
+#     typeRecu = models.CharField(max_length=20, choices=TYPE_CHOICES)
+#     somme = models.FloatField()
+#     anneeUniversiatire = models.CharField(max_length=50) 
+#     matricule = models.ForeignKey(Enseignant, on_delete=models.DO_NOTHING , default = None)
+#     semestre = models.CharField(max_length=20, choices=SEMESTRE_CHOICES)
+
+#     def __str__(self):
+#         return f"ID: {self.idMontant}, Type: {self.typeRecu}, Somme: {self.somme}, Date: {self.date}, Semestre: {self.semestre}"
+
+
+
+    
+    
+
+    
