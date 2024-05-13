@@ -7,16 +7,20 @@ import { useForm } from "react-hook-form";
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { useRef } from "react";
+import { useNavigate, useParams } from 'react-router-dom';
+import { ChargeHoraire } from "../Components/ChargeHoraire";
 
 export function ProfInfos() {
 
-    const matricule = "bb";
+    const { matricule } = useParams();
 
     const [enseignant, setEnseignant] = useState(new teacher(matricule));
 
     const [absences, setAbsences] = useState([]);
 
     const [modules, setModules] = useState([]);
+
+    const [seances, setSeances] = useState([]);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -27,7 +31,7 @@ export function ProfInfos() {
                 setEnseignant(response.data.teacher);
                 setAbsences(response.data.absences);
                 setModules(response.data.modules);
-                console.log(response.data);
+                setSeances(response.data.seances)
             } catch (error) {
                 console.error('Error fetching data: ', error);
             }
@@ -35,6 +39,27 @@ export function ProfInfos() {
 
         fetchData();
     }, []);
+
+    const comparerParJour = (a, b) => {
+        if (a.Jour < b.Jour) {
+            return -1;
+        }
+        if (a.Jour > b.Jour) {
+            return 1;
+        }
+        return 0;
+    };
+
+    // Tri des séances en fonction de l'attribut "Jour"
+    const trierSeances = () => {
+        const seancesTrie = [...seances];
+        seancesTrie.sort(comparerParJour);
+        setSeances(seancesTrie);
+    };
+
+    useEffect(() => {
+        trierSeances();
+    }, []); 
 
 
     const btns = [
@@ -44,7 +69,7 @@ export function ProfInfos() {
         },
         {
             title: "charge horaire",
-            component: null,
+            component: <ChargeHoraire seances= {seances} />,
         },
         {
             title: "comptabilité",
@@ -98,11 +123,11 @@ export function ProfInfos() {
                     handleAnnuler={() => setAjouterAbscenceClicked(false)} />}
 
             {modifierProfileClicked &&
-                <ModifierProfile enseignant={enseignant} annulerModification={annulerModification} />
+                <ModifierProfile enseignant={enseignant} annulerModification={annulerModification} modules={modules} matricule={matricule} />
             }
 
             {supprimerProfClicked &&
-                <SupprimerProfile annulerSuppression={annulerSuppression} />
+                <SupprimerProfile Matricule={matricule} annulerSuppression={annulerSuppression} />
             }
 
         </div >
@@ -132,12 +157,8 @@ const AjouterAbsence = (props) => {
                 console.log(res);
                 window.location.reload();
             })
-            .catch(err => console.log(err));
+            .catch(err => console.log(err.response.data));
     }
-
-    const handleReload = () => {
-        window.location.reload(); // Reload the page
-    };
 
     const [inputType, setInputType] = useState('text');
 
@@ -176,7 +197,7 @@ const AjouterAbsence = (props) => {
                 <div className="input-line">
                     <label htmlFor="date">Date</label>
                     <input
-                        style={{ textTransform: 'lowercase'} }
+                        style={{ textTransform: 'lowercase' }}
                         type={inputType} placeholder=""
                         onFocus={handleFocus}
                         onBlur={handleBlur}
@@ -242,7 +263,7 @@ const ModifierProfile = (props) => {
         },
         {
             title: "ajouter sceance",
-            component: <AjouterSeance enseignant={props.enseignant} annulerModification={props.annulerModification} />,
+            component: <AjouterSeance matricule={props.matricule} annulerModification={props.annulerModification} modules={props.modules} />,
         },
         {
             title: "comptabilité",
@@ -269,24 +290,66 @@ const ModifierProfile = (props) => {
 const ModifierInfosProf = (props) => {
 
     const schema = yup.object().shape({
-        nom: yup.string().matches(/^[a-zA-Z\s]*$/, "Nom conteint seulement des caracteres").required("le champ nom est obligatoire"),
-        prenom: yup.string().matches(/^[a-zA-Z\s]*$/, "Prenom conteint seulement des caracteres").required("le champ prenom est obligatoire"),
-        adress: yup.string().required("le champ adress est obligatoire"),
-        numTelephone: yup.number()
-            .positive("Phone number must be positive")
-            .integer("Phone number must be an integer")
-            .min(100000000, "Le numero telephone est de 10 chiffres")
-            .max(9999999999, "Le numero telephone est de 10 chiffres")
-            .required("Le numero telephone est obligatoire"),
+        Nom: yup.string().matches(/^[a-zA-Z\s]*$/, "Nom ne doit contenir que des caractères").required("Le champ nom est obligatoire"),
+        Prénom: yup.string().matches(/^[a-zA-Z\s]*$/, "Prénom ne doit contenir que des caractères").required("Le champ prénom est obligatoire"),
+        DateNaissance: yup.string(),
+        Email: yup.string().email().matches(/@esi-sba\.dz$/, "L'adresse email doit se terminer par @esi-sba.dz").required("L'email est obligatoire"),
+        Adresse: yup.string().required("Le champ adresse est obligatoire"),
+        NumeroTelephone: yup.string().required("Numéro de téléphone est obligatoire"),
+        Grade: yup.string(),
+        Etablissement: yup.string().required("Le champ établissement est obligatoire"),
+        Fonction: yup.string(),
     });
+
 
     const { register, handleSubmit, formState: { errors } } = useForm({
         resolver: yupResolver(schema),
     });
 
+    const [modifiedEnseignant, setModifiedEnseignant] = useState({
+        Matricule: props.enseignant.Matricule,
+        Nom: props.enseignant.Nom,
+        Prénom: props.enseignant.Prénom,
+        DateNaissance: props.enseignant.DateNaissance,
+        Adresse: props.enseignant.Adresse,
+        Email: props.enseignant.Email,
+        NumeroTelephone: props.enseignant.NumeroTelephone,
+        Fonction: props.enseignant.Fonction,
+        Grade: props.enseignant.Grade,
+        Etablissement: props.enseignant.Etablissement,
+        MotDePasse: props.enseignant.MotDePasse
+    });
 
-    const onSubmit = (data) => {
+    const [clickCount, setClickCount] = useState(0);
+
+    const onSubmit = (data, e) => {
+
+        e.preventDefault();
+
         console.log(data);
+        setModifiedEnseignant({
+            Matricule: props.enseignant.Matricule,
+            Nom: data.Nom,
+            Prénom: data.Prénom,
+            DateNaissance: data.DateNaissance,
+            Adresse: data.Adresse,
+            Email: data.Email,
+            NumeroTelephone: data.NumeroTelephone,
+            Fonction: data.Fonction,
+            Grade: props.enseignant.Grade,
+            Etablissement: data.Etablissement,
+            MotDePasse: props.enseignant.MotDePasse
+        });
+
+        axios.put(`http://127.0.0.1:8000/Administration/updateEnseignant/${modifiedEnseignant.Matricule}/`, modifiedEnseignant)
+            .then(res => {
+                console.log(res.data);
+                setClickCount(prevCount => prevCount + 1); // Increment click count
+                if (clickCount === 1) {
+                    window.location.reload(); // Reload the page after the second click
+                }
+            })
+            .catch(err => console.log(err.response.data));
     }
     return (
         <form onSubmit={handleSubmit(onSubmit)}>
@@ -295,11 +358,11 @@ const ModifierInfosProf = (props) => {
                     <label htmlFor="nom">nom</label>
                     <input
                         type="text"
-                        value={props.enseignant.Nom}
-                        {...register("nom")}
+                        defaultValue={modifiedEnseignant.Nom}
+                        {...register("Nom")}
                     />
                 </div>
-                {errors.nom && <p>{errors.nom?.message}</p>}
+                {errors.Nom && <p>{errors.Nom?.message}</p>}
             </div>
 
             <div className="input-container">
@@ -307,19 +370,20 @@ const ModifierInfosProf = (props) => {
                     <label htmlFor="prenom">prénom</label>
                     <input
                         type="text"
-                        value={props.enseignant.Prénom}
-                        {...register("prenom")}
+                        defaultValue={modifiedEnseignant.Prénom}
+                        {...register("Prénom")}
                     />
                 </div>
-                {errors.prenom && <p>{errors.prenom?.message}</p>}
+                {errors.Prénom && <p>{errors.Prénom?.message}</p>}
             </div>
 
             <div className="input-line">
                 <label htmlFor="dateNaissance">date Naissance</label>
                 <input
                     type="date"
-                    style={{ textTransform: 'lowercase'} }
-                    value={props.enseignant.DateNaissance}
+                    style={{ textTransform: 'lowercase' }}
+                    defaultValue={modifiedEnseignant.DateNaissance}
+                    {...register("DateNaissance")}
                 />
             </div>
 
@@ -328,11 +392,24 @@ const ModifierInfosProf = (props) => {
                     <label htmlFor="adresse">adresse</label>
                     <input
                         type="text"
-                        {...register('adress')}
-                        value={props.enseignant.Adresse}
+                        defaultValue={modifiedEnseignant.Adresse}
+                        {...register("Adresse")}
                     />
                 </div>
-                {errors.adress && <p>{errors.adress?.message}</p>}
+                {errors.Adresse && <p>{errors.Adresse?.message}</p>}
+            </div>
+
+            <div className="input-container">
+                <div className="input-line">
+                    <label htmlFor="adresse">email</label>
+                    <input
+                        type="text"
+                        style={{ textTransform: 'lowercase' }}
+                        defaultValue={modifiedEnseignant.Email}
+                        {...register('Email')}
+                    />
+                </div>
+                {errors.Email && <p>{errors.Email?.message}</p>}
             </div>
 
             <div className="input-container">
@@ -340,30 +417,48 @@ const ModifierInfosProf = (props) => {
                     <label htmlFor="numTel">Numéro telephone</label>
                     <input
                         type="text"
-                        value={props.enseignant.NumeroTelephone}
-                        onChange={(e) => e.target.value}
-                        {...register('numTelephone')}
+                        defaultValue={modifiedEnseignant.NumeroTelephone}
+                        {...register('NumeroTelephone')}
                     />
                 </div>
-                {errors.numTelephone && <p>{errors.numTelephone?.message}</p>}
+                {errors.NumeroTelephone && <p>{errors.NumeroTelephone?.message}</p>}
             </div>
 
             <div className="input-line">
                 <label htmlFor="grade">grade</label>
-                <input
-                    type="text"
-                    value={props.enseignant.Grade}
-                />
+                <select
+                    defaultValue={modifiedEnseignant.Grade}
+                    {...register('Grade')}
+                >
+                    <option value={"professeur"}>professeur</option>
+                    <option value={"Professor"}>professor</option>
+                    <option value={"MCA"}>MCA</option>
+                    <option value={"MCB"}>MCB</option>
+                    <option value={"maa"}>MAA</option>
+                    <option value={"mab"}>MAB</option>
+                </select>
+            </div>
+
+            <div className="input-container">
+                <div className="input-line">
+                    <label htmlFor="etablissement">etablissement</label>
+                    <input
+                        type="text"
+                        defaultValue={modifiedEnseignant.Etablissement}
+                        {...register("Etablissement")}
+                    />
+                </div>
+                {errors.Etablissement && <p>{errors.Etablissement?.message}</p>}
             </div>
 
             <div className="input-line">
                 <label htmlFor="fonctions">fonction</label>
                 <select
-                    value={props.enseignant.Fonction.toLowerCase()}
+                    defaultValue={modifiedEnseignant.Fonction}
+                    {...register('Fonction')}
                 >
-                    <option value={"chercheur"}>chercheur</option>
-                    <option value={"professeur"}>professeur</option>
-                    <option value={"doctorat"}>doctorat</option>
+                    <option value={"Fonction1"}>Fonction1</option>
+                    <option value={"Fonction2"}>Fonction2</option>
                 </select>
             </div>
 
@@ -403,16 +498,17 @@ const AjouterSeance = (props) => {
     }, []);
 
     const schema = yup.object().shape({
-        jour: yup.string().matches("", "veuillez saisie le jour de la scéance").required("veuillez saisie le jour de la scéance"),
-        heureDebut: yup.string().required("veuillez saisie l'heure début de scéance"),
-        heureFin: yup.string().required("veuillez saisie l'heure fin de scéance"),
-        cycle: yup.string().required("veuillez saisie le cycle "),
-        promotion: yup.string().required("veuillez saisie la promotion"),
-        semestre: yup.string().required("veuillez saisie le semestre"),
-        specialite: yup.string().required("veuillez saisie la specialité"),
-        module: yup.string().required("veuillez saisie le module"),
-        type: yup.string().required("veuillez saisie le type de scéance"),
-        salle: yup.string().required("veuillez spécifier la salle"),
+        NomS: yup.string().required("veuillez saisie le jour de la scéance"),
+        Type: yup.string(),
+        Jour: yup.string(),
+        HeureDebut: yup.string().required("veuillez saisie l'heure début de scéance"),
+        HeureFin: yup.string().required("veuillez saisie l'heure fin de scéance"),
+        Semestre: yup.string(),
+        Promotion: yup.string(),
+        Module: yup.string(),
+        Section: yup.string(),
+        Groupe: yup.string().optional(),
+        Salle: yup.string(),
 
     });
 
@@ -420,10 +516,79 @@ const AjouterSeance = (props) => {
         resolver: yupResolver(schema),
     });
 
+    //Récupération des data: salles, groupes...
 
-    const onSubmit = (data) => {
-        console.log(data);
-    }
+    const [salles, setSalles] = useState([]);
+
+    useEffect(() => {
+
+
+        const fetchData = () => {
+            axios.get('http://127.0.0.1:8000/Administration/salles')
+                .then((res => {
+                    setSalles(res.data);
+                }))
+                .catch((err) => { console.log(err) })
+        }
+
+        fetchData();
+
+    }, []);
+
+    const [selctedCycle, setSelectedCycle] = useState("");
+
+    const handleSelectChange = (e) => {
+        const selectedValue = e.target.value;
+        if (selectedValue === "1CPI" || selectedValue === "2CPI") {
+            setSelectedCycle('Classe préparatoire');
+        } else {
+            setSelectedCycle('Seconde Cycle');
+        }
+    };
+
+    const filteredSalles = salles.filter((salle) => salle.Zone === selctedCycle);
+
+    //-------Sections-------
+
+    const [sections, setSections] = useState([]);
+
+    useEffect(() => {
+        const fetchData1 = () => {
+            axios.get('http://127.0.0.1:8000/Administration/sections')
+                .then((res) => {
+                    setSections(res.data)
+                })
+                .catch((err) => { console.log(err) })
+        }
+
+        fetchData1();
+
+    }, []);
+
+    const [selectedPromo, setSeelctedPromo] = useState("default")
+
+    const filteredSections = sections.filter((section) => section.nomP === selectedPromo)
+
+
+    //----------groupes----------
+
+    const [groupes, setGroupes] = useState([]);
+
+    useEffect(() => {
+
+        axios.get('http://127.0.0.1:8000/Administration/groupes')
+            .then((res) => {
+                setGroupes(res.data)
+            })
+            .catch((err) => { console.log(err) })
+
+    }, []);
+
+    const [selectedSection, setSelectedSection] = useState(-1);
+
+    const filteredGroupes = groupes.filter((groupe) => groupe.idSection === parseInt(selectedSection));
+
+
 
     const [inputType, setInputType] = useState('text');
 
@@ -445,20 +610,97 @@ const AjouterSeance = (props) => {
         setInputType1('text');
     };
 
+    const [appearGroupe, setAppearGroup] = useState(false);
+
+    const handleChange = (e) => {
+        const selectedType = e.target.value;
+
+        if (selectedType === 'Cours') {
+            setAppearGroup(false)
+        } else if (selectedType === 'Tp' || selectedType === 'Td') {
+            setAppearGroup(true)
+        }
+    }
+
+    
+    const [newSeance, setNewSeance] = useState({
+        NomS: '',
+        Type: '',
+        Jour: '',
+        HeureDebut: '',
+        HeureFin: '',
+        Semestre: '',
+        Matricule: props.matricule,
+        Code: '',
+        idSalle: 0,
+        idPromo: '',
+        idGroupe: 0,
+        idSection: 0
+    })
+    const onSubmit = (data) => {
+        console.log(data);
+
+        setNewSeance({
+            NomS: data.NomS,
+            Type: data.Type,
+            Jour: data.Jour,
+            HeureDebut: data.HeureDebut,
+            HeureFin: data.HeureFin,
+            Semestre: data.Semestre,
+            Matricule: props.matricule,
+            Code: data.Module,
+            idSalle: data.Salle,
+            idPromo: data.Promotion,
+            idGroupe: data.Groupe,
+            idSection: data.Section
+        });
+
+        axios.post(`http://127.0.0.1:8000/Administration/insertSeance/${newSeance.Matricule}/${newSeance.Semestre}/`, newSeance)
+        .then((res) => {
+            window.location.reload()
+        })
+        .catch((err) => {console.log(err.response.data)})
+    }
+
     return (
         <form className="form-ajouter-sceance" ref={formRef} onSubmit={handleSubmit(onSubmit)}>
+
+            <div className="input-container">
+                <div className="input-line">
+                    <label htmlFor="NomS">nom séance</label>
+                    <input
+                        type="text"
+                        {...register('NomS')}
+                    />
+                </div>
+                {errors.NomS && <p>{errors.NomS?.message}</p>}
+            </div>
+
+            <div className="input-container">
+                <div className="input-line">
+                    <label htmlFor="type">type scéance</label>
+                    <select {...register('Type')} onChange={handleChange}>
+                        <option value={"Cours"}>cours</option>
+                        <option value={"Td"}>TD</option>
+                        <option value={"Tp"}>TP</option>
+                    </select>
+                </div>
+                {errors.Type && <p>{errors.Type?.message}</p>}
+            </div>
+
             <div className="input-container">
                 <div className="input-line">
                     <label htmlFor="jour">jour</label>
-                    <select {...register('jour')}>
-                        <option value={"dimanche"}>dimanche</option>
-                        <option value={"lundi"}>lundi</option>
-                        <option value={"mardi"}>mardi</option>
-                        <option value={"mercredi"}>mercredi</option>
-                        <option value={"jeudi"}>jeudi</option>
+                    <select {...register('Jour')}>
+                        <option value={"default"}> </option>
+                        <option value={"Dimanche"}>dimanche</option>
+                        <option value={"Lundi"}>lundi</option>
+                        <option value={"Mardi"}>mardi</option>
+                        <option value={"Mercredi"}>mercredi</option>
+                        <option value={"Jeudi"}>jeudi</option>
                     </select>
                 </div>
-                {errors.jour && <p>{errors.jour?.message}</p>}
+                {errors.Jour && <p>{errors.Jour?.message}</p>}
             </div>
 
             <div className="input-container">
@@ -468,94 +710,105 @@ const AjouterSeance = (props) => {
                         type={inputType} placeholder=""
                         onFocus={handleFocus}
                         onBlur={handleBlur}
-                        {...register("heureDebut")}
+                        {...register("HeureDebut")}
                     />
                 </div>
-                {errors.heureDebut && <p>{errors.heureDebut?.message}</p>}
+                {errors.HeureDebut && <p>{errors.HeureDebut?.message}</p>}
             </div>
 
             <div className="input-container">
                 <div className="input-line">
-                    <label htmlFor="heureFin">heure fin</label>
+                    <label htmlFor="HeureFin">heure fin</label>
                     <input
                         type={inputType1} placeholder=""
                         onFocus={handleFocus1}
                         onBlur={handleBlur1}
-                        {...register("heureFin")}
+                        {...register("HeureFin")}
                     />
                 </div>
-                {errors.heureDebut && <p>{errors.heureDebut?.message}</p>}
-            </div>
-
-            <div className="input-container">
-                <div className="input-line">
-                    <label htmlFor="cycle">cycle</label>
-                    <select {...register('cycle')}>
-                        <option value={"1cpi"}>1CPI</option>
-                        <option value={"2cpi"}>2CPI</option>
-                        <option value={"1cs"}>1CS</option>
-                        <option value={"2cs"}>2CS</option>
-                        <option value={"3cs"}>3CS</option>
-                    </select>
-                </div>
-                {errors.cycle && <p>{errors.cycle?.message}</p>}
+                {errors.HeureFin && <p>{errors.HeureFin?.message}</p>}
             </div>
 
             <div className="input-container">
                 <div className="input-line">
                     <label htmlFor="promotion">promotion</label>
-                    <input
-                        type="text"
-                        {...register("heureFin")}
-                    />
+                    <select  {...register('Promotion')} onChange={(e) => { handleSelectChange(e); setSeelctedPromo(e.target.value) }}>
+                        <option value={"default"}> </option>
+                        <option value={"1CPI"}>1CPI</option>
+                        <option value={"2CPI"}>2CPI</option>
+                        <option value={"1CS"}>1CS</option>
+                        <option value={"2CS"}>2CS</option>
+                        <option value={"3CS"}>3CS</option>
+                    </select>
                 </div>
-                {errors.promotion && <p>{errors.promotion?.message}</p>}
+
             </div>
 
             <div className="input-container">
                 <div className="input-line">
-                    <label htmlFor="specialite">specialité</label>
-                    <select {...register('specialite')}>
-                        <option value={"default"}></option>
-                        <option value={"siw"}>SIW</option>
-                        <option value={"isi"}>ISI</option>
-                        <option value={"ai"}>AI</option>
+                    <label htmlFor="semestre">Semestre</label>
+                    <select  {...register('Semestre')} >
+                        <option value={"default"}> </option>
+                        <option value={"S1"}>S1</option>
+                        <option value={"S2"}>S2</option>
                     </select>
                 </div>
-                {errors.specialite && <p>{errors.specialite?.message}</p>}
+
             </div>
+
             <div className="input-container">
                 <div className="input-line">
                     <label htmlFor="module">module</label>
-                    <input
-                        type="text"
-                        {...register("module")}
-                    />
+                    <select {...register('Module')}>
+                        <option value={"default"}> </option>
+                        {props.modules.map((module) => (
+                            <option value={module.Code}>{module.NomModule}</option>
+                        ))}
+                    </select>
                 </div>
-                {errors.module && <p>{errors.module?.message}</p>}
+                {errors.Module && <p>{errors.Module?.message}</p>}
             </div>
 
             <div className="input-container">
                 <div className="input-line">
-                    <label htmlFor="type">type scéance</label>
-                    <select {...register('type')}>
-                        <option value={"cours"}>cours</option>
-                        <option value={"td"}>TD</option>
-                        <option value={"tp"}>TP</option>
+                    <label htmlFor="jour">section</label>
+                    <select {...register('Section')} onChange={(e) => { setSelectedSection(e.target.value) }}>
+                        <option value={"-1"}> </option>
+                        {filteredSections.map((section) => (
+                            <option value={section.idSection}>{section.NomSection}</option>
+                        ))}
                     </select>
                 </div>
-                {errors.type && <p>{errors.type?.message}</p>}
+                {errors.Section && <p>{errors.Section?.message}</p>}
             </div>
+
+            {appearGroupe &&
+
+                <div className="input-container">
+                    <div className="input-line">
+                        <label htmlFor="jour">groupe</label>
+                        <select {...register('Groupe')}>
+                            {filteredGroupes.map((groupe) => (
+                                <option value={groupe.idGroupe}>{groupe.Numero}</option>
+                            ))}
+                        </select>
+                    </div>
+                    {errors.Groupe && <p>{errors.Groupe?.message}</p>}
+                </div>
+            }
+
 
             <div className="input-container">
                 <div className="input-line">
                     <label htmlFor="salle">salle</label>
-                    <input
-                        type="text"
-                        {...register("salle")}
-                    />
+                    <select {...register('Salle')}>
+                        <option value={"-1"}> </option>
+                        {filteredSalles.map((salle) => (
+                            <option value={salle.IdSalle}>{salle.NomSalle}</option>
+                        ))}
+                    </select>
                 </div>
-                {errors.heureDebut && <p>{errors.heureDebut?.message}</p>}
+                {errors.Salle && <p>{errors.Salle?.message}</p>}
             </div>
 
             <div className="update-profile-btns">
@@ -570,21 +823,38 @@ const AjouterSeance = (props) => {
 //----------------------Supprimer Profile----------------------//
 
 const SupprimerProfile = (props) => {
+
+    const navigate = useNavigate();
+
+    const handleSubmit = (e) => {
+
+        e.preventDefault();
+        axios.delete(`http://127.0.0.1:8000/Administration/delete_enseignants/${props.Matricule}/`)
+            .then(() => {
+                navigate('/admin/enseignants')
+            })
+            .catch(err => console.log(err.response.data))
+
+    }
+
     return (
-        <div className="container-supprimer-profile">
-            <div className="warning-circle">
-                <svg width="35" height="35" viewBox="0 0 35 35" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M17.4993 32.0832C25.5535 32.0832 32.0827 25.554 32.0827 17.4998C32.0827 9.44568 25.5535 2.9165 17.4993 2.9165C9.4452 2.9165 2.91602 9.44568 2.91602 17.4998C2.91602 25.554 9.4452 32.0832 17.4993 32.0832Z" stroke="#F80707" stroke-width="2.91667" stroke-linecap="round" stroke-linejoin="round" />
-                    <path d="M17.5 11.6667V17.5" stroke="#F80707" stroke-width="2.91667" stroke-linecap="round" stroke-linejoin="round" />
-                    <path d="M17.5 23.3333H17.5138" stroke="#F80707" stroke-width="2.91667" stroke-linecap="round" stroke-linejoin="round" />
-                </svg>
+        <form onSubmit={handleSubmit}>
+            <div className="container-supprimer-profile">
+                <div className="warning-circle">
+                    <svg width="35" height="35" viewBox="0 0 35 35" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M17.4993 32.0832C25.5535 32.0832 32.0827 25.554 32.0827 17.4998C32.0827 9.44568 25.5535 2.9165 17.4993 2.9165C9.4452 2.9165 2.91602 9.44568 2.91602 17.4998C2.91602 25.554 9.4452 32.0832 17.4993 32.0832Z" stroke="#F80707" stroke-width="2.91667" stroke-linecap="round" stroke-linejoin="round" />
+                        <path d="M17.5 11.6667V17.5" stroke="#F80707" stroke-width="2.91667" stroke-linecap="round" stroke-linejoin="round" />
+                        <path d="M17.5 23.3333H17.5138" stroke="#F80707" stroke-width="2.91667" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                </div>
+                <p>Est ce que vous etes sur de la suppression de ce compte?</p>
+                <div className="supprimer-profile-btns">
+                    <button className="annuler" onClick={() => props.annulerSuppression()}>Annuler</button>
+                    <button type="submit" className="supprimer">Supprimer</button>
+                </div>
             </div>
-            <p>Est ce que vous etes sur de la suppression de ce compte?</p>
-            <div className="supprimer-profile-btns">
-                <button className="annuler" onClick={() => props.annulerSuppression()}>Annuler</button>
-                <button className="supprimer">Supprimer</button>
-            </div>
-        </div>
+        </form>
+
     )
 }
 

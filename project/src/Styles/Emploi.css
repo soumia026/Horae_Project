@@ -1,0 +1,56 @@
+:root {
+    --main-color: #B8CEF7;
+    --bg-color: #D9D9D950;
+    --font-main-color: #000;
+    --font-color: #00000060;
+    --font-weight: 400;
+    --main-font-size: 17px;
+    --info-font-size: 14px;
+    --small-font-size: 11px;
+    --padding-page: 60px;
+    --buttons-color: #CBCBCB;
+}
+
+.infos-emploi-box {
+    padding: 0 1.5rem;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    position: relative;
+    z-index: 1;
+    align-items: center;
+    flex-grow: 1;
+}
+
+.infos-emploi-box .data-container {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.data-container .table-emploi-container {
+    width: 100%;
+    margin-top: 1.5rem;
+}
+
+.table-emploi-container tr{
+    width: 100%;
+}
+
+.table-emploi-container td {
+    padding-bottom: 0.8rem;
+    border-bottom: 1.5px #00000015 solid;
+    padding-left: 8px;
+   
+}
+
+.table-emploi-container td p {
+    margin-left: 2px;
+}
+
+.table-emploi-container .update-seance {
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+}

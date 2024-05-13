@@ -58,13 +58,20 @@
     cursor: pointer;
 }
 
+.update-btns .update {
+    background-color: var(--main-color);
+    color: #000;
+}
+
 .update-btns .update:hover {
     background-color: var(--main-color);
+    
 }
 
 .update-btns .delete {
     background-color: #C51818;
     box-shadow: 1px 2px 11px 4px rgb(14 55 54 /15%);
+    color: #fff;
 }
 
 .buttons-container {
@@ -288,7 +295,7 @@ input[type='time'] {
     z-index: 10;
     gap: 1rem;
     max-height: 100%;
-    min-height: 400px;
+    min-height: 460px;
 }
 
 .container-modifier-profile .infos-butns button {

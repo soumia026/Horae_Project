@@ -6,7 +6,7 @@ export const Modules = (props) => {
             <td>
                 <span>Modules enseignes</span>
                 {props.modules.map((module) => (
-                    <p>{module}</p>
+                    <p>{module.NomModule}</p>
                 ))}
             </td>
         </tr>

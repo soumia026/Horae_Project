@@ -1,0 +1,15 @@
+.scheduler-container table {
+    border-collapse: collapse;
+    width: 100%;
+  }
+  
+  .scheduler-container th, .scheduler-container td {
+    border: 1px solid #ccc;
+    padding: 8px;
+    text-align: center;
+  }
+  
+  .scheduler-container th:first-child, .scheduler-container td:first-child {
+    background-color: #f2f2f2;
+  }
+  

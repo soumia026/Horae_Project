@@ -299,7 +299,7 @@
     border: none;
     padding: 4px 0px;
     border-radius:  8px;
-    margin-bottom: 4px !important;
+    margin-bottom: 10px !important;
 }
 
 [aria-label^="1"],
@@ -314,7 +314,6 @@
     /* Your styles here */
     /* For example */
     padding: 6px 10.3px;
-    background-color: #fff;
 }
 [aria-label^="10"],
 [aria-label^="11"],
@@ -341,7 +340,10 @@
     /* Your styles here */
     /* For example */
     padding: 6px 7px;
-    background-color: #fff;
+}
+
+.react-calendar__month-view__days__day--weekend abbr{
+    color: #000 !important;
 }
 
 .react-calendar__month-view__days .react-calendar__tile--now{

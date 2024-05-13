@@ -6,6 +6,7 @@ from django.core.serializers import serialize
 import smtplib 
 from email.mime.text import MIMEText 
 from email.mime.multipart import MIMEMultipart
+
 from .models import *
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
@@ -18,6 +19,7 @@ from rest_framework import status
 from django.utils import timezone
 from datetime import datetime, time
 from django.db import IntegrityError
+# import datetime 
 
 
 @api_view(['GET'])
@@ -199,21 +201,6 @@ def delete_sections(request, section_id):
         return Response({'success': False, 'message': str(e)}, status=500)
    
     
-# @api_view(['DELETE'])
-# def delete_sections(request, ids_sections):
-#     try:
-#        with transaction.atomic():
-
-#         # Identifier les spécialités référençant les sections à supprimer
-#         Specialite.objects.filter(idSection_id=ids_sections).update(idSection_id=None)
-#         Seance.objects.filter(idSection_id=ids_sections).update(idSection_id=None)
-#         Seance.objects.filter(idSection_id = ids_sections).update(idGroupe_id=None)
-#         Groupe.objects.filter(idSection_id=ids_sections).delete()
-#         section.objects.filter(idSection=ids_sections).delete()
-       
-#         return Response({'success': True, 'message': 'La section a été supprimée avec succès.'})
-#     except Exception as e:
-#      return Response({'success': False, 'message': str(e)}, status=500)
     
 
 
@@ -300,25 +287,6 @@ def addSeance(request, teacher_id,semestre):
     "seanceJours":seanceJours,"promos":serPromos.data,"salles":serSalles.data,"specialites":serSpecialites.data,"sections":serSections.data,"groupes":serGroupes.data} )
    
 
-
-
-# def delete_absences(request, ids_absences):
-#     ids_absences_to_delete = [id_absence.strip() for id_absence in ids_absences.split(',') if id_absence.strip()]
-    
-#     if ids_absences_to_delete:
-#         try:
-#             with transaction.atomic():
-#                 # Supprimer les absences
-#                 Abcence.objects.filter(IdAbs__in=ids_absences_to_delete).delete()
-#             return JsonResponse({'success': True, 'message': 'Les absences ont été supprimées avec succès.'})
-#         except Exception as e:
-#             return JsonResponse({'success': False, 'message': str(e)}, status=500)
-#     else:
-#         return JsonResponse({'success': False, 'message': 'Aucun identifiant d' 'absence fourni.'}, status=400)
-
-
-
-
 @api_view(['DELETE'])
 def deleteAbsence(request,teacher_id,abs_id):
     if request.method == 'DELETE':
@@ -328,35 +296,9 @@ def deleteAbsence(request,teacher_id,abs_id):
         myAbs.delete()
         return Response({'success': True, 'message': 'L absence a été supprimée avec succès.'})
 
-    
-
-
-# @api_view(['POST','GET'])
-# @permission_classes([IsAuthenticated])
-# def insertSeance(request, teacher_id,semestre):
-#     if request.method == 'POST':
-#         serializer = SeanceSerializer(data=request.data)
-#         if serializer.is_valid():
-#             serializer.validated_data['Matricule_id'] = teacher_id
-#             serializer.validated_data['Semestre'] = semestre
-#             serializer.save()
-#             return Response(serializer.data, status=201)
-#         return Response(serializer.errors, status=400)
-#     elif request.method == 'GET':
-#         # Handle GET request if needed
-#         seances = Seance.objects.filter(Matricule_id=teacher_id,Semestre = semestre)
-#         serializer = SeanceSerializer(seances, many=True)
-#         return Response(serializer.data, status=200)
-#     else:
-#         return Response({"message": "Method not allowed"}, status=405)
-
-
-
-
-
 
 @api_view(['POST','GET'])
-@permission_classes([IsAuthenticated])
+
 def insertSeance(request, teacher_id, semestre):
     if request.method == 'POST':
         heure_debut = timezone.make_aware(datetime.combine(datetime.now().date(), time(8, 0)))
@@ -409,7 +351,6 @@ def insertSeance(request, teacher_id, semestre):
 
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
 def insertSpecialite(request):
     if request.method == 'POST':
         serializer = SpecialiteSerializer(data=request.data)
@@ -422,7 +363,7 @@ def insertSpecialite(request):
 
 
 # @api_view(['POST', 'GET'])
-# @permission_classes([IsAuthenticated])
+#   
 # def insertEnseignant(request):
 #     if request.method == 'POST':
 #         serializer = EnseignantSerializer(data=request.data)
@@ -451,8 +392,10 @@ def insertSpecialite(request):
 #         return Response({"message": "Method not allowed"}, status=405)
 
 
+
+
+
 @api_view(['POST', 'GET'])
-@permission_classes([IsAuthenticated])
 def insertEnseignant(request):
     if request.method == 'POST':
         serializer = EnseignantSerializer(data=request.data)
@@ -467,9 +410,11 @@ def insertEnseignant(request):
             if not email.endswith('@esi-sba.dz'):
                 return Response({"error": "L'email doit se terminer par '@esi-sba.dz'."}, status=400)
             
+            # Insérer l'enseignant dans la base de données
             teacher = serializer.save()
-            selected_modules_ids = request.data.get('modules', [])
             teacher_id = teacher.Matricule  # Assuming Matricule is the primary key of the Enseignant model
+            
+            selected_modules_ids = request.data.get('modules', [])
             for module_id in selected_modules_ids:
                 try:
                     module = Module.objects.get(Code=module_id)
@@ -480,6 +425,17 @@ def insertEnseignant(request):
                 except Exception as e:
                     print(f"An error occurred while creating Enseigne: {e}")
                     return Response({"error": f"An error occurred while creating Enseigne: {e}"}, status=500)
+            
+            # Récupérer le mot de passe depuis l'objet enseignant
+            password = teacher.MotDePasse
+            
+            # Envoi du mot de passe par email
+            try:
+                send_password_email(email, password)
+            except Exception as e:
+                print(f"An error occurred while sending password email: {e}")
+                # Gérer les erreurs d'envoi d'email ici
+            
             return Response(serializer.data, status=201)
         return Response(serializer.errors, status=400)
     elif request.method == 'GET':
@@ -490,15 +446,177 @@ def insertEnseignant(request):
     else:
         return Response({"message": "Method not allowed"}, status=405)
 
+def send_password_email(receiver_email, password):
+    sender_email = "EMAIL TA3KOUM TESTIW BIH "
+    sender_password = "MDP TA3KOUM"
+    
+    message = MIMEMultipart()
+    message['From'] = sender_email
+    message['To'] = receiver_email
+    message['Subject'] = "Votre mot de passe"
+
+    body = f"Votre mot de passe est : {password}"
+    message.attach(MIMEText(body, 'plain'))
+
+    with smtplib.SMTP('smtp.gmail.com', 587) as server:
+        server.starttls()
+        server.login(sender_email, sender_password)
+        text = message.as_string()
+        server.sendmail(sender_email, receiver_email, text)
 
 
 
 
 
+
+
+@api_view(['POST'])
+def inscription(request):
+    email = request.data.get('Email', None)
+    mot_de_passe = request.data.get('MotDePasse', None)
+
+    if email is None or mot_de_passe is None:
+        return Response({'message': 'Veuillez fournir à la fois Email et MotDePasse.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        # Vérifie si un enseignant avec cet email existe déjà dans la base de données
+        enseignant = Enseignant.objects.get(Email=email)
+        
+        # Vérifie si le mot de passe correspond
+        if enseignant.MotDePasse != mot_de_passe:
+            return Response({'message': 'Le mot de passe est incorrect.'}, status=status.HTTP_400_BAD_REQUEST)
+    except Enseignant.DoesNotExist:
+        # Si aucun enseignant correspondant n'est trouvé, retourne une réponse d'erreur
+        return Response({'message': 'L\'email fourni n\'existe pas.'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+    return Response({'message': 'Inscription réussie.'}, status=status.HTTP_201_CREATED)
+
+
+
+@api_view(['POST'])
+def inscription_ecole_administration(request):
+    email = request.data.get('Email', None)
+    mot_de_passe = request.data.get('mot_de_passe', None)  # Renommer le champ mot_de_passe
+
+    if email is None or mot_de_passe is None:
+        return Response({'message': 'Veuillez fournir à la fois Email et mot_de_passe.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        # Vérifie si un EcoleAdministration avec cet email existe déjà dans la base de données
+        ecole_administration = EcoleAdministration.objects.get(Email=email)
+        
+        # Vérifie si le mot de passe correspond
+        if ecole_administration.mot_de_passe != mot_de_passe:
+            return Response({'message': 'Le mot de passe est incorrect.'}, status=status.HTTP_400_BAD_REQUEST)
+    except EcoleAdministration.DoesNotExist:
+        # Si aucun EcoleAdministration correspondant n'est trouvé, retourne une réponse d'erreur
+        return Response({'message': 'L\'email fourni n\'existe pas.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    return Response({'message': 'Inscription réussie.'}, status=status.HTTP_201_CREATED)
+
+
+
+@api_view(['POST'])
+def changer_mot_de_passe_enseignant(request):
+    email = request.data.get('Email', None)
+    mot_de_passe_actuel = request.data.get('MotDePasseActuel', None)
+    nouveau_mot_de_passe = request.data.get('NouveauMotDePasse', None)
+
+    if email is None or mot_de_passe_actuel is None or nouveau_mot_de_passe is None:
+        return Response({'message': 'Veuillez fournir Email, MotDePasseActuel et NouveauMotDePasse.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        # Vérifie si un enseignant avec cet email existe déjà dans la base de données
+        enseignant = Enseignant.objects.get(Email=email)
+        
+        # Vérifie si le mot de passe actuel correspond
+        if enseignant.MotDePasse != mot_de_passe_actuel:
+            return Response({'message': 'Le mot de passe actuel est incorrect.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Met à jour le mot de passe avec le nouveau mot de passe
+        enseignant.MotDePasse = nouveau_mot_de_passe
+        enseignant.save()
+
+    except Enseignant.DoesNotExist:
+        # Si aucun enseignant correspondant n'est trouvé, retourne une réponse d'erreur
+        return Response({'message': 'L\'email fourni n\'existe pas.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    return Response({'message': 'Mot de passe changé avec succès.'}, status=status.HTTP_200_OK)
+
+
+
+
+@api_view(['POST'])
+def changer_mot_de_passe_ecole_administration(request):
+    email = request.data.get('Email', None)
+    mot_de_passe_actuel = request.data.get('MotDePasseActuel', None)
+    nouveau_mot_de_passe = request.data.get('NouveauMotDePasse', None)
+
+    if email is None or mot_de_passe_actuel is None or nouveau_mot_de_passe is None:
+        return Response({'message': 'Veuillez fournir Email, MotDePasseActuel et NouveauMotDePasse.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        # Vérifie si un EcoleAdministration avec cet email existe déjà dans la base de données
+        ecole_administration = EcoleAdministration.objects.get(Email=email)
+        
+        # Vérifie si le mot de passe actuel correspond
+        if ecole_administration.mot_de_passe != mot_de_passe_actuel:
+            return Response({'message': 'Le mot de passe actuel est incorrect.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Met à jour le mot de passe avec le nouveau mot de passe
+        ecole_administration.mot_de_passe = nouveau_mot_de_passe
+        ecole_administration.save()
+
+    except EcoleAdministration.DoesNotExist:
+        # Si aucun EcoleAdministration correspondant n'est trouvé, retourne une réponse d'erreur
+        return Response({'message': 'L\'email fourni n\'existe pas.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    return Response({'message': 'Mot de passe changé avec succès.'}, status=status.HTTP_200_OK)
+
+
+
+@api_view(['POST', 'GET'])
+def insert_ecole_administration(request):
+    if request.method == 'POST':
+        serializer = EcoleAdministrationSerializer(data=request.data)
+        if serializer.is_valid():
+            email = serializer.validated_data.get('Email')
+            
+            # Vérification si l'email existe déjà dans la base de données
+            if EcoleAdministration.objects.filter(Email=email).exists():
+                return Response({"error": f"L'email {email} est déjà utilisé."}, status=400)
+            
+            # Insérer l'école d'administration dans la base de données
+            ecole_administration = serializer.save()
+
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    elif request.method == 'GET':
+        # Handle GET request if needed
+        ecole_administrations = EcoleAdministration.objects.all()
+        serializer = EcoleAdministrationSerializer(ecole_administrations, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    else:
+        return Response({"message": "Méthode non autorisée"}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+
+
+
+@api_view(['DELETE'])
+def delete_ecole_administration(request, matricule):
+    try:
+        ecole_administration = EcoleAdministration.objects.get(matricule=matricule)
+    except EcoleAdministration.DoesNotExist:
+        return Response({"error": f"L'école d'administration avec le matricule {matricule} n'existe pas."}, status=status.HTTP_404_NOT_FOUND)
+
+    ecole_administration.delete()
+    return Response({"message": f"L'école d'administration avec le matricule {matricule} a été supprimée."}, status=status.HTTP_204_NO_CONTENT)
 
 
 @api_view(['POST','GET'])
-@permission_classes([IsAuthenticated])
+  
 def insertAbs(request, teacher_id):
     if request.method == 'POST':
         serializer = AbcenceSerializer(data=request.data)
@@ -518,7 +636,7 @@ def insertAbs(request, teacher_id):
         return Response({"message": "Method not allowed"}, status=405)
     
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+  
 def insertSection(request,idPromo):
     if request.method == 'POST':
         serializer = SectionSerializer(data=request.data)
@@ -532,7 +650,6 @@ def insertSection(request,idPromo):
 
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
 def insertHeure(request,idSeance):
     if request.method == 'POST':
         serializer = HeureSerializer(data=request.data)
@@ -544,7 +661,7 @@ def insertHeure(request,idSeance):
         return Response(serializer.errors, status=400)
     
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+  
 def insertGroupe(request,idSection):
     if request.method == 'POST':
         serializer = GroupeSerializer(data=request.data)
@@ -557,7 +674,7 @@ def insertGroupe(request,idSection):
     
 
 @api_view(['PUT'])
-@permission_classes([IsAuthenticated])
+  
 def updateHeure(request, idHeure):
     try:
         Heure = heure.objects.get(pk=idHeure)
@@ -573,7 +690,7 @@ def updateHeure(request, idHeure):
 
 
 @api_view(['PUT'])
-@permission_classes([IsAuthenticated])
+  
 def updateGroupe(request, idGroupe):
     if request.method == 'PUT':
         try:
@@ -588,7 +705,7 @@ def updateGroupe(request, idGroupe):
         return Response(serializer.errors, status=400)
 
 @api_view(['PUT'])
-@permission_classes([IsAuthenticated])
+  
 def updateSpecialite(request, idSpecialite):
     try:
         specialite = Specialite.objects.get(idSpecialite=idSpecialite)
@@ -603,7 +720,7 @@ def updateSpecialite(request, idSpecialite):
         return Response(serializer.errors, status=400)
 
 @api_view(['PUT'])
-@permission_classes([IsAuthenticated])
+  
 def updateSection(request, idSection):
     try:
         Section = section.objects.get(idSection=idSection)
@@ -623,7 +740,7 @@ def updateSection(request, idSection):
 from datetime import datetime, timedelta
 
 @api_view(['PUT'])
-@permission_classes([IsAuthenticated])
+  
 def updateEnseignant(request, matricule):
     try:
         enseignant = Enseignant.objects.get(Matricule=matricule)
@@ -661,7 +778,7 @@ def updateEnseignant(request, matricule):
 
 
 @api_view(['PUT'])
-@permission_classes([IsAuthenticated])
+  
 def updateAbsence(request, idAbs):
     try:
         absence = Abcence.objects.get(IdAbs=idAbs)
@@ -689,7 +806,7 @@ def updateAbsence(request, idAbs):
         return Response(serializer.errors, status=400)
 
 @api_view(['PUT'])
-@permission_classes([IsAuthenticated])
+  
 def updateSalle(request, id_salle):
     try:
         salle = Salle.objects.get(IdSalle=id_salle)
@@ -715,7 +832,7 @@ def updateSalle(request, id_salle):
 
 
 @api_view(['PUT'])
-@permission_classes([IsAuthenticated])
+  
 def updateModule(request, code):
     try:
         module = Module.objects.get(Code=code)
@@ -739,7 +856,7 @@ def updateModule(request, code):
 
 
 @api_view(['PUT'])
-@permission_classes([IsAuthenticated])
+  
 def updateSeance(request, idSeance):
     try:
         seance = Seance.objects.get(IdSeance=idSeance)
@@ -787,3 +904,325 @@ def updateSeance(request, idSeance):
             serializer.save()
             return Response(serializer.data, status=200)
         return Response(serializer.errors, status=400)
+
+
+from threading import Timer
+import locale
+locale.setlocale(locale.LC_TIME, 'fr_FR.UTF-8')
+   
+def createDate():
+    now = datetime.now()
+    if not DateSeance.objects.filter(date=now.date()).exists():
+        DateSeance.objects.create(date=now.date())
+
+    today = now.strftime("%A").lower()  # Convert to lowercase for case-insensitive comparison
+    seances = Seance.objects.filter(Jour__iexact=today)
+    dateId = DateSeance.objects.get(date=now.date())  # Retrieve the DateSeance object for today
+
+    for seance in seances:
+        Seances.objects.create(date=dateId, idSeance = seance, present=True)
+
+current_time = datetime.now()
+target_time = datetime.strptime("01:00:00", "%H:%M:%S")
+
+
+while  current_time.hour == target_time.hour and current_time.minute == target_time.minute and current_time.second == target_time.second:
+        createDate()  
+
+
+
+@api_view(['GET'])
+def calculerHeuresSup(request,nbrHeuresCharge,TauxCours,TauxTd,TauxTp):
+    nbrHeuresCharge = float(nbrHeuresCharge)
+    TauxCours = float(TauxCours)
+    TauxTd = float(TauxTd)
+    TauxTp = float(TauxTp)
+    Teachers = Enseignant.objects.all()
+  
+    for teacher in Teachers :
+       
+        seancesCours = Seance.objects.filter(Matricule_id = teacher.Matricule,Type= 'Cours')
+        seancesTd = Seance.objects.filter(Matricule_id = teacher.Matricule,Type= 'Td')
+        seancesTp = Seance.objects.filter(Matricule_id = teacher.Matricule,Type= 'Tp')
+        nbrHeuresCours = 0
+        nbrHeuresTd = 0
+        nbrHeuresTp = 0
+
+        for seance in seancesCours:
+
+            difference = (datetime.combine(datetime.min, seance.HeureFin) - datetime.combine(datetime.min, seance.HeureDebut)).total_seconds() / 3600
+            nbrHeuresCours += difference
+
+
+        for seance in seancesTd:
+
+            difference = (datetime.combine(datetime.min, seance.HeureFin) - datetime.combine(datetime.min, seance.HeureDebut)).total_seconds() / 3600
+            nbrHeuresTd += difference
+
+
+        for seance in seancesTp:
+
+            difference = (datetime.combine(datetime.min, seance.HeureFin) - datetime.combine(datetime.min, seance.HeureDebut)).total_seconds() / 3600
+            nbrHeuresTp += difference
+
+
+        transNbrHeuresCours = nbrHeuresCours * TauxCours
+        transNbrHeuresTD = nbrHeuresTd * TauxTd
+        transNbrHeuresTp = nbrHeuresTp *TauxTp
+        nbrHeuresSup = 0
+        calculCharge = 0
+        calculCharge += transNbrHeuresCours
+        if calculCharge >= nbrHeuresCharge :
+            nbrHeuresSupCours = (transNbrHeuresCours - nbrHeuresCharge)/TauxCours
+            nbrHeuresSup += nbrHeuresSupCours + nbrHeuresTd + nbrHeuresTp
+        else :
+            nbrChargeRest = nbrHeuresCharge - calculCharge
+            calculCharge += transNbrHeuresTD
+            if calculCharge >= nbrHeuresCharge :
+                nbrHeuresSupTd = (transNbrHeuresTD - nbrChargeRest)/TauxTd
+                nbrHeuresSup += nbrHeuresSupTd + nbrHeuresTp
+            else :
+                nbrChargeRest = nbrHeuresCharge - calculCharge
+                calculCharge += transNbrHeuresTp
+                nbrHeuresSupTp = (transNbrHeuresTp - nbrChargeRest)/TauxTp
+                if calculCharge <= nbrHeuresCharge :
+                    nbrHeuresSup = 0
+                else :
+                    nbrHeuresSup += nbrHeuresSupTp
+
+
+        return Response({'R-Sup':nbrHeuresSup})
+    
+
+# # @api_view(['POST'])
+# # def ajouterEnseigne(request,id_teacher,id_modules):
+
+
+# @api_view(['GET'])
+# def calculer_montant(request,debut_semestre,fin_semestre,PU_MAB,PU_MAA,PU_MCB,PU_MCA,PU_Professeur):
+#     def calculerMontant(matricule,rsup,Pu):
+#         montant = rsup * Pu
+#         debut_year = datetime.strptime(debut_semestre, "%Y-%m-%d").year
+#         fin_year = datetime.strptime(fin_semestre, "%Y-%m-%d").year
+
+#     # Test if debut_semestre year differs from fin_semestre year
+#         if debut_year != fin_year:
+#             semestre = 'S1'
+#         else:
+#             semestre = 'S2'
+#         if debut_year != fin_year:
+#             anneuniversitaire = f"{debut_year}/{fin_year}"
+#         else:
+#             anneuniversitaire = f"{debut_year}/{debut_year - 1}"
+
+#         montant_instance = Montant.objects.create(
+#             somme=montant,
+#             anneeUniversitaire=anneuniversitaire,
+#             semestre=semestre,
+#             matricule=matricule  # You need to pass the correct matricule here
+#         )
+#         return montant
+#     Teachers = Enseignant.objects.all()
+#     PUMAB = float(PU_MAB)
+#     PUMAA = float(PU_MAA)
+#     PUMCB = float(PU_MCB)
+#     PUMCA = float(PU_MCA)
+#     PUProfesseur = float(PU_Professeur)
+#     for teacher in Teachers:
+#         # Récupérer les séances de l'enseignant pour le mois en cours
+#         emploi_enseignant = Seance.objects.filter(Matricule_id= teacher.Matricule)
+
+#         # Récupérer les heures supplémentaires pour les séances de l'enseignant
+#         seances_rsup = heure.objects.filter(defType='HeuresSup', idSeance_id__in=emploi_enseignant.values_list('IdSeance', flat=True))
+
+#         # Récupérer les présences aux séances des heures supplémentaires
+#         seances_rsup_presents = Seances.objects.filter(idSeance_id__in=seances_rsup.values_list('idSeance_id', flat=True), present=True )
+#         rsup_monthly = {}
+#         debut_semestre = datetime.strptime(debut_semestre, '%Y-%m-%d')
+#         fin_semestre = datetime.strptime(fin_semestre, '%Y-%m-%d')
+#         duree_semestre = (fin_semestre.year - debut_semestre.year) * 12 + fin_semestre.month - debut_semestre.month + 1
+
+#         seances_par_semestre = DateSeance.objects.filter(IddatteS__in=seances_rsup_presents.values_list('date_id', flat=True), date__range=[debut_semestre, fin_semestre])
+
+#         rsup_monthly = {}
+#         rsup_semestre = 0
+#         for mois in range(debut_semestre.month, debut_semestre.month + duree_semestre):
+#             rsup = 0
+#             if mois > 12:
+#                 mois = mois % 12
+#             seances_par_mois = seances_par_semestre.filter(date__month=mois)
+#             id_seances_par_mois = Seances.objects.filter(date_id__in = seances_par_mois.values_list('IddatteS', flat=True))
+#             for seance in id_seances_par_mois:
+#                 hours= heure.objects.filter(defType='HeuresSup',idSeance_id = seance.idSeance_id)
+#                 for hour in hours:
+#                     rsup += hour.duree.total_seconds() / 3600  # Convert timedelta to hours
+        
+#             rsup_monthly[mois] = rsup
+#             rsup_semestre += rsup
+        
+#         if teacher.Grade == 'LectureA' :
+#             calculerMontant(teacher.Matricule,rsup_semestre,PUMAA)
+#         elif teacher.Grade == 'LectureB' :
+#             calculerMontant(teacher.Matricule,rsup_semestre,PUMAB)
+#         elif teacher.Grade == 'MCA' :
+#             calculerMontant(teacher.Matricule,rsup_semestre,PUMCA)
+#         elif teacher.Grade == 'MCB' :
+#             calculerMontant(teacher.Matricule,rsup_semestre,PUMCB)
+#         elif teacher.Grade == 'Professor' :
+#             calculerMontant(teacher.Matricule,rsup_semestre,PUProfesseur)
+
+#         # for hour in heures :
+#         #     rsup += hour.duree.total_seconds() / 3600 
+
+#         return Response(rsup_monthly)
+    
+
+# @api_view(['GET'])
+# def calculer_rsup_mois(request,debut_semestre,fin_semestre):
+#     Teachers = Enseignant.objects.all()
+#     for teacher in Teachers:
+#         # Récupérer les séances de l'enseignant pour le mois en cours
+#         emploi_enseignant = Seance.objects.filter(Matricule_id= teacher.Matricule)
+
+#         # Récupérer les heures supplémentaires pour les séances de l'enseignant
+#         seances_rsup = heure.objects.filter(defType='HeuresSup', idSeance_id__in=emploi_enseignant.values_list('IdSeance', flat=True))
+
+#         # Récupérer les présences aux séances des heures supplémentaires
+#         seances_rsup_presents = Seances.objects.filter(idSeance_id__in=seances_rsup.values_list('idSeance_id', flat=True), present=True )
+    
+#         rsup_monthly = {}
+#         for mois in range(1,13) :
+#             rsup = 0
+#             seances_par_mois = DateSeance.objects.filter(IddatteS__in = seances_rsup_presents.values_list('date_id', flat=True),date__month = mois)
+#             id_seances_par_mois = Seances.objects.filter(date_id__in = seances_par_mois.values_list('IddatteS', flat=True))
+#             for seance in id_seances_par_mois:
+#                 hours= heure.objects.filter(defType='HeuresSup',idSeance_id = seance.idSeance_id)
+#                 for hour in hours:
+#                     rsup += hour.duree.total_seconds() / 3600  # Convert timedelta to hours
+        
+#             rsup_monthly[mois] = rsup
+#         # for hour in heures :
+#         #     rsup += hour.duree.total_seconds() / 3600 
+
+#         return Response(rsup_monthly)
+    
+
+    
+
+
+
+
+
+@api_view(['POST'])
+def attribuer_Module_Ens(request):
+    if request.method == 'POST':
+        serializer = EnseigneSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+def get_salle_by_id(request, id_salle):
+    try:
+        # Récupérer la salle par son IdSalle
+        salle = Salle.objects.get(IdSalle=id_salle)
+
+        # Créer un dictionnaire contenant les détails de la salle
+        salle_details = {
+            'NomSalle': salle.NomSalle,
+            'Zone': salle.Zone,
+            'NbrPlaces': salle.NbrPlaces,
+            'Type': salle.Type
+            # Ajoutez d'autres champs si nécessaire
+        }
+
+        # Retourner les détails de la salle sous forme de réponse JSON
+        return JsonResponse({'salle': salle_details})
+
+    except Salle.DoesNotExist:
+        # Si la salle avec l'IdSalle donné n'existe pas, renvoyer une réponse avec un statut 404
+        return JsonResponse({'error': 'La salle avec cet ID n\'existe pas'}, status=404)
+    
+def get_section_by_id(request, id_section):
+    try:
+        # Récupérer la section par son idSection
+        section_instance = section.objects.get(idSection=id_section)  # Use lowercase "section"
+
+        # Créer un dictionnaire contenant les détails de la section
+        section_details = {
+            'NomSection': section_instance.NomSection,
+            'nomP': section_instance.nomP.NomPromo  # Exemple pour récupérer le nom de la promotion associée
+            # Ajoutez d'autres champs si nécessaire
+        }
+
+        # Retourner les détails de la section sous forme de réponse JSON
+        return JsonResponse({'section': section_details})
+
+    except section.DoesNotExist:  # Use lowercase "section"
+        # Si la section avec l'idSection donné n'existe pas, renvoyer une réponse avec un statut 404
+        return JsonResponse({'error': 'La section avec cet ID n\'existe pas'}, status=404) 
+    
+def get_module_by_code(request, code):
+    try:
+        module = get_object_or_404(Module, Code=code)
+        # Vous pouvez ajouter d'autres traitements ici si nécessaire
+        # Par exemple, serializer le module si vous souhaitez renvoyer des données JSON
+        module_data = {
+            'NomModule': module.NomModule,
+            'Coefficient': module.Coefficient,
+            'NbrHeures': module.NbrHeures,
+            'Semestre': module.Semestre,
+        }
+        return JsonResponse({'module': module_data})
+    except Exception as e:
+        # Gérer les erreurs
+        return JsonResponse({'error': str(e)}, status=500)    
+    
+def get_groupe_by_id(request, id_groupe):
+    try:
+        # Retrieve the group by its idGroupe
+        groupe = Groupe.objects.get(idGroupe=id_groupe)
+
+        # Create a dictionary containing the details of the group
+        groupe_details = {
+            'Numero': groupe.Numero,
+            'Specialite': groupe.Specialite,
+            'idSection': groupe.idSection.NomSection if groupe.idSection else None
+            # Include other fields as needed
+        }
+
+        # Return the group details as a JSON response
+        return JsonResponse({'groupe': groupe_details})
+
+    except Groupe.DoesNotExist:
+        # If the group with the given idGroupe does not exist, return a response with status 404
+        return JsonResponse({'error': 'Le groupe avec cet ID n\'existe pas'}, status=404)    
+        
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    

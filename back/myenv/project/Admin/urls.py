@@ -7,7 +7,12 @@ path('teachers',views.teacher_list,name='teacher_list'),
 # path('absence/<str:teacher_id>/',views.addAbsence,name='addAbsence'),
 path('insertAbs/<str:teacher_id>/',views.insertAbs,name='insertAbs'),
 path('insertEnseignant/',views.insertEnseignant,name='insertEnseignant'),
+# path('insert-enseignant/', views.insertEnseignant, name='insert_enseignant'),
+path('attribuer_Module_Ens/',views.attribuer_Module_Ens,name='attribuer_Module_Ens'),
+
+path('inscription/', views.inscription, name='inscription'),
 path('deleteAbsence/<str:teacher_id>/<int:abs_id>/',views.deleteAbsence,name='deleteAbsence'),
+
 
 
 path('modules',views.modules_list,name='modules_list'),
@@ -42,5 +47,16 @@ path('updateAbsence/<int:idAbs>/', views.updateAbsence, name='update_absence'),
 path('updateSalle/<int:id_salle>/', views.updateSalle, name='update_salle'),
 path('updateModule/<str:code>/', views.updateModule, name='update_module'),
 path('updateSeance/<int:idSeance>/',views.updateSeance, name='update_seance'),
+path('calculerHeuresSup/<str:nbrHeuresCharge>/<str:TauxCours>/<str:TauxTd>/<str:TauxTp>/',views.calculerHeuresSup, name='calculerHeuresSup'),
+# path('calculer_montant/<str:debut_semestre>/<str:fin_semestre>/<str:PU_MAB>/<str:PU_MAA>/<str:PU_MCB>/<str:PU_MCA>/<str:PU_Professeur>/',views.calculer_rsup_mois,name="calculer_rsup_mois")
+path('inscription_ecole_administration/', views.inscription_ecole_administration, name='inscription_ecole_administration'),
+path('changer_mot_de_passe/', views.changer_mot_de_passe_ecole_administration, name='changer_mot_de_passe_ecole_administration'),
+path('changer_mot_de_passe_enseignant/', views.changer_mot_de_passe_enseignant, name='changer_mot_de_passe_enseignant'),
+path('insert_ecole_administration/', views.insert_ecole_administration, name='insert_ecole_administration'),
+path('delete_ecole_administration/<str:matricule>/', views.delete_ecole_administration, name='delete_ecole_administration'),
+path('salle/<int:id_salle>/', views.get_salle_by_id, name='get_salle_by_id'),
+path('section/<int:id_section>/', views.get_section_by_id, name='get_section_by_id'),
+path('groupe/<int:id_groupe>/', views.get_groupe_by_id, name='get_groupe_by_id'),
+path('module/<str:code>/', views.get_module_by_code, name='get_module_by_code'),
 
 ]

@@ -1,8 +1,6 @@
 
 from django.db import models
 
-
-
 class Enseignant(models.Model):
     myFunctions = [
     ('Fonction1','Fonction1'),
@@ -11,7 +9,6 @@ class Enseignant(models.Model):
     myGrades = [
     ('MCA','MCA'),
     ('MCB','MCB'),
-    ('Teacher','Teacher'),
     ('LectureA','LectureA'),
     ('LectureB','LectureB'),
     ('Professor','Professor'),
@@ -54,7 +51,7 @@ class Promotion(models.Model):
     class Meta:
         db_table =  "Promotion"
     def __str__(self) -> str:
-        return self.NomPromo
+        return self.Matricule
 
 
 class Module(models.Model):
@@ -72,7 +69,7 @@ class Module(models.Model):
     class Meta:
         db_table =  "Module" 
     def __str__(self) -> str:
-        return self.NomModule
+        return self.Code
 
 
 
@@ -104,73 +101,40 @@ class DateSeance(models.Model) :
         return self.IddatteS
 
 
-class section(models.Model):
-        
-    mySections = [
-    ('A','A'),
-    ('B','B'),
-    ('C','C'),
-]
+class section(models.Model):     
     idSection = models.IntegerField(blank = True,primary_key = True)
-    NomSection = models.CharField(max_length = 20,choices = mySections)
+    NomSection = models.CharField(max_length = 20)
     nomP = models.ForeignKey(Promotion,default = None,on_delete=models.DO_NOTHING)
     class Meta:
         db_table =  "Section"
     def __str__(self) -> str:
-        return self.NomSection
+        return str(self.idSection)
     
+
+
+class Specialite(models.Model):
+ 
+    idSpecialite = models.AutoField(blank = True,primary_key = True)
+    NomSpecialite = models.CharField(max_length = 20,blank = True)
+    # idSection = models.ForeignKey(section,default = None,on_delete=models.DO_NOTHING , null=True)
+
+    class Meta:
+        db_table =  "Specialite"
+    def __str__(self) -> str:
+        return str(self.idSpecialite)
 
 class Groupe(models.Model):
     
-    myGroups =[ 
-    ('1','1'),
-    ('2','2'),
-    ('3','3'),
-    ('4','4'),
-    ('5','5'),
-    ('6','6'),
-    ('7','7'),
-    ('8','8'),
-    ('9','9'),
-    ('10','10'),
-    ('11','11'),
-    ('12','12'),
-    ('13','13'),
-    ('14','14'),
-    ('15','15'),
-    ('16','16'),
-    ('17','17'),
-    ('18','18'),
-    ('19','19'),
-    ('20','20'),
-]
-    mySpesialite = [
-    ('ISI','ISI'),
-    ('SIW','SIW'),
-    ('IASD','IASD'),
-]
     idGroupe = models.IntegerField(blank = True,primary_key = True)
-    Numero = models.CharField(max_length = 20,choices = myGroups)
-    Specialite = models.CharField(max_length = 20,choices = mySpesialite, blank = True)
+    Numero = models.CharField(max_length = 20)
+    Specialite = models.CharField(max_length = 20, blank = True)
     idSection = models.ForeignKey(section,default = None,on_delete=models.DO_NOTHING)
 
     class Meta:
         db_table =  "Groupe"
         
     def __str__(self) -> str:
-        return self.idGroupe
-
-class Specialite(models.Model):
-    idSpecialite = models.IntegerField(blank = True,primary_key = True)
-    NomSpecialite = models.CharField(max_length = 20,choices= Groupe.mySpesialite,blank = True)
-    idSection = models.ForeignKey(section,default = None,on_delete=models.DO_NOTHING)
-
-    class Meta:
-        db_table =  "Specialite"
-    def __str__(self) -> str:
-        return self.idSpecialite
-
-
+        return str(self.idGroupe)
     
 class Enseigne(models.Model) :
     Matric = models.ForeignKey(Enseignant,default = None,on_delete=models.DO_NOTHING)
@@ -179,7 +143,7 @@ class Enseigne(models.Model) :
         db_table =  "Enseigne"
         unique_together = ["Matric", "Codee"]
     def __str__(self) -> str:
-        return self.Matric
+        return str(self.Matric)
 
 class SpecPromo(models.Model):
     idSpecialite = models.ForeignKey(Specialite,default = None,on_delete=models.DO_NOTHING)
@@ -189,12 +153,20 @@ class SpecPromo(models.Model):
         unique_together = ["idSpecialite", "nomP"]
 
 
+
+class SpecSection(models.Model):
+    idSpecialite =models.ForeignKey(Specialite,default = None,on_delete=models.DO_NOTHING)
+    idSection = models.ForeignKey(section,default = None,on_delete=models.DO_NOTHING , null=True)
+    class Meta:
+        db_table =  "SpecSection"
+        unique_together = ["idSpecialite", "idSection"]
+
 class Abcence(models.Model):
     IdAbs = models.AutoField(primary_key = True)
-    DateAbs = models.DateField(default = None)
-    HeureDebut = models.TimeField(blank = True)
-    HeureFin = models.TimeField(blank = True)
-    Motif = models.CharField(max_length = 100, blank = True)
+    DateAbs = models.DateField(blank = True,default = None)
+    HeureDebut = models.TimeField(blank = True,default = None)
+    HeureFin = models.TimeField(blank = True,default = None)
+    Motif = models.CharField(max_length = 100, blank = True,default = None)
     IdProf = models.ForeignKey(Enseignant,default = None,on_delete=models.DO_NOTHING)
     class Meta:
         db_table =  "Absence"
@@ -221,13 +193,14 @@ class Seance(models.Model):
     Jour = models.CharField(max_length = 20,choices = myJours)
     HeureDebut = models.TimeField(blank = True)
     HeureFin = models.TimeField(blank = True)
-    Semestre = models.CharField(max_length = 20,choices = Module.mySemesters)
+    Semestre = models.CharField(max_length = 20,choices = Module.mySemesters,default = None)
     Matricule = models.ForeignKey(Enseignant,default = None,on_delete=models.DO_NOTHING)
-    Code = models.ForeignKey(Module,default = None,on_delete=models.DO_NOTHING)
-    idSalle = models.ForeignKey(Salle,default = None,on_delete=models.DO_NOTHING)
-    idSpecialite =  models.ForeignKey(Specialite,default = None,on_delete=models.DO_NOTHING)
-    idGroupe =  models.ForeignKey(Groupe,default = None,on_delete=models.DO_NOTHING)
-    idSection =  models.ForeignKey(section,default = None,on_delete=models.DO_NOTHING)
+    Code = models.ForeignKey(Module,default = None,on_delete=models.DO_NOTHING,null= True)
+    idSalle = models.ForeignKey(Salle,default = None,on_delete=models.DO_NOTHING,null= True)
+    idPromo=  models.ForeignKey(Promotion,default = None,on_delete=models.DO_NOTHING,null = True)
+    idGroupe =  models.ForeignKey(Groupe,default = None,on_delete=models.DO_NOTHING,null = True)
+    idSection =  models.ForeignKey(section,default = None,on_delete=models.DO_NOTHING,null = True)
+    # idAbs = models.ForeignKey(Abcence,default=None,on_delete=models.DO_NOTHING,null=True)
     class Meta:
         db_table =  "Seance"
 
@@ -238,8 +211,10 @@ class Seance(models.Model):
 class Seances(models.Model) :
     date = models.ForeignKey(DateSeance,default=None,on_delete=models.DO_NOTHING)
     idSeance = models.ForeignKey(Seance,default=None,on_delete=models.DO_NOTHING)
+    present = models.BooleanField(default=True)
     class Meta:
         db_table =  "Seances"
+        unique_together = ["date", "idSeance"]
 
     # presence = models.BooleanField(default=True)
     
@@ -251,10 +226,79 @@ class heure(models.Model):
     ('Charge','Charge'),
 ]
 
-    idHeure = models.IntegerField(blank = True,primary_key = True)
+    idHeure = models.AutoField(primary_key = True)
     defType = models.CharField(max_length = 20,choices= Types)
     idSeance = models.ForeignKey(Seance,default = None,on_delete=models.DO_NOTHING)
+    duree = models.DurationField(null=True)
     class Meta:
         db_table =  "Heure"
     def __str__(self) -> str:
         return self.defType
+    
+
+
+class EcoleAdministration(models.Model):
+    matricule = models.CharField(max_length = 20,blank = True,primary_key = True)
+    nom = models.CharField(max_length=50)
+    prenom = models.CharField(max_length=50)
+    mot_de_passe = models.CharField(max_length=20)
+    Email = models.EmailField(max_length = 30,blank = True)
+
+    class Meta:
+        db_table = 'EcoleAdministration'
+    def __str__(self) -> str:
+        return self.Nom
+
+class Montant(models.Model):
+    idMontant = models.AutoField(primary_key=True)
+
+    SEMESTRE_CHOICES = (
+            ('S1','S1'),
+            ('S2','S2'),
+
+    )
+    
+    somme = models.FloatField(default = None)
+    anneeUniversiatire = models.CharField(max_length=50, default = None) 
+    semestre = models.CharField(max_length=20, choices=SEMESTRE_CHOICES)
+    matricule = models.ForeignKey(Enseignant, on_delete=models.DO_NOTHING , default = None)
+    class Meta:
+        db_table =  "Montant"
+
+    def __str__(self):
+        return str(self.idMontant)
+
+
+
+
+
+
+
+
+
+# class Montant(models.Model):
+#     idMontant = models.AutoField(primary_key=True)
+#     TYPE_CHOICES = (
+#         ('Banque', 'Banque'),
+#         ('CCP', 'CCP'),
+#     )
+#     SEMESTRE_CHOICES = (
+#             ('S1','S1'),
+#             ('S2','S2'),
+
+#     )
+#     typeRecu = models.CharField(max_length=20, choices=TYPE_CHOICES)
+#     somme = models.FloatField()
+#     anneeUniversiatire = models.CharField(max_length=50) 
+#     matricule = models.ForeignKey(Enseignant, on_delete=models.DO_NOTHING , default = None)
+#     semestre = models.CharField(max_length=20, choices=SEMESTRE_CHOICES)
+
+#     def __str__(self):
+#         return f"ID: {self.idMontant}, Type: {self.typeRecu}, Somme: {self.somme}, Date: {self.date}, Semestre: {self.semestre}"
+
+
+
+    
+    
+
+    

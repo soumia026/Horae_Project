@@ -4,13 +4,17 @@ import axios from "axios";
 export const AbsenceLine = (props) => {
 
     
-    const handleDelete = (id) => {
+    const handleDelete = (id, matriculeProf) => {
         axios.get(`http://127.0.0.1:8000/Administration/delete_absences/${id}/`)
         .then(res => {
-            console.log(res.data)
-            window.location.reload()
+            console.log(res.data);
+            window.location.reload();
         })
         .catch(err => console.log(err));
+    }
+
+    const handleReload = () => {
+      
     }
 
     return (

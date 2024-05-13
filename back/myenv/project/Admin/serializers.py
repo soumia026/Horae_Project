@@ -87,3 +87,15 @@ class AbcenceSerializer(serializers.ModelSerializer):
         if value is None:
             raise serializers.ValidationError("La date d'absence ne peut pas être nulle.")
         return value
+
+
+
+class EcoleAdministrationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EcoleAdministration
+        fields = '__all__'
+
+class MontantSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Montant
+        fields = '__all__'

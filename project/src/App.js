@@ -9,6 +9,7 @@ import { Reclamations } from "./Pages/Reclamations";
 import { Archive } from "./Pages/Archive";
 import { Etats } from "./Pages/Etats";
 import { ProfInfos } from "./Pages/ProfInfos";
+import LoginPage from "./Pages/LoginPage";
 
 function App() {
 
@@ -20,13 +21,13 @@ function App() {
       <Router>
         <Routes>
 
-          <Route path='/' element={<Links />} />
+          <Route path='/' element={<LoginPage />} />
 
           <Route path="/admin" element={<AdminLayout />} >
             <Route index element={<Dashboard/>} />
             <Route path="calendrier" element={<Calendrier />} />
             <Route path="enseignants" element={<Enseignants />} />
-            <Route path="enseignants/:id" element={<ProfInfos />} />
+            <Route path="enseignants/:matricule" element={<ProfInfos />} />
             <Route path="etats" element={<Etats />} />
             <Route path="reclamations" element={<Reclamations />} />
             <Route path="archive" element={<Archive />} />

@@ -1,10 +1,19 @@
-import React from "react";
-import ProgressBar from "@ramonak/react-progress-bar";
+import React from 'react';
+import { Calendar, momentLocalizer } from 'react-big-calendar';
+import moment from 'moment';
+import 'react-big-calendar/lib/css/react-big-calendar.css';
 
-export function Etats() {
-    return (
-        <div className="main-container">
-            <ProgressBar completed={60} />
-        </div>
-    )
-}
+const localizer = momentLocalizer(moment);
+
+export const Etats = () => {
+  return (
+    <div>
+      <Calendar
+        localizer={localizer}
+        events={[]} // Add events data here
+        startAccessor="start"
+        endAccessor="end"
+      />
+    </div>
+  );
+};
