@@ -7,43 +7,47 @@ import { Calendrier } from "./Pages/Calendrier";
 import { Enseignants } from "./Pages/Enseignants";
 import { Reclamations } from "./Pages/Reclamations";
 import { Archive } from "./Pages/Archive";
-import { Etats } from "./Pages/Etats";
+import { Documents } from "./Pages/Documents";
 import { ProfInfos } from "./Pages/ProfInfos";
+import { Profile } from "./Pages/Profile";
 import LoginPage from "./Pages/LoginPage";
+import { useState, createContext, useContext } from "react";
+
+export const AppContext = createContext();
 
 function App() {
 
-  
+  const [enseignantMat, setEnseignantMat] = useState('')
 
   return (
     <div className="App">
-      {/* <ProfProvider> */}
-      <Router>
-        <Routes>
+      <AppContext.Provider value={{enseignantMat, setEnseignantMat}}>
+        <Router>
+          <Routes>
+            <Route path='/' element={<LoginPage />} />
 
-          <Route path='/' element={<LoginPage />} />
+            <Route path="/admin" element={<AdminLayout />} >
+              <Route index element={<Dashboard />} />
+              <Route path="calendrier" element={<Calendrier />} />
+              <Route path="enseignants" element={<Enseignants />} />
+              <Route path="enseignants/:matricule" element={<ProfInfos />} />
+              <Route path="documents" element={<Documents />} />
+              <Route path="reclamations" element={<Reclamations />} />
+              <Route path="archive" element={<Archive />} />
+            </Route>
 
-          <Route path="/admin" element={<AdminLayout />} >
-            <Route index element={<Dashboard/>} />
-            <Route path="calendrier" element={<Calendrier />} />
-            <Route path="enseignants" element={<Enseignants />} />
-            <Route path="enseignants/:matricule" element={<ProfInfos />} />
-            <Route path="etats" element={<Etats />} />
-            <Route path="reclamations" element={<Reclamations />} />
-            <Route path="archive" element={<Archive />} />
-          </Route>
+            <Route path="/enseignant" element={<ProfLayout />}>
+              <Route path=":matricule" element={<Profile />} />
+              <Route path="documents" element={<Documents />} />
+              <Route path="reclamations" element={<Reclamations />} />
+              <Route path="archive" element={<Archive />} />
+            </Route>
 
-          <Route path="/enseignant" element={<ProfLayout />}>
-            <Route index element={<Dashboard />} />
-            <Route path="etats" element={<Etats />} />
-            <Route path="reclamations" element={<Reclamations />} />
-            <Route path="archive" element={<Archive />} />
-          </Route>
+          </Routes>
+        </Router>
+      </AppContext.Provider>
 
-        </Routes>
-      </Router>
 
-      
     </div>
   );
 }
@@ -53,7 +57,7 @@ const AdminLayout = () => {
     { name: 'dashboard', path: 'admin' },
     { name: 'calcul', path: 'admin/calendrier' },
     { name: 'enseignants', path: 'admin/enseignants' },
-    { name: 'etats', path: 'admin/etats' },
+    { name: 'documents', path: 'admin/documents' },
     { name: 'reclamations', path: 'admin/reclamations' },
     { name: 'Archive', path: 'admin/archive' }
   ];
@@ -71,9 +75,12 @@ const AdminLayout = () => {
 }
 
 const ProfLayout = () => {
+
+  const {enseignantMat} = useContext(AppContext)
+
   const navProf = [
-    { name: 'profile', path: 'enseignant' },
-    { name: 'etats', path: 'enseignant/etats' },
+    { name: 'profile', path: `enseignant/${enseignantMat}` },
+    { name: 'documents  ', path: 'enseignant/documents' },
     { name: 'reclamations', path: 'enseignant/reclamations' },
     { name: 'Archive', path: 'enseignant/archive' }
   ];

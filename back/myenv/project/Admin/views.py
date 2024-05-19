@@ -37,7 +37,12 @@ def delete_enseignants(request, matricule):
                     # Supprimer les lignes correspondantes dans la table 'enseigne'
                     Enseigne.objects.filter(Matric_id__in=matricule).delete()
                     # Supprimer les enseignants
-                    Enseignant.objects.filter(Matricule__in=matricule).delete()
+                    
+                    Abcence.objects.filter(IdProf__in=matricule).delete()
+                    
+                    Seance.objects.filter(Matricule__in=matricule).delete()
+
+                    Enseignant.objects.filter(Matricule=matricule).delete()
                 return Response({'success': True, 'message': 'Les enseignants ont été supprimés avec succès.'})
             except Exception as e:
                 return Response({'success': False, 'message': str(e)}, status=500)
@@ -321,9 +326,9 @@ def insertSeance(request, teacher_id, semestre):
             # Vérification des heures de début et de fin
             error_messages = []
             if heure_debut_seance < heure_debut:
-                error_messages.append("L'heure de début doit être après 8:00 AM.")
+               return Response({"error": "L'heure de début doit être après 8:00 AM."}, status=400)
             if heure_fin_seance > heure_fin_limite:
-                error_messages.append("L'heure de fin doit être avant 5:30 PM.")
+                return Response({"error": "L'heure de fin doit être avant 5:30 PM. "}, status=400)
             if heure_fin_seance <= heure_debut_seance:
                 return Response({"error": "L'heure de debut doit etre inferieur au heure fin "}, status=400)
 
@@ -408,7 +413,7 @@ def insertEnseignant(request):
             
             # Vérification si l'email se termine par '@esi-sba.dz'
             if not email.endswith('@esi-sba.dz'):
-                return Response({"error": "L'email doit se terminer par '@esi-sba.dz'."}, status=400)
+                return Response({"error": f"L'email doit se terminer par '@esi-sba.dz'."}, status=400)
             
             # Insérer l'enseignant dans la base de données
             teacher = serializer.save()
@@ -420,10 +425,10 @@ def insertEnseignant(request):
                     module = Module.objects.get(Code=module_id)
                     Enseigne.objects.create(Matric_id=teacher_id, Codee_id=module_id)
                 except Module.DoesNotExist:
-                    print(f"Module with ID {module_id} does not exist.")
+                    print("Module with ID {module_id} does not exist.")
                     return Response({"error": f"Module with ID {module_id} does not exist."}, status=400)
                 except Exception as e:
-                    print(f"An error occurred while creating Enseigne: {e}")
+                    print("An error occurred while creating Enseigne: {e}")
                     return Response({"error": f"An error occurred while creating Enseigne: {e}"}, status=500)
             
             # Récupérer le mot de passe depuis l'objet enseignant
@@ -491,14 +496,14 @@ def inscription(request):
 
 
 
-    return Response({'message': 'Inscription réussie.'}, status=status.HTTP_201_CREATED)
+    return Response({'message': 'Inscription réussie.', 'Matricule' : enseignant.Matricule}, status=status.HTTP_201_CREATED)
 
 
 
 @api_view(['POST'])
 def inscription_ecole_administration(request):
     email = request.data.get('Email', None)
-    mot_de_passe = request.data.get('mot_de_passe', None)  # Renommer le champ mot_de_passe
+    mot_de_passe = request.data.get('MotDePasse', None)  # Renommer le champ mot_de_passe
 
     if email is None or mot_de_passe is None:
         return Response({'message': 'Veuillez fournir à la fois Email et mot_de_passe.'}, status=status.HTTP_400_BAD_REQUEST)
@@ -637,15 +642,23 @@ def insertAbs(request, teacher_id):
     
 @api_view(['POST'])
   
-def insertSection(request,idPromo):
+def insertSection(request, idPromo):
     if request.method == 'POST':
         serializer = SectionSerializer(data=request.data)
         if serializer.is_valid():
-            # Add the new choice to the list
+            NomSection = serializer.validated_data.get('NomSection')
+            
+            # Vérifier si une section avec le même code et la même promotion existe déjà
+            if section.objects.filter(NomSection = NomSection, nomP=idPromo).exists():
+                return Response({"error": f"cette section existe déjà."}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Ajouter la nouvelle section à la liste
             serializer.validated_data['nomP_id'] = idPromo
             serializer.save()
-            return Response(serializer.data, status=201)
-        return Response(serializer.errors, status=400)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    
     
 
 
@@ -666,6 +679,12 @@ def insertGroupe(request,idSection):
     if request.method == 'POST':
         serializer = GroupeSerializer(data=request.data)
         if serializer.is_valid():
+            
+            numero = serializer.validated_data.get('Numero')
+            
+            if Groupe.objects.filter(Numero = numero, idSection = idSection).exists():
+                return Response({"error": f"ce groupe existe déja dans cette section."}, status=status.HTTP_400_BAD_REQUEST)
+
             # Add the new choice to the list
             serializer.validated_data['idSection_id'] = idSection
             serializer.save()
@@ -873,37 +892,52 @@ def updateSeance(request, idSeance):
             NouveauIdSection= serializer.validated_data.get('idSection')
             NouveauIdGroupe= serializer.validated_data.get('idGroupe')
             matr = seance.Matricule
-          # Vérification de l'heure de début et de fin
+
+            # Vérification de l'heure de début et de fin
             if NouveauHRdeb and NouveauHRdeb < time(8, 0):
                 return Response({"error": "L'heure de début doit être à partir de 08:00 am."}, status=400)
             if NouveauHRfin and NouveauHRfin > time(17, 30):
                 return Response({"error": "L'heure de fin doit être avant 17:30 pm."}, status=400)
-            # if NouveauHRdeb and NouveauHRfin and NouveauHRfin <= NouveauHRdeb:
-            #     return Response({"error": "L'heure de début doit être antérieure à l'heure de fin."}, status=400)
-            if NouveauIdGroupe :
-                heure_debut = seance.HeureDebut
-                heure_fin =seance.HeureFin
-                jour = seance.Jour
-                seanGroup = Seance.objects.filter(IdGroupe = NouveauIdGroupe,HeureDebut =heure_debut ,HeureFin = heure_fin ,Jour = jour)
-                if seanGroup :
-                    return Response({"error": "Ce groupe a une seanca cette datte ."}, status=400)
-                
-            if NouveauJour and NouveauHRdeb and NouveauHRfin :
-                seanSJour = Seance.objects.filter(Matricule=matr,Jour = NouveauJour ,HeureDebut =NouveauHRdeb ,HeureFin = NouveauHRfin)
-                if seanSJour :
-                    return Response({"error": "impossible."}, status=400)
-            if NouveauIdSalle != None :
-                heure_debut = seance.HeureDebut
-                heure_fin =seance.HeureFin
-                jour = seance.Jour
-                seanSalle = Seance.objects.filter(idSalle=NouveauIdSalle,HeureDebut =heure_debut ,HeureFin = heure_fin ,Jour = jour )
-                if seanSalle :
+            if NouveauHRdeb > NouveauHRfin :
+                return Response({"error": "L'heure de debut doit etre inferieur au heure fin "}, status=400)
+
+            # Vérifier s'il existe une autre séance avec le même groupe à la même heure
+            if NouveauIdGroupe:
+                seanGroup = Seance.objects.filter(
+                    idGroupe=NouveauIdGroupe,
+                    HeureDebut=NouveauHRdeb,
+                    HeureFin=NouveauHRfin,
+                    Jour=NouveauJour
+                ).exclude(IdSeance=idSeance)  # Exclure la séance actuelle
+                if seanGroup.exists():
+                    return Response({"error": "Ce groupe a une séance à cette date et cette heure."}, status=400)
+
+            # Vérifier s'il existe une autre séance avec le même professeur à la même heure
+            if NouveauJour and NouveauHRdeb and NouveauHRfin:
+                seanSJour = Seance.objects.filter(
+                    Matricule=matr,
+                    Jour=NouveauJour,
+                    HeureDebut=NouveauHRdeb,
+                    HeureFin=NouveauHRfin
+                ).exclude(IdSeance=idSeance)  # Exclure la séance actuelle
+                if seanSJour.exists():
+                    return Response({"error": "Impossible."}, status=400)
+
+            # Vérifier si la salle est déjà réservée pour une autre séance à ce moment-là
+            if NouveauIdSalle is not None:
+                seanSalle = Seance.objects.filter(
+                    idSalle=NouveauIdSalle,
+                    HeureDebut=NouveauHRdeb,
+                    HeureFin=NouveauHRfin,
+                    Jour=NouveauJour
+                ).exclude(IdSeance=idSeance)  # Exclure la séance actuelle
+                if seanSalle.exists():
                     return Response({"error": "Cette salle est déjà réservée pour une autre séance à ce moment. Veuillez choisir une autre salle pour cette séance."}, status=400)
-                
 
             serializer.save()
-            return Response(serializer.data, status=200)
+            return Response(serializer.data)
         return Response(serializer.errors, status=400)
+
 
 
 from threading import Timer
@@ -1197,32 +1231,41 @@ def get_groupe_by_id(request, id_groupe):
     except Groupe.DoesNotExist:
         # If the group with the given idGroupe does not exist, return a response with status 404
         return JsonResponse({'error': 'Le groupe avec cet ID n\'existe pas'}, status=404)    
+
+@api_view(['POST'])
+def add_module(request):
+    if request.method == 'POST':
+        serializer = ModuleSerializer(data=request.data)
+        if serializer.is_valid():
+            code = serializer.validated_data.get('Code')
+            nom_module = serializer.validated_data.get('NomModule')
+            
+            # Vérification si le nom du module existe déjà dans la base de données
+            if Module.objects.filter(NomModule=nom_module).exists():
+                return Response({"error": f"Le nom du module {nom_module} est déjà utilisé par un autre module."}, status=status.HTTP_400_BAD_REQUEST)
+            
+            serializer.save()
+            
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
         
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
+@api_view(['POST'])
+def add_salle(request):
+    if request.method == 'POST':
+        serializer = SalleSerializer(data=request.data)
+        if serializer.is_valid():
+            nom_salle = serializer.validated_data.get('NomSalle')
+            zone = serializer.validated_data.get('Zone')
+            if Salle.objects.filter(NomSalle = nom_salle, Zone = zone).exists():
+                return Response({"error": f"cette salle existe deja dans {zone}."}, status=status.HTTP_400_BAD_REQUEST)
+
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+    return Response({"error": "Méthode non autorisée"}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+

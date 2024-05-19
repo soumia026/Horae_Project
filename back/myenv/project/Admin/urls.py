@@ -58,5 +58,6 @@ path('salle/<int:id_salle>/', views.get_salle_by_id, name='get_salle_by_id'),
 path('section/<int:id_section>/', views.get_section_by_id, name='get_section_by_id'),
 path('groupe/<int:id_groupe>/', views.get_groupe_by_id, name='get_groupe_by_id'),
 path('module/<str:code>/', views.get_module_by_code, name='get_module_by_code'),
-
+path('add_module/', views.add_module, name='add_module'),
+path('add_salle/', views.add_salle, name='add_salle'),
 ]

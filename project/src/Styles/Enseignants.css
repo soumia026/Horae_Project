@@ -2,7 +2,7 @@
   width: 100%;
   display: flex;
   flex-direction: column;
-  border-radius: 10px;
+  border-top-left-radius: 1rem;
   padding: 1.5rem 2rem;
   position: relative;
   font-family: 'DM sans', sans-serif;
@@ -231,7 +231,9 @@
   background-color: #B8CEF7;
   color: #000;
   font-size: 15px;
-  font-weight: 400;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: 'DM sans', sans-serif;
 }
 
 .Whole .ajouter-container {
@@ -250,7 +252,6 @@
   z-index: 10;
   gap: 1rem;
   box-shadow: 1px 2px 20px 4px rgb(14 55 54 /15%);
-
   max-height: 460px;
 }
 
@@ -393,7 +394,6 @@
   padding: 0 10px;
   height: 1.5rem;
   flex-grow: 1;
-  text-transform: capitalize;
   max-width: 190px;
   min-width: 170px;
 }
@@ -431,9 +431,4 @@
 
 .ajouter-container form .sauvegarder-ajouter-btn {
   background-color: var(--main-color);
-}
-
-.input-container p {
-  color: #C51818;
-  font-size: var(--small-font-size);
 }

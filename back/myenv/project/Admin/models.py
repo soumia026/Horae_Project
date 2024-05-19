@@ -7,11 +7,11 @@ class Enseignant(models.Model):
     ('Fonction2','Fonction2'),
 ]
     myGrades = [
+    ('Professeur', 'Professeur'),  
     ('MCA','MCA'),
     ('MCB','MCB'),
-    ('LectureA','LectureA'),
-    ('LectureB','LectureB'),
-    ('Professor','Professor'),
+    ('MAA','MAA'),
+    ('MAB','MAB'),
 ]
     Matricule = models.CharField(max_length = 20,blank = True,primary_key = True)
     Nom = models.CharField(max_length = 20,blank = True)
@@ -51,7 +51,7 @@ class Promotion(models.Model):
     class Meta:
         db_table =  "Promotion"
     def __str__(self) -> str:
-        return self.Matricule
+        return self.NomPromo
 
 
 class Module(models.Model):
@@ -101,7 +101,9 @@ class DateSeance(models.Model) :
         return self.IddatteS
 
 
-class section(models.Model):     
+class section(models.Model):  
+    
+       
     idSection = models.IntegerField(blank = True,primary_key = True)
     NomSection = models.CharField(max_length = 20)
     nomP = models.ForeignKey(Promotion,default = None,on_delete=models.DO_NOTHING)

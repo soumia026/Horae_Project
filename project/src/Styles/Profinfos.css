@@ -223,7 +223,8 @@ table tr td span {
 }
 
 .container-update-absence form,
-.container-modifier-profile form {
+.container-modifier-profile form, 
+.ajouter-enseigne form {
     width: 100%;
     padding: 0.4rem;
     display: flex;
@@ -232,7 +233,8 @@ table tr td span {
 }
 
 .container-update-absence .input-line,
-.container-modifier-profile .input-line {
+.container-modifier-profile .input-line,
+.ajouter-enseigne .input-line {
     padding: 0 1rem;
     display: flex;
     align-items: center;
@@ -259,7 +261,8 @@ select {
 }
 
 .container-update-absence .update-absence-btns,
-.container-modifier-profile .update-profile-btns {
+.container-modifier-profile .update-profile-btns,
+.ajouter-enseigne .ajouter-enseigne-btns {
     display: flex;
     width: 100%;
     justify-content: space-evenly;
@@ -267,7 +270,8 @@ select {
 }
 
 .update-absence-btns button,
-.update-profile-btns button {
+.update-profile-btns button,
+.ajouter-enseigne-btns button {
     background-color: #fff;
     color: #000;
     font-size: 0.85rem;
@@ -329,7 +333,8 @@ select {
     align-items: center;
 }
 
-.update-profile-btns .sauvegarder-btn{
+.update-profile-btns .sauvegarder-btn,
+.ajouter-enseigne-btns .sauvegarder-btn{
     background-color: var(--main-color);
 }
 
@@ -395,6 +400,43 @@ select {
 
 .form-ajouter-sceance::-webkit-scrollbar {
     display: none;
+}
+
+/*-------------Ajouter Enseigne---------*/
+
+.ajouter-enseigne{
+    max-width: 500px;
+    min-width: 400px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 20;
+    background-color: #D9D9D9;
+    padding: 1rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+    border-radius: 1rem;
+}
+
+.ajouter-enseigne h2{
+    font-size: 1.3rem;
+    text-transform: capitalize;
+    font-weight: 550;
+}
+
+.ajouter-enseigne .line-decoration{
+    width: 90%;
+    height: 1.5px;
+    background-color: #00000015;
+    align-self: center;
+    border-radius: 3px;
+}
+
+.ajouter-enseigne form{
+    padding: 1rem 0.4rem;
+    gap: 1.2rem;
 }
 
 @media screen and (max-width: 800px) {

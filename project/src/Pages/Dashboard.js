@@ -12,7 +12,6 @@ import {
     Title,
     Tooltip,
     Legend,
-    plugins
 } from 'chart.js'
 
 ChartJS.register(
@@ -62,7 +61,7 @@ export function Dashboard() {
 
     return (
         <div className="main-container dashboard-container" >
-            <h2>my Dashboard</h2>
+            <h2 className="principal-title">my Dashboard</h2>
             <div className="infos-container">
                 <CalculContainer pourcentage={60} />
                 <EvenementContainer />

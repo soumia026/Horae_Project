@@ -2,10 +2,9 @@ import React, { useState, useEffect } from "react";
 import { LineInfos } from "./LineInfos";
 import {Modules} from "./Modules";
 import { AbsenceLine } from "./AbsenceLine";
-import axios, { Axios } from 'axios';
-import { useNavigate } from "react-router-dom"
-export const InfosPersonnelles = (props) => {
+import axios from 'axios';
 
+export const InfosPersonnelles = (props) => {
 
     const [updateAbsence, setUpdateAbsence] = useState(null);
     
@@ -93,7 +92,6 @@ const ModifierAbsence = (props) => {
         IdProf: props.absence.IdProf
     });
 
-    const navigate = useNavigate();
 
     const handleSubmit = (e) => {
         e.preventDefault();

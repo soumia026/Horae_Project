@@ -20,10 +20,18 @@
     overflow-x: hidden;
 }
 
+.dashboard-container::-webkit-scrollbar{
+    display: none;
+}
+
 .dashboard-container h2 {
     font-size: 1.5rem;
     text-transform: capitalize;
-    font-weight: 550;
+    font-weight: 500;
+}
+
+.dashboard-container .principal-title{
+    font-size: 2rem;
 }
 
 .dashboard-container .infos-container{

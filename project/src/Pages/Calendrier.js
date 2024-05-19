@@ -1,7 +1,6 @@
 import React, { Component, useEffect, useState } from "react";
-import '../Styles/calendrier.css'
+import '../Styles/Calcul.css'
 import { useRef } from "react";
-import 'react-calendar/dist/Calendar.css';
 import * as yup from 'yup';
 import { useForm } from "react-hook-form";
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -60,7 +59,7 @@ export function Calendrier() {
 
     return (
         <div className="main-container calendrier-container">
-            <h2>calendrier</h2>
+            <h2>calcul</h2>
             <div className="grid-container">
                 <div className="type-payment">
                     <div className="title-line">
@@ -489,47 +488,11 @@ const ModifierModeSemestre = (props) => {
         };
     }, []);
 
-    const schema1 = yup.object().shape({
-        dateDebut: yup.string().required("date debut semestre est obligatoire"),
-        dateFin: yup.string().required("date fin semestre est obligatoire"),
-        chargeCours: yup.string().required("charge cours est obligatoire"),
-        chargeTD: yup.string().required("charge TD est obligatoire"),
-        chargeTP: yup.string().required("charge TP est obligatoire"),
-        pourcentageCours: yup.string().required("pourcentage cours est obligatoire"),
-        pourcentageTD: yup.string().required("pourcentage TD est obligatoire"),
-        pourcentageTP: yup.string().required("pourcentage TP est obligatoire")
-    });
-
-    // Define the second schema for the second set of fields
-    const schema2 = yup.object().shape({
-        PUProfesseur: yup.string().required("PU Professeur est obligatoire"),
-        PUMCA: yup.string().required("PU MCA est obligatoire"),
-        PUMCB: yup.string().required("PU MCB est obligatoire"),
-        PUMAA: yup.string().required("PU MAA est obligatoire"),
-        PUMAB: yup.string().required("PU MAB est obligatoire")
-    });
-
-    const schema3 = yup.object().shape({
-        pourcentageSec: yup.string().required("PU Professeur est obligatoire"),
-        pourcentageIRG: yup.string().required("PU MCA est obligatoire"),
-    });
-
-    const { register: register1, handleSubmit: handleSubmit1, formState: { errors: errors1 } } = useForm({
-        resolver: yupResolver(schema1),
-    });
-
-    const { register: register2, handleSubmit: handleSubmit2, formState: { errors: errors2 } } = useForm({
-        resolver: yupResolver(schema2),
-    });
-
-    const { register: register3, handleSubmit: handleSubmit3, formState: { errors: errors3 } } = useForm({
-        resolver: yupResolver(schema3),
-    });
 
 
-    const onSubmit = (data) => {
+    const onSubmit = () => {
         props.handleChange();
-        console.log(data)
+        console.log('rr')
     }
 
     const [inputType, setInputType] = useState('text');
@@ -555,8 +518,8 @@ const ModifierModeSemestre = (props) => {
     return (
         <>
             {props.step === 1 && (
-                <form ref={heightRef} onSubmit={handleSubmit1(onSubmit)} >
-                    <div className="input-container">
+                <form ref={heightRef} onSubmit={onSubmit} >
+
                         <div className="input-line">
                             <label htmlFor="debutSemestre">date debut semestre</label>
                             <input
@@ -564,13 +527,10 @@ const ModifierModeSemestre = (props) => {
                                 type={inputType} placeholder=""
                                 onFocus={handleFocus}
                                 onBlur={handleBlur}
-                                {...register1('dateDebut')}
+                               
                             />
                         </div>
-                        {errors1.dateDebut && <p>{errors1.dateDebut?.message}</p>}
-                    </div>
 
-                    <div className="input-container">
                         <div className="input-line">
                             <label htmlFor="finSemestre">date fin semestre</label>
                             <input
@@ -578,59 +538,38 @@ const ModifierModeSemestre = (props) => {
                                 type={inputType1} placeholder=""
                                 onFocus={handleFocus1}
                                 onBlur={handleBlur1}
-                                {...register1('dateFin')}
                             />
                         </div>
-                        {errors1.dateFin && <p>{errors1.dateFin?.message}</p>}
-                    </div>
 
-                    <div className="input-container">
                         <div className="input-line">
                             <label htmlFor="chargeCours">charge cours</label>
-                            <input type="number" min={'1'} max={'20'} step={0.25} {...register1('chargeCours')} />
+                            <input type="number" min={'1'} max={'20'} step={0.25} />
                         </div>
-                        {errors1.chargeCours && <p>{errors1.chargeCours?.message}</p>}
-                    </div>
 
-                    <div className="input-container">
                         <div className="input-line">
                             <label htmlFor="cours">charge TD</label>
-                            <input type="number" min={'1'} max={'20'} step={0.25} {...register1('chargeTD')} />
+                            <input type="number" min={'1'} max={'20'} step={0.25} />
                         </div>
-                        {errors1.chargeTD && <p>{errors1.chargeTD?.message}</p>}
-                    </div>
 
-                    <div className="input-container">
                         <div className="input-line">
                             <label htmlFor="td">charge TP</label>
-                            <input type="number" min={'1'} max={'20'} step={0.25} {...register1('chargeTP')} />
+                            <input type="number" min={'1'} max={'20'} step={0.25}  />
                         </div>
-                        {errors1.chargeTP && <p>{errors1.chargeTP?.message}</p>}
-                    </div>
 
-                    <div className="input-container">
                         <div className="input-line">
                             <label htmlFor="tp">pourcentage cours</label>
-                            <input type="number" step={0.25} {...register1('pourcentageCours')} />
+                            <input type="number" step={0.25} />
                         </div>
-                        {errors1.pourcentageCours && <p>{errors1.pourcentageCours?.message}</p>}
-                    </div>
 
-                    <div className="input-container">
                         <div className="input-line">
                             <label htmlFor="tp">pourcentage TD</label>
-                            <input type="number" step={0.25} {...register1('pourcentageTD')} />
+                            <input type="number" step={0.25} />
                         </div>
-                        {errors1.pourcentageTD && <p>{errors1.pourcentageTD?.message}</p>}
-                    </div>
 
-                    <div className="input-container">
                         <div className="input-line">
                             <label htmlFor="tp">pourcentage TP</label>
-                            <input type="number" step={0.25} {...register1('pourcentageTP')} />
+                            <input type="number" step={0.25} />
                         </div>
-                        {errors1.pourcentageTP && <p>{errors1.pourcentageTP?.message}</p>}
-                    </div>
 
                     <div className="modifier-mode-btns">
                         <button className="annuler-btn" onClick={() => { props.annulerModifierMode() }}>annuler</button>
@@ -640,54 +579,38 @@ const ModifierModeSemestre = (props) => {
             )}
 
             {props.step === 2 && (
-                <form style={{ alignItems: 'center' }} ref={heightRef} onSubmit={handleSubmit2(onSubmit)}>
-                    <div className="input-container">
+                <form style={{ alignItems: 'center' }} ref={heightRef} onSubmit={onSubmit}>
+
                         <div className="input-line">
                             <label htmlFor="PUprofrsseur">PU professeur</label>
                             <input
                                 style={{ textTransform: 'lowercase' }}
                                 type="number"
-                                {...register2('PUProfesseur')}
                             />
                         </div>
-                        {errors2.PUProfesseur && <p>{errors2.PUProfesseur?.message}</p>}
-                    </div>
 
-                    <div className="input-container">
                         <div className="input-line">
                             <label htmlFor="PUmca">PU MCA</label>
                             <input
                                 style={{ textTransform: 'lowercase' }}
                                 type="number"
-                                {...register2('PUMCA')}
                             />
                         </div>
-                        {errors2.PUMCA && <p>{errors2.PUMCA?.message}</p>}
-                    </div>
 
-                    <div className="input-container">
                         <div className="input-line">
                             <label htmlFor="PUmcb">PU MCB</label>
-                            <input type="number" {...register2('PUMCB')} />
+                            <input type="number" />
                         </div>
-                        {errors2.PUMCB && <p>{errors2.PUMCB?.message}</p>}
-                    </div>
 
-                    <div className="input-container">
                         <div className="input-line">
                             <label htmlFor="PUmaa">PU MAA</label>
-                            <input type="number" {...register2('PUMAA')} />
+                            <input type="number"  />
                         </div>
-                        {errors2.PUMAA && <p>{errors2.PUMAA?.message}</p>}
-                    </div>
 
-                    <div className="input-container">
                         <div className="input-line">
                             <label htmlFor="PUmab">PU MAB</label>
-                            <input type="number" {...register2('PUMAB')} />
+                            <input type="number"  />
                         </div>
-                        {errors2.PUMAB && <p>{errors2.PUMAB?.message}</p>}
-                    </div>
 
                     <div className="modifier-mode-btns">
                         <button className="annuler-btn" onClick={() => { props.annulerModifierMode() }}>annuler</button>
@@ -697,30 +620,23 @@ const ModifierModeSemestre = (props) => {
             )}
 
             {props.step === 3 && (
-                <form style={{ alignItems: 'center' }} ref={heightRef} onSubmit={handleSubmit3(onSubmit)}>
-                    <div className="input-container">
+                <form style={{ alignItems: 'center' }} ref={heightRef} onSubmit={onSubmit}>
+                
                         <div className="input-line">
                             <label htmlFor="pourcentageSec">pourcentage sec</label>
                             <input
                                 style={{ textTransform: 'lowercase' }}
                                 type="number"
-                                {...register3('pourcentageSec')}
                             />
                         </div>
-                        {errors3.pourcentageSec && <p>{errors3.pourcentageSec?.message}</p>}
-                    </div>
 
-                    <div className="input-container">
                         <div className="input-line">
                             <label htmlFor="pourcentageIrg">pourcentage IRG</label>
                             <input
                                 style={{ textTransform: 'lowercase' }}
                                 type="number"
-                                {...register2('PUMCA')}
                             />
                         </div>
-                        {errors3.pourcentageIRG && <p>{errors3.pourcentageIRG?.message}</p>}
-                    </div>
 
                     <div className="modifier-mode-btns">
                         <button className="annuler-btn" onClick={() => { props.annulerModifierMode() }}>annuler</button>
@@ -756,47 +672,13 @@ const ModifierModeAnnuel = (props) => {
         };
     }, []);
 
-    const schema1 = yup.object().shape({
-        dateDebut: yup.string().required("le champ date debut semestre est obligatoire"),
-        dateFin: yup.string().required("le champ date fin semestre est obligatoire"),
-        chargeCours: yup.string().required("le champ charge cours est obligatoire"),
-        chargeTD: yup.string().required("le champ charge TD est obligatoire"),
-        chargeTP: yup.string().required("le champ charge TP est obligatoire"),
-        pourcentageCours: yup.string().required("le champ pourcentage cours est obligatoire"),
-        pourcentageTD: yup.string().required("le champ pourcentage TD est obligatoire"),
-        pourcentageTP: yup.string().required("le champ pourcentage TP est obligatoire")
-    });
-
-    // Define the second schema for the second set of fields
-    const schema2 = yup.object().shape({
-        PUProfesseur: yup.string().required("le champ PU Professeur est obligatoire"),
-        PUMCA: yup.string().required("le champ PU MCA est obligatoire"),
-        PUMCB: yup.string().required("le champ PU MCB est obligatoire"),
-        PUMAA: yup.string().required("le champ PU MAA est obligatoire"),
-        PUMAB: yup.string().required("le champ PU MAB est obligatoire")
-    });
-
-    const schema3 = yup.object().shape({
-        pourcentageSec: yup.string().required("le champ PU Professeur est obligatoire"),
-        pourcentageIRG: yup.string().required("le champ PU MCA est obligatoire"),
-    });
-
-    const { register: register1, handleSubmit: handleSubmit1, formState: { errors: errors1 } } = useForm({
-        resolver: yupResolver(schema1),
-    });
-
-    const { register: register2, handleSubmit: handleSubmit2, formState: { errors: errors2 } } = useForm({
-        resolver: yupResolver(schema2),
-    });
-
-    const { register: register3, handleSubmit: handleSubmit3, formState: { errors: errors3 } } = useForm({
-        resolver: yupResolver(schema3),
-    });
-
+    
+    
+   
 
     const onSubmit = (data) => {
         props.handleChange();
-        console.log(data)
+        console.log('rrr')
     }
 
     const [inputType, setInputType] = useState('text');
@@ -822,8 +704,8 @@ const ModifierModeAnnuel = (props) => {
     return (
         <>
             {props.step === 1 && (
-                <form ref={heightRef} onSubmit={handleSubmit1(onSubmit)} >
-                    <div className="input-container">
+                <form ref={heightRef} onSubmit={onSubmit} >
+                    
                         <div className="input-line">
                             <label htmlFor="debutAnnee">date debut année</label>
                             <input
@@ -831,13 +713,10 @@ const ModifierModeAnnuel = (props) => {
                                 type={inputType} placeholder=""
                                 onFocus={handleFocus}
                                 onBlur={handleBlur}
-                                {...register1('dateDebut')}
                             />
                         </div>
-                        {errors1.dateDebut && <p>{errors1.dateDebut?.message}</p>}
-                    </div>
-
-                    <div className="input-container">
+                        
+                    
                         <div className="input-line">
                             <label htmlFor="finAnnee">date fin année</label>
                             <input
@@ -845,59 +724,39 @@ const ModifierModeAnnuel = (props) => {
                                 type={inputType1} placeholder=""
                                 onFocus={handleFocus1}
                                 onBlur={handleBlur1}
-                                {...register1('dateFin')}
                             />
                         </div>
-                        {errors1.dateFin && <p>{errors1.dateFin?.message}</p>}
-                    </div>
 
-                    <div className="input-container">
                         <div className="input-line">
                             <label htmlFor="chargeCours">charge cours</label>
-                            <input type="number" min={'1'} max={'20'} {...register1('chargeCours')} />
+                            <input type="number" min={'1'} max={'20'}  />
                         </div>
-                        {errors1.chargeCours && <p>{errors1.chargeCours?.message}</p>}
-                    </div>
-
-                    <div className="input-container">
+                    
                         <div className="input-line">
                             <label htmlFor="cours">charge TD</label>
-                            <input type="number" min={'1'} max={'20'} {...register1('chargeTD')} />
+                            <input type="number" min={'1'} max={'20'}  />
                         </div>
-                        {errors1.chargeTD && <p>{errors1.chargeTD?.message}</p>}
-                    </div>
-
-                    <div className="input-container">
+                        
+                   
                         <div className="input-line">
                             <label htmlFor="td">charge TP</label>
-                            <input type="number" min={'1'} max={'20'} {...register1('chargeTP')} />
+                            <input type="number" min={'1'} max={'20'}  />
                         </div>
-                        {errors1.chargeTP && <p>{errors1.chargeTP?.message}</p>}
-                    </div>
-
-                    <div className="input-container">
+                    
                         <div className="input-line">
                             <label htmlFor="tp">pourcentage cours</label>
-                            <input type="text" {...register1('pourcentageCours')} />
+                            <input type="text" />
                         </div>
-                        {errors1.pourcentageCours && <p>{errors1.pourcentageCours?.message}</p>}
-                    </div>
 
-                    <div className="input-container">
                         <div className="input-line">
                             <label htmlFor="tp">pourcentage TD</label>
-                            <input type="text" {...register1('pourcentageTD')} />
+                            <input type="text" />
                         </div>
-                        {errors1.pourcentageTD && <p>{errors1.pourcentageTD?.message}</p>}
-                    </div>
-
-                    <div className="input-container">
+                  
                         <div className="input-line">
                             <label htmlFor="tp">pourcentage TP</label>
-                            <input type="text" {...register1('pourcentageTP')} />
+                            <input type="text" />
                         </div>
-                        {errors1.pourcentageTP && <p>{errors1.pourcentageTP?.message}</p>}
-                    </div>
 
                     <div className="modifier-mode-btns">
                         <button className="annuler-btn" onClick={() => { props.annulerModifierMode() }}>annuler</button>
@@ -907,54 +766,38 @@ const ModifierModeAnnuel = (props) => {
             )}
 
             {props.step === 2 && (
-                <form style={{ alignItems: 'center' }} ref={heightRef} onSubmit={handleSubmit2(onSubmit)}>
-                    <div className="input-container">
+                <form style={{ alignItems: 'center' }} ref={heightRef} onSubmit={onSubmit}>
+                    
                         <div className="input-line">
                             <label htmlFor="PUprofrsseur">PU professeur</label>
                             <input
                                 style={{ textTransform: 'lowercase' }}
                                 type="text"
-                                {...register2('PUProfesseur')}
                             />
                         </div>
-                        {errors2.PUProfesseur && <p>{errors2.PUProfesseur?.message}</p>}
-                    </div>
 
-                    <div className="input-container">
                         <div className="input-line">
                             <label htmlFor="PUmca">PU MCA</label>
                             <input
                                 style={{ textTransform: 'lowercase' }}
                                 type="text"
-                                {...register2('PUMCA')}
                             />
                         </div>
-                        {errors2.PUMCA && <p>{errors2.PUMCA?.message}</p>}
-                    </div>
 
-                    <div className="input-container">
                         <div className="input-line">
                             <label htmlFor="PUmcb">PU MCB</label>
-                            <input type="text" {...register2('PUMCB')} />
+                            <input type="text" />
                         </div>
-                        {errors2.PUMCB && <p>{errors2.PUMCB?.message}</p>}
-                    </div>
 
-                    <div className="input-container">
                         <div className="input-line">
                             <label htmlFor="PUmaa">PU MAA</label>
-                            <input type="text" {...register2('PUMAA')} />
+                            <input type="text" />
                         </div>
-                        {errors2.PUMAA && <p>{errors2.PUMAA?.message}</p>}
-                    </div>
 
-                    <div className="input-container">
                         <div className="input-line">
                             <label htmlFor="PUmab">PU MAB</label>
-                            <input type="text" {...register2('PUMAB')} />
+                            <input type="text" />
                         </div>
-                        {errors2.PUMAB && <p>{errors2.PUMAB?.message}</p>}
-                    </div>
 
                     <div className="modifier-mode-btns">
                         <button className="annuler-btn" onClick={() => { props.annulerModifierMode() }}>annuler</button>
@@ -964,30 +807,23 @@ const ModifierModeAnnuel = (props) => {
             )}
 
             {props.step === 3 && (
-                <form style={{ alignItems: 'center' }} ref={heightRef} onSubmit={handleSubmit3(onSubmit)}>
+                <form style={{ alignItems: 'center' }} ref={heightRef} onSubmit={onSubmit}>
                     <div className="input-container">
-                        <div className="input-line">
+                       
                             <label htmlFor="pourcentageSec">pourcentage sec</label>
                             <input
                                 style={{ textTransform: 'lowercase' }}
                                 type="text"
-                                {...register3('pourcentageSec')}
                             />
                         </div>
-                        {errors3.pourcentageSec && <p>{errors3.pourcentageSec?.message}</p>}
-                    </div>
 
-                    <div className="input-container">
                         <div className="input-line">
                             <label htmlFor="pourcentageIrg">pourcentage IRG</label>
                             <input
                                 style={{ textTransform: 'lowercase' }}
                                 type="text"
-                                {...register2('PUMCA')}
                             />
                         </div>
-                        {errors3.pourcentageIRG && <p>{errors3.pourcentageIRG?.message}</p>}
-                    </div>
 
                     <div className="modifier-mode-btns">
                         <button className="annuler-btn" onClick={() => { props.annulerModifierMode() }}>annuler</button>

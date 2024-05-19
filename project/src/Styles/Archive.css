@@ -1,0 +1,78 @@
+.archive-container {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    border-top-left-radius: 1rem;
+    padding: 1.5rem 2rem;
+    position: relative;
+    font-family: 'DM sans', sans-serif;
+}
+
+.Bandd {
+    display: flex;
+    justify-content: space-between;
+    padding: 20px;
+    border-bottom: 1.5px solid #00000015;
+}
+
+.archive-container .imprimer-container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    max-width: 550px;
+    min-width: 500px;
+    background-color: #D9D9D9;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+    border-radius: 1rem;
+    z-index: 10;
+    gap: 1rem;
+}
+
+.imprimer-container h3 {
+    font-size: 1.3rem;
+    font-weight: 500;
+    margin-bottom: 0.7rem;
+    width: 100%;
+    text-align: center;
+}
+
+.imprimer-container form {
+    width: 100%;
+    padding: 0.4rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    flex-grow: 1;
+    overflow-y: auto;
+}
+
+.imprimer-container form .input-line {
+    padding: 0 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    width: 100%;
+    justify-content: space-between;
+    height: 40px;
+}
+
+.imprimer-container .input-line label {
+    font-size: 18px;
+}
+
+.imprimer-container .input-line select {
+    height: 100%;
+    font-size: 17px;
+}
+
+.imprimer-container .btn-container {
+    display: flex;
+    justify-content: flex-end;
+    width: 100%;
+    padding: 0 1rem;
+    margin-top: 0.7rem;
+}

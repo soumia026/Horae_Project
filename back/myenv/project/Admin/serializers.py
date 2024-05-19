@@ -16,7 +16,7 @@ class PromotionSerializer(serializers.ModelSerializer):
 class ModuleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Module
-        fields = '__all__'
+        fields = '__all__'   
 
 class SalleSerializer(serializers.ModelSerializer):
     class Meta:
