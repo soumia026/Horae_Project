@@ -19,8 +19,18 @@ from rest_framework import status
 from django.utils import timezone
 from datetime import datetime, time
 from django.db import IntegrityError
+
+import pandas as pd
+from django.apps import apps
+
 # import datetime 
 import schedule
+
+# export  pdf
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import letter, landscape
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
+
 
 @api_view(['GET'])
 def teacher_list(request):
@@ -615,6 +625,23 @@ def delete_ecole_administration(request, matricule):
     return Response({"message": f"L'école d'administration avec le matricule {matricule} a été supprimée."}, status=status.HTTP_204_NO_CONTENT)
 
 
+@api_view(['PUT'])
+def update_ecole_administration(request, matricule):
+    try:
+        ecole_administration = EcoleAdministration.objects.get(matricule=matricule)
+    except EcoleAdministration.DoesNotExist:
+        return Response({"error": f"L'école d'administration avec le matricule {matricule} n'existe pas."}, status=status.HTTP_404_NOT_FOUND)
+
+    # Récupérer les données envoyées dans la requête
+    data = request.data
+
+    # Mettre à jour les champs spécifiés dans les données
+    serializer = EcoleAdministrationSerializer(ecole_administration, data=data, partial=True)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 @api_view(['POST','GET'])
   
 def insertAbs(request, teacher_id):
@@ -906,28 +933,103 @@ def updateSeance(request, idSeance):
         return Response(serializer.errors, status=400)
 
 
-from threading import Timer
-import locale
-locale.setlocale(locale.LC_TIME, 'fr_FR.UTF-8')
-   
-def createDate():
-    now = datetime.now()
-    if not DateSeance.objects.filter(date=now.date()).exists():
-        DateSeance.objects.create(date=now.date())
-
-    today = now.strftime("%A").lower()  # Convert to lowercase for case-insensitive comparison
-    seances = Seance.objects.filter(Jour__iexact=today)
-    dateId = DateSeance.objects.get(date=now.date())  # Retrieve the DateSeance object for today
-
-    for seance in seances:
-        Seances.objects.create(date=dateId, idSeance = seance, present=True)
-
-current_time = datetime.now()
-target_time = datetime.strptime("01:00:00", "%H:%M:%S")
 
 
-while  current_time.hour == target_time.hour and current_time.minute == target_time.minute and current_time.second == target_time.second:
-        createDate()  
+
+# from datetime import datetime
+# from django.utils.translation import gettext as _
+# import schedule
+# import time 
+# def translate_day_to_french(day):
+#     if day.lower() == "monday":
+#         return _("Lundi")
+#     elif day.lower() == "tuesday":
+#         return _("Mardi")
+#     elif day.lower() == "wednesday":
+#         return _("Mercredi")
+#     elif day.lower() == "thursday":
+#         return _("Jeudi")
+#     elif day.lower() == "friday":
+#         return _("Vendredi")
+#     elif day.lower() == "saturday":
+#         return _("Samedi")
+#     elif day.lower() == "sunday":
+#         return _("Dimanche")
+#     else:
+#         return None  # Handle error or return None if day is not recognized
+
+
+# def createDate():
+#     now = datetime.now()
+#     today = translate_day_to_french(now.strftime("%A"))
+
+#     if not today:
+#         print("Day translation not found.")
+#         return
+
+#     if not DateSeance.objects.filter(date=now.date()).exists():
+#         DateSeance.objects.create(date=now.date())
+
+#     seances = Seance.objects.filter(Jour__iexact=today)
+#     dateId = DateSeance.objects.get(date=now.date())
+
+#     for seance in seances:
+#         Seances.objects.create(date=dateId, idSeance=seance, present=True)
+
+# current_time = datetime.now()
+# target_time = datetime.strptime("01:00:00", "%H:%M:%S")
+
+
+# schedule.every().day.at("20:48").do(createDate)
+
+
+
+
+
+
+
+# from datetime import datetime
+# from django.utils.translation import gettext as _
+# import schedule
+# import time 
+# def translate_day_to_french(day):
+#     if day.lower() == "monday":
+#         return _("Lundi")
+#     elif day.lower() == "tuesday":
+#         return _("Mardi")
+#     elif day.lower() == "wednesday":
+#         return _("Mercredi")
+#     elif day.lower() == "thursday":
+#         return _("Jeudi")
+#     elif day.lower() == "friday":
+#         return _("Vendredi")
+#     elif day.lower() == "saturday":
+#         return _("Samedi")
+#     elif day.lower() == "sunday":
+#         return _("Dimanche")
+#     else:
+#         return None  # Handle error or return None if day is not recognized
+
+# from celery.schedules import crontab
+# from celery.task import periodic_task
+
+# @periodic_task(run_every=crontab(hour=7, minute=30))
+# def createDate():
+#     now = datetime.now()
+#     today = translate_day_to_french(now.strftime("%A"))
+
+#     if not today:
+#         print("Day translation not found.")
+#         return
+
+#     if not DateSeance.objects.filter(date=now.date()).exists():
+#         DateSeance.objects.create(date=now.date())
+
+#     seances = Seance.objects.filter(Jour__iexact=today)
+#     dateId = DateSeance.objects.get(date=now.date())
+
+#     for seance in seances:
+#         Seances.objects.create(date=dateId, idSeance=seance, present=True)
 
 
 
@@ -994,125 +1096,6 @@ def calculerHeuresSup(request,nbrHeuresCharge,TauxCours,TauxTd,TauxTp):
         return Response({'R-Sup':nbrHeuresSup})
     
 
-# # @api_view(['POST'])
-# # def ajouterEnseigne(request,id_teacher,id_modules):
-
-
-# @api_view(['GET'])
-# def calculer_montant(request,debut_semestre,fin_semestre,PU_MAB,PU_MAA,PU_MCB,PU_MCA,PU_Professeur):
-#     def calculerMontant(matricule,rsup,Pu):
-#         montant = rsup * Pu
-#         debut_year = datetime.strptime(debut_semestre, "%Y-%m-%d").year
-#         fin_year = datetime.strptime(fin_semestre, "%Y-%m-%d").year
-
-#     # Test if debut_semestre year differs from fin_semestre year
-#         if debut_year != fin_year:
-#             semestre = 'S1'
-#         else:
-#             semestre = 'S2'
-#         if debut_year != fin_year:
-#             anneuniversitaire = f"{debut_year}/{fin_year}"
-#         else:
-#             anneuniversitaire = f"{debut_year}/{debut_year - 1}"
-
-#         montant_instance = Montant.objects.create(
-#             somme=montant,
-#             anneeUniversitaire=anneuniversitaire,
-#             semestre=semestre,
-#             matricule=matricule  # You need to pass the correct matricule here
-#         )
-#         return montant
-#     Teachers = Enseignant.objects.all()
-#     PUMAB = float(PU_MAB)
-#     PUMAA = float(PU_MAA)
-#     PUMCB = float(PU_MCB)
-#     PUMCA = float(PU_MCA)
-#     PUProfesseur = float(PU_Professeur)
-#     for teacher in Teachers:
-#         # Récupérer les séances de l'enseignant pour le mois en cours
-#         emploi_enseignant = Seance.objects.filter(Matricule_id= teacher.Matricule)
-
-#         # Récupérer les heures supplémentaires pour les séances de l'enseignant
-#         seances_rsup = heure.objects.filter(defType='HeuresSup', idSeance_id__in=emploi_enseignant.values_list('IdSeance', flat=True))
-
-#         # Récupérer les présences aux séances des heures supplémentaires
-#         seances_rsup_presents = Seances.objects.filter(idSeance_id__in=seances_rsup.values_list('idSeance_id', flat=True), present=True )
-#         rsup_monthly = {}
-#         debut_semestre = datetime.strptime(debut_semestre, '%Y-%m-%d')
-#         fin_semestre = datetime.strptime(fin_semestre, '%Y-%m-%d')
-#         duree_semestre = (fin_semestre.year - debut_semestre.year) * 12 + fin_semestre.month - debut_semestre.month + 1
-
-#         seances_par_semestre = DateSeance.objects.filter(IddatteS__in=seances_rsup_presents.values_list('date_id', flat=True), date__range=[debut_semestre, fin_semestre])
-
-#         rsup_monthly = {}
-#         rsup_semestre = 0
-#         for mois in range(debut_semestre.month, debut_semestre.month + duree_semestre):
-#             rsup = 0
-#             if mois > 12:
-#                 mois = mois % 12
-#             seances_par_mois = seances_par_semestre.filter(date__month=mois)
-#             id_seances_par_mois = Seances.objects.filter(date_id__in = seances_par_mois.values_list('IddatteS', flat=True))
-#             for seance in id_seances_par_mois:
-#                 hours= heure.objects.filter(defType='HeuresSup',idSeance_id = seance.idSeance_id)
-#                 for hour in hours:
-#                     rsup += hour.duree.total_seconds() / 3600  # Convert timedelta to hours
-        
-#             rsup_monthly[mois] = rsup
-#             rsup_semestre += rsup
-        
-#         if teacher.Grade == 'LectureA' :
-#             calculerMontant(teacher.Matricule,rsup_semestre,PUMAA)
-#         elif teacher.Grade == 'LectureB' :
-#             calculerMontant(teacher.Matricule,rsup_semestre,PUMAB)
-#         elif teacher.Grade == 'MCA' :
-#             calculerMontant(teacher.Matricule,rsup_semestre,PUMCA)
-#         elif teacher.Grade == 'MCB' :
-#             calculerMontant(teacher.Matricule,rsup_semestre,PUMCB)
-#         elif teacher.Grade == 'Professor' :
-#             calculerMontant(teacher.Matricule,rsup_semestre,PUProfesseur)
-
-#         # for hour in heures :
-#         #     rsup += hour.duree.total_seconds() / 3600 
-
-#         return Response(rsup_monthly)
-    
-
-# @api_view(['GET'])
-# def calculer_rsup_mois(request,debut_semestre,fin_semestre):
-#     Teachers = Enseignant.objects.all()
-#     for teacher in Teachers:
-#         # Récupérer les séances de l'enseignant pour le mois en cours
-#         emploi_enseignant = Seance.objects.filter(Matricule_id= teacher.Matricule)
-
-#         # Récupérer les heures supplémentaires pour les séances de l'enseignant
-#         seances_rsup = heure.objects.filter(defType='HeuresSup', idSeance_id__in=emploi_enseignant.values_list('IdSeance', flat=True))
-
-#         # Récupérer les présences aux séances des heures supplémentaires
-#         seances_rsup_presents = Seances.objects.filter(idSeance_id__in=seances_rsup.values_list('idSeance_id', flat=True), present=True )
-    
-#         rsup_monthly = {}
-#         for mois in range(1,13) :
-#             rsup = 0
-#             seances_par_mois = DateSeance.objects.filter(IddatteS__in = seances_rsup_presents.values_list('date_id', flat=True),date__month = mois)
-#             id_seances_par_mois = Seances.objects.filter(date_id__in = seances_par_mois.values_list('IddatteS', flat=True))
-#             for seance in id_seances_par_mois:
-#                 hours= heure.objects.filter(defType='HeuresSup',idSeance_id = seance.idSeance_id)
-#                 for hour in hours:
-#                     rsup += hour.duree.total_seconds() / 3600  # Convert timedelta to hours
-        
-#             rsup_monthly[mois] = rsup
-#         # for hour in heures :
-#         #     rsup += hour.duree.total_seconds() / 3600 
-
-#         return Response(rsup_monthly)
-    
-
-    
-
-
-
-
-
 @api_view(['POST'])
 def attribuer_Module_Ens(request):
     if request.method == 'POST':
@@ -1123,29 +1106,416 @@ def attribuer_Module_Ens(request):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+def exporter_donnees_excel(request):
+    # Récupérer tous les modèles de l'application Django
+    models = apps.get_models()
+
+    # Créer un fichier Excel en mémoire
+    excel_file = pd.ExcelWriter('archivageDesDonnees.xlsx', engine='xlsxwriter')
+
+    # Parcourir tous les modèles
+    for model in models:
+        # Récupérer toutes les données du modèle
+        donnees = model.objects.all()
+        
+        # Créer un DataFrame pandas pour les données du modèle
+        df = pd.DataFrame(list(donnees.values()))
+        
+        # Écrire les données dans une feuille Excel portant le nom du modèle
+        df.to_excel(excel_file, sheet_name=model.__name__, index=False)
+
+    # Fermer le fichier Excel
+    excel_file.close()
+
+    # Créer une réponse HTTP pour télécharger le fichier Excel
+    response = HttpResponse(open('archivageDesDonnees.xlsx', 'rb'), content_type='application/vnd.ms-excel')
+    response['Content-Disposition'] = 'attachment; filename="archivageDesDonnees.xlsx"'
+
+    return response
 
 
 
 
 
+def export_enseignants_pdf(request):
+    enseignants = Enseignant.objects.all()
+
+    # Création du document PDF avec une taille de page personnalisée
+    custom_page_size = (900, 1200)  # Ajustez la taille selon vos besoins
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="enseignants.pdf"'
+    doc = SimpleDocTemplate(response, pagesize=custom_page_size)
+    elements = []
+
+    # Données à inclure dans le PDF
+    data = [['Matricule', 'Nom', 'Prénom', 'Date de Naissance', 'Adresse', 'Email', 'Numéro de Téléphone', 'Fonction', 'Grade', 'Etablissement']]
+
+    for enseignant in enseignants:
+        data.append([
+            enseignant.Matricule,
+            enseignant.Nom,
+            enseignant.Prénom,
+            str(enseignant.DateNaissance),
+            enseignant.Adresse,
+            enseignant.Email,
+            enseignant.NumeroTelephone,
+            enseignant.Fonction,
+            enseignant.Grade,
+            enseignant.Etablissement,
+        ])
+
+    # Création de la table
+    table = Table(data)
+
+    # Style de la table
+    style = TableStyle([('BACKGROUND', (0,0), (-1,0), colors.grey),
+                        ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
+                        ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+                        ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+                        ('BOTTOMPADDING', (0,0), (-1,0), 12),
+                        ('BACKGROUND', (0,1), (-1,-1), colors.beige),
+                        ('GRID', (0,0), (-1,-1), 1, colors.black)])
+
+    table.setStyle(style)
+
+    # Ajouter la table au document
+    elements.append(table)
+    doc.build(elements)
+    return response
 
 
 
 
 
+def export_groupes_pdf(request):
+    groupes = Groupe.objects.all()
+
+    # Création du document PDF en mode paysage
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="groupes.pdf"'
+    doc = SimpleDocTemplate(response, pagesize=landscape(letter))
+    elements = []
+
+    # Données à inclure dans le PDF
+    data = [['ID Groupe', 'Numéro', 'Spécialité', 'ID Section']]
+
+    for groupe in groupes:
+        data.append([
+            groupe.idGroupe,
+            groupe.Numero,
+            groupe.Specialite,
+            groupe.idSection_id,
+        ])
+
+    # Création de la table
+    table = Table(data)
+
+    # Style de la table
+    style = TableStyle([('BACKGROUND', (0,0), (-1,0), colors.grey),
+                        ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
+                        ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+                        ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+                        ('BOTTOMPADDING', (0,0), (-1,0), 12),
+                        ('BACKGROUND', (0,1), (-1,-1), colors.beige),
+                        ('GRID', (0,0), (-1,-1), 1, colors.black)])
+
+    table.setStyle(style)
+
+    # Ajouter la table au document
+    elements.append(table)
+    doc.build(elements)
+    return response
 
 
 
+def export_specialites_pdf(request):
+    specialites = Specialite.objects.all()
+
+    # Création du document PDF en mode paysage
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="specialites.pdf"'
+    doc = SimpleDocTemplate(response, pagesize=landscape(letter))
+    elements = []
+
+    # Données à inclure dans le PDF
+    data = [['ID Spécialité', 'Nom Spécialité']]
+
+    for specialite in specialites:
+        data.append([
+            specialite.idSpecialite,
+            specialite.NomSpecialite,
+        ])
+
+    # Création de la table
+    table = Table(data)
+
+    # Style de la table
+    style = TableStyle([('BACKGROUND', (0,0), (-1,0), colors.grey),
+                        ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
+                        ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+                        ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+                        ('BOTTOMPADDING', (0,0), (-1,0), 12),
+                        ('BACKGROUND', (0,1), (-1,-1), colors.beige),
+                        ('GRID', (0,0), (-1,-1), 1, colors.black)])
+
+    table.setStyle(style)
+
+    # Ajouter la table au document
+    elements.append(table)
+    doc.build(elements)
+    return response
 
 
 
+def export_modules_pdf(request):
+    modules = Module.objects.all()
+
+    # Création du document PDF en mode paysage
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="modules.pdf"'
+    doc = SimpleDocTemplate(response, pagesize=landscape(letter))
+    elements = []
+
+    # Données à inclure dans le PDF
+    data = [['Code', 'Nom du Module', 'Coefficient', 'Nombre d\'heures', 'Semestre', 'ID Promotion']]
+
+    for module in modules:
+        data.append([
+            module.Code,
+            module.NomModule,
+            module.Coefficient,
+            module.NbrHeures,
+            module.Semestre,
+            module.nomP_id,
+        ])
+
+    # Création de la table
+    table = Table(data)
+
+    # Style de la table
+    style = TableStyle([('BACKGROUND', (0,0), (-1,0), colors.grey),
+                        ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
+                        ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+                        ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+                        ('BOTTOMPADDING', (0,0), (-1,0), 12),
+                        ('BACKGROUND', (0,1), (-1,-1), colors.beige),
+                        ('GRID', (0,0), (-1,-1), 1, colors.black)])
+
+    table.setStyle(style)
+
+    # Ajouter la table au document
+    elements.append(table)
+    doc.build(elements)
+    return response
+
+
+def export_absences_pdf(request):
+    absences = Abcence.objects.all()
+
+    # Création du document PDF en mode paysage
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="absences.pdf"'
+    doc = SimpleDocTemplate(response, pagesize=landscape(letter))
+    elements = []
+
+    # Données à inclure dans le PDF
+    data = [['ID Absence', 'Date Absence', 'Heure Début', 'Heure Fin', 'Motif', 'ID Prof']]
+
+    for absence in absences:
+        data.append([
+            absence.IdAbs,
+            absence.DateAbs,
+            absence.HeureDebut,
+            absence.HeureFin,
+            absence.Motif,
+            absence.IdProf_id,
+        ])
+
+    # Création de la table
+    table = Table(data)
+
+    # Style de la table
+    style = TableStyle([('BACKGROUND', (0,0), (-1,0), colors.grey),
+                        ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
+                        ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+                        ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+                        ('BOTTOMPADDING', (0,0), (-1,0), 12),
+                        ('BACKGROUND', (0,1), (-1,-1), colors.beige),
+                        ('GRID', (0,0), (-1,-1), 1, colors.black)])
+
+    table.setStyle(style)
+
+    # Ajouter la table au document
+    elements.append(table)
+    doc.build(elements)
+    return response
 
 
 
+def export_sections_pdf(request):
+    Sections = section.objects.all()
+
+    # Création du document PDF en mode paysage
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="sections.pdf"'
+    doc = SimpleDocTemplate(response, pagesize=landscape(letter))
+    elements = []
+
+    # Données à inclure dans le PDF
+    data = [['ID Section', 'Nom de la Section', 'ID Promotion']]
+
+    for Section in Sections:
+        data.append([
+            Section.idSection,
+            Section.NomSection,
+            Section.nomP_id,
+        ])
+
+    # Création de la table
+    table = Table(data)
+
+    # Style de la table
+    style = TableStyle([('BACKGROUND', (0,0), (-1,0), colors.grey),
+                        ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
+                        ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+                        ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+                        ('BOTTOMPADDING', (0,0), (-1,0), 12),
+                        ('BACKGROUND', (0,1), (-1,-1), colors.beige),
+                        ('GRID', (0,0), (-1,-1), 1, colors.black)])
+
+    table.setStyle(style)
+
+    # Ajouter la table au document
+    elements.append(table)
+    doc.build(elements)
+    return response
 
 
 
+def export_seances_pdf(request):
+    seances = Seance.objects.all()
 
+    # Création du document PDF en mode paysage
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="seances.pdf"'
+    doc = SimpleDocTemplate(response, pagesize=landscape(letter))
+    elements = []
 
+    # Données à inclure dans le PDF
+    data = [['ID Séance', 'Nom de la Séance', 'Type', 'Jour', 'Heure Début', 'Heure Fin', 'Semestre', 'Code', 'Matricule', 'ID Groupe', 'ID Promotion', 'ID Salle', 'ID Section']]
 
-    
+    for seance in seances:
+        data.append([
+            seance.IdSeance,
+            seance.NomS,
+            seance.Type,
+            seance.Jour,
+            seance.HeureDebut,
+            seance.HeureFin,
+            seance.Semestre,
+            seance.Code_id,
+            seance.Matricule_id,
+            seance.idGroupe_id,
+            seance.idPromo_id,
+            seance.idSalle_id,
+            seance.idSection_id,
+        ])
+
+    # Création de la table
+    table = Table(data)
+
+    # Style de la table
+    style = TableStyle([('BACKGROUND', (0,0), (-1,0), colors.grey),
+                        ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
+                        ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+                        ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+                        ('BOTTOMPADDING', (0,0), (-1,0), 12),
+                        ('BACKGROUND', (0,1), (-1,-1), colors.beige),
+                        ('GRID', (0,0), (-1,-1), 1, colors.black)])
+
+    table.setStyle(style)
+
+    # Ajouter la table au document
+    elements.append(table)
+    doc.build(elements)
+    return response
+
+@api_view(['GET'])
+def calculer_montant(request,debut_semestre,fin_semestre,PU_MAB,PU_MAA,PU_MCB,PU_MCA,PU_Professeur,per_securite_social,per_irg):
+     per_securite_soc = float(per_securite_social)
+     per_IRG = float(per_irg)
+     def calculerMontant(teacher,rsup,Pu,per_securite_sociale,per_IRG):
+         montant = rsup * Pu
+         securite_sociale = montant * (per_securite_sociale/100)
+         IRG = montant * (per_IRG/100)
+         montant_debite = securite_sociale + IRG
+         montant_net = montant - montant_debite
+         debut_year = debut_semestre.year
+         fin_year = fin_semestre.year
+         infos = [("montant",montant),("securite_sociale",securite_sociale),("IRG",IRG),("montant debite",montant_debite),("montant net",montant_net)]
+
+     # Test if debut_semestre year differs from fin_semestre year
+         if debut_year != fin_year:
+             semestre = 'S1'
+         else:
+             semestre = 'S2'
+         if debut_year != fin_year:
+             anneuniversitaire = f"{debut_year}/{fin_year}"
+         else:
+             anneuniversitaire = f"{debut_year}/{debut_year - 1}"
+
+         montant_instance = Montant.objects.create(
+             somme=montant_net,
+             anneeUniversiatire = anneuniversitaire,
+             semestre=semestre,
+             matricule= teacher  # You need to pass the correct matricule here
+         )
+         return infos
+     Teachers = Enseignant.objects.all()
+     PUMAB = float(PU_MAB)
+     PUMAA = float(PU_MAA)
+     PUMCB = float(PU_MCB)
+     PUMCA = float(PU_MCA)
+     PUProfesseur = float(PU_Professeur)
+     for teacher in Teachers:
+         # Récupérer les séances de l'enseignant pour le mois en cours
+         emploi_enseignant = Seance.objects.filter(Matricule_id= teacher.Matricule)
+
+         # Récupérer les heures supplémentaires pour les séances de l'enseignant
+         seances_rsup = heure.objects.filter(defType='HeuresSup', idSeance_id__in=emploi_enseignant.values_list('IdSeance', flat=True))
+
+         # Récupérer les présences aux séances des heures supplémentaires
+         seances_rsup_presents = Seances.objects.filter(idSeance_id__in=seances_rsup.values_list('idSeance_id', flat=True), present=True )
+         rsup_monthly = {}
+         debut_semestre = datetime.strptime(debut_semestre, '%Y-%m-%d')
+         fin_semestre = datetime.strptime(fin_semestre, '%Y-%m-%d')
+         duree_semestre = (fin_semestre.year - debut_semestre.year) * 12 + fin_semestre.month - debut_semestre.month + 1
+
+         seances_par_semestre = DateSeance.objects.filter(IddatteS__in=seances_rsup_presents.values_list('date_id', flat=True), date__range=[debut_semestre, fin_semestre])
+         rsup_semestre = 0
+         for mois in range(debut_semestre.month, debut_semestre.month + duree_semestre):
+             rsup = 0
+             if mois > 12:
+                 mois = mois % 12
+             seances_par_mois = seances_par_semestre.filter(date__month=mois)
+             id_seances_par_mois = Seances.objects.filter(date_id__in = seances_par_mois.values_list('IddatteS', flat=True))
+             for seance in id_seances_par_mois:
+                 hours= heure.objects.filter(defType='HeuresSup',idSeance_id = seance.idSeance_id)
+                 for hour in hours:
+                     rsup += hour.duree.total_seconds() / 3600  # Convert timedelta to hours
+       
+             rsup_monthly[mois] = rsup
+             rsup_semestre += rsup
+        
+         if teacher.Grade == 'LectureA' :
+             calculerMontant(teacher,rsup_semestre,PUMAA,per_securite_soc,per_IRG)
+         elif teacher.Grade == 'LectureB' :
+             calculerMontant(teacher,rsup_semestre,PUMAB,per_securite_soc,per_IRG)
+         elif teacher.Grade == 'MCA' :
+             calculerMontant(teacher,rsup_semestre,PUMCA,per_securite_soc,per_IRG)
+         elif teacher.Grade == 'MCB' :
+             calculerMontant(teacher,rsup_semestre,PUMCB,per_securite_soc,per_IRG)
+         elif teacher.Grade == 'Professor' :
+             calculerMontant(teacher,rsup_semestre,PUProfesseur,per_securite_soc,per_IRG)
+
+         return Response(rsup_monthly)

@@ -160,3 +160,4 @@ EMAIL_HOST_USER = 'EMAIL TA3KOUM TESTIW BIH '  # Votre adresse e-mail d'envoi
 EMAIL_HOST_PASSWORD = 'MDP TA3KOUM'  # Le mot de passe de votre adresse e-mail d'envoi
 
 
+

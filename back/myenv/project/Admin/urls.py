@@ -13,8 +13,6 @@ path('attribuer_Module_Ens/',views.attribuer_Module_Ens,name='attribuer_Module_E
 path('inscription/', views.inscription, name='inscription'),
 path('deleteAbsence/<str:teacher_id>/<int:abs_id>/',views.deleteAbsence,name='deleteAbsence'),
 
-
-
 path('modules',views.modules_list,name='modules_list'),
 path('salles',views.salles_list,name='salles_list'),
 path('specialites',views.specialites_list,name='specialites_list'),
@@ -48,13 +46,24 @@ path('updateSalle/<int:id_salle>/', views.updateSalle, name='update_salle'),
 path('updateModule/<str:code>/', views.updateModule, name='update_module'),
 path('updateSeance/<int:idSeance>/',views.updateSeance, name='update_seance'),
 path('calculerHeuresSup/<str:nbrHeuresCharge>/<str:TauxCours>/<str:TauxTd>/<str:TauxTp>/',views.calculerHeuresSup, name='calculerHeuresSup'),
-# path('calculer_montant/<str:debut_semestre>/<str:fin_semestre>/<str:PU_MAB>/<str:PU_MAA>/<str:PU_MCB>/<str:PU_MCA>/<str:PU_Professeur>/',views.calculer_rsup_mois,name="calculer_rsup_mois")
 path('inscription_ecole_administration/', views.inscription_ecole_administration, name='inscription_ecole_administration'),
 path('changer_mot_de_passe/', views.changer_mot_de_passe_ecole_administration, name='changer_mot_de_passe_ecole_administration'),
 path('changer_mot_de_passe_enseignant/', views.changer_mot_de_passe_enseignant, name='changer_mot_de_passe_enseignant'),
 path('insert_ecole_administration/', views.insert_ecole_administration, name='insert_ecole_administration'),
 path('delete_ecole_administration/<str:matricule>/', views.delete_ecole_administration, name='delete_ecole_administration'),
+path('update_ecole_administration/<str:matricule>/', views.update_ecole_administration, name='update_ecole_administration'),
+path('exporter_donnees_excel/', views.exporter_donnees_excel, name='exporter_donnees_excel'),
+path('exporter_donnees_pdf/', views.export_enseignants_pdf, name='export_enseignants_pdf'),
+path('export_groupes_pdf/', views.export_groupes_pdf, name='export_groupes_pdf'),
+path('export_specialites_pdf/', views.export_specialites_pdf, name='export_specialites_pdf'),
+path('export_modules_pdf/', views.export_modules_pdf, name='export_modules_pdf'),
+path('export_absences_pdf/', views.export_absences_pdf, name='export_absences_pdf'),
+path('export_sections_pdf/', views.export_sections_pdf, name='export_sections_pdf'),
+path('export_seances_pdf/', views.export_seances_pdf, name='export_seances_pdf'),
+path('calculer_montant/<str:debut_semestre>/<str:fin_semestre>/<str:PU_MAB>/<str:PU_MAA>/<str:PU_MCB>/<str:PU_MCA>/<str:PU_Professeur>/<str:per_securite_social>/<str:per_irg>/',views.calculer_montant,name="calculer_montant"),
+path('inscription_ecole_administration/', views.inscription_ecole_administration, name='inscription_ecole_administration')
 ]
+
 
 
 
