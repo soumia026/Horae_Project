@@ -45,7 +45,7 @@ path('updateAbsence/<int:idAbs>/', views.updateAbsence, name='update_absence'),
 path('updateSalle/<int:id_salle>/', views.updateSalle, name='update_salle'),
 path('updateModule/<str:code>/', views.updateModule, name='update_module'),
 path('updateSeance/<int:idSeance>/',views.updateSeance, name='update_seance'),
-path('calculerHeuresSup/<str:nbrHeuresCharge>/<str:TauxCours>/<str:TauxTd>/<str:TauxTp>/',views.calculerHeuresSup, name='calculerHeuresSup'),
+path('calculerHeuresSup/<str:matricule>/<str:nbrHeuresCharge>/<str:TauxCours>/<str:TauxTd>/<str:TauxTp>/',views.calculerHeuresSup, name='calculerHeuresSup'),
 path('inscription_ecole_administration/', views.inscription_ecole_administration, name='inscription_ecole_administration'),
 path('changer_mot_de_passe/', views.changer_mot_de_passe_ecole_administration, name='changer_mot_de_passe_ecole_administration'),
 path('changer_mot_de_passe_enseignant/', views.changer_mot_de_passe_enseignant, name='changer_mot_de_passe_enseignant'),
@@ -61,7 +61,8 @@ path('export_absences_pdf/', views.export_absences_pdf, name='export_absences_pd
 path('export_sections_pdf/', views.export_sections_pdf, name='export_sections_pdf'),
 path('export_seances_pdf/', views.export_seances_pdf, name='export_seances_pdf'),
 path('calculer_montant/<str:debut_semestre>/<str:fin_semestre>/<str:PU_MAB>/<str:PU_MAA>/<str:PU_MCB>/<str:PU_MCA>/<str:PU_Professeur>/<str:per_securite_social>/<str:per_irg>/',views.calculer_montant,name="calculer_montant"),
-path('inscription_ecole_administration/', views.inscription_ecole_administration, name='inscription_ecole_administration')
+path('inscription_ecole_administration/', views.inscription_ecole_administration, name='inscription_ecole_administration'),
+path('export_montants_pdf/', views.export_montants_pdf, name='export_montants_pdf'),
 ]
 
 

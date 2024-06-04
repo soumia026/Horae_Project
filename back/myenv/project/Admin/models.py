@@ -257,11 +257,17 @@ class Montant(models.Model):
             ('S2','S2'),
 
     )
-    
-    somme = models.FloatField(default = None)
+    montant_total = models.FloatField(default = None)
     anneeUniversiatire = models.CharField(max_length=50, default = None) 
     semestre = models.CharField(max_length=20, choices=SEMESTRE_CHOICES)
     matricule = models.ForeignKey(Enseignant, on_delete=models.DO_NOTHING , default = None)
+    prix_unitaire = models.FloatField(default = None)
+    nombre_des_heures = models.FloatField(default = None)
+    securite_sociale = models.FloatField(default = None)
+    irg = models.FloatField(default = None)
+    montant_debite = models.FloatField(default = None)
+    montant_net = models.FloatField(default = None)
+    periode = models.CharField(default = None,max_length=20, choices=SEMESTRE_CHOICES)
     class Meta:
         db_table =  "Montant"
 
@@ -269,6 +275,19 @@ class Montant(models.Model):
         return str(self.idMontant)
 
 
+
+
+# models.py
+class Reclamation(models.Model):
+    IdRec = models.AutoField(primary_key = True)
+    enseignant = models.ForeignKey(Enseignant, on_delete=models.CASCADE)
+    description = models.CharField(max_length=255,default = None)
+
+    class Meta:
+       db_table =  "Reclamation"
+
+    def __str__(self):
+        return f'Reclamation {self.id} de {self.enseignant.matricule}'
 
 
 

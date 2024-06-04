@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_celery_results',
     'rest_framework',
 ]
 
@@ -158,6 +159,5 @@ EMAIL_PORT = 587  # Port de messagerie, par exemple, 587 pour Gmail
 EMAIL_USE_TLS = True  # Utilisez True si votre serveur de messagerie nécessite TLS
 EMAIL_HOST_USER = 'EMAIL TA3KOUM TESTIW BIH '  # Votre adresse e-mail d'envoi
 EMAIL_HOST_PASSWORD = 'MDP TA3KOUM'  # Le mot de passe de votre adresse e-mail d'envoi
-
 
 

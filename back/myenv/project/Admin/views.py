@@ -1033,16 +1033,17 @@ def updateSeance(request, idSeance):
 
 
 
+
+
+
 @api_view(['GET'])
-def calculerHeuresSup(request,nbrHeuresCharge,TauxCours,TauxTd,TauxTp):
-    nbrHeuresCharge = float(nbrHeuresCharge)
-    TauxCours = float(TauxCours)
-    TauxTd = float(TauxTd)
-    TauxTp = float(TauxTp)
-    Teachers = Enseignant.objects.all()
+def calculerHeuresSup(request,matricule,nbrHeuresCharge,TauxCours,TauxTd,TauxTp):
+        nbrHeuresCharge = float(nbrHeuresCharge)
+        TauxCours = float(TauxCours)
+        TauxTd = float(TauxTd)
+        TauxTp = float(TauxTp)
+        teacher = Enseignant.objects.get(Matricule = matricule)
   
-    for teacher in Teachers :
-       
         seancesCours = Seance.objects.filter(Matricule_id = teacher.Matricule,Type= 'Cours')
         seancesTd = Seance.objects.filter(Matricule_id = teacher.Matricule,Type= 'Td')
         seancesTp = Seance.objects.filter(Matricule_id = teacher.Matricule,Type= 'Tp')
@@ -1094,6 +1095,68 @@ def calculerHeuresSup(request,nbrHeuresCharge,TauxCours,TauxTd,TauxTp):
 
 
         return Response({'R-Sup':nbrHeuresSup})
+
+# @api_view(['GET'])
+# def calculerHeuresSup(request,nbrHeuresCharge,TauxCours,TauxTd,TauxTp):
+#     nbrHeuresCharge = float(nbrHeuresCharge)
+#     TauxCours = float(TauxCours)
+#     TauxTd = float(TauxTd)
+#     TauxTp = float(TauxTp)
+#     Teachers = Enseignant.objects.all()
+  
+#     for teacher in Teachers :
+       
+#         seancesCours = Seance.objects.filter(Matricule_id = teacher.Matricule,Type= 'Cours')
+#         seancesTd = Seance.objects.filter(Matricule_id = teacher.Matricule,Type= 'Td')
+#         seancesTp = Seance.objects.filter(Matricule_id = teacher.Matricule,Type= 'Tp')
+#         nbrHeuresCours = 0
+#         nbrHeuresTd = 0
+#         nbrHeuresTp = 0
+
+#         for seance in seancesCours:
+
+#             difference = (datetime.combine(datetime.min, seance.HeureFin) - datetime.combine(datetime.min, seance.HeureDebut)).total_seconds() / 3600
+#             nbrHeuresCours += difference
+
+
+#         for seance in seancesTd:
+
+#             difference = (datetime.combine(datetime.min, seance.HeureFin) - datetime.combine(datetime.min, seance.HeureDebut)).total_seconds() / 3600
+#             nbrHeuresTd += difference
+
+
+#         for seance in seancesTp:
+
+#             difference = (datetime.combine(datetime.min, seance.HeureFin) - datetime.combine(datetime.min, seance.HeureDebut)).total_seconds() / 3600
+#             nbrHeuresTp += difference
+
+
+#         transNbrHeuresCours = nbrHeuresCours * TauxCours
+#         transNbrHeuresTD = nbrHeuresTd * TauxTd
+#         transNbrHeuresTp = nbrHeuresTp *TauxTp
+#         nbrHeuresSup = 0
+#         calculCharge = 0
+#         calculCharge += transNbrHeuresCours
+#         if calculCharge >= nbrHeuresCharge :
+#             nbrHeuresSupCours = (transNbrHeuresCours - nbrHeuresCharge)/TauxCours
+#             nbrHeuresSup += nbrHeuresSupCours + nbrHeuresTd + nbrHeuresTp
+#         else :
+#             nbrChargeRest = nbrHeuresCharge - calculCharge
+#             calculCharge += transNbrHeuresTD
+#             if calculCharge >= nbrHeuresCharge :
+#                 nbrHeuresSupTd = (transNbrHeuresTD - nbrChargeRest)/TauxTd
+#                 nbrHeuresSup += nbrHeuresSupTd + nbrHeuresTp
+#             else :
+#                 nbrChargeRest = nbrHeuresCharge - calculCharge
+#                 calculCharge += transNbrHeuresTp
+#                 nbrHeuresSupTp = (transNbrHeuresTp - nbrChargeRest)/TauxTp
+#                 if calculCharge <= nbrHeuresCharge :
+#                     nbrHeuresSup = 0
+#                 else :
+#                     nbrHeuresSup += nbrHeuresSupTp
+
+
+#         return Response({'R-Sup':nbrHeuresSup})
     
 
 @api_view(['POST'])
@@ -1132,6 +1195,7 @@ def exporter_donnees_excel(request):
     response['Content-Disposition'] = 'attachment; filename="archivageDesDonnees.xlsx"'
 
     return response
+
 
 
 
@@ -1444,6 +1508,7 @@ def export_seances_pdf(request):
 def calculer_montant(request,debut_semestre,fin_semestre,PU_MAB,PU_MAA,PU_MCB,PU_MCA,PU_Professeur,per_securite_social,per_irg):
      per_securite_soc = float(per_securite_social)
      per_IRG = float(per_irg)
+     
      def calculerMontant(teacher,rsup,Pu,per_securite_sociale,per_IRG):
          montant = rsup * Pu
          securite_sociale = montant * (per_securite_sociale/100)
@@ -1453,7 +1518,7 @@ def calculer_montant(request,debut_semestre,fin_semestre,PU_MAB,PU_MAA,PU_MCB,PU
          debut_year = debut_semestre.year
          fin_year = fin_semestre.year
          infos = [("montant",montant),("securite_sociale",securite_sociale),("IRG",IRG),("montant debite",montant_debite),("montant net",montant_net)]
-
+         periode = f"du {debut_semestre} au {fin_semestre}"
      # Test if debut_semestre year differs from fin_semestre year
          if debut_year != fin_year:
              semestre = 'S1'
@@ -1465,10 +1530,17 @@ def calculer_montant(request,debut_semestre,fin_semestre,PU_MAB,PU_MAA,PU_MCB,PU
              anneuniversitaire = f"{debut_year}/{debut_year - 1}"
 
          montant_instance = Montant.objects.create(
-             somme=montant_net,
+             montant_total=montant,
              anneeUniversiatire = anneuniversitaire,
              semestre=semestre,
-             matricule= teacher  # You need to pass the correct matricule here
+             matricule= teacher,  
+             prix_unitaire =Pu,
+             nombre_des_heures =rsup,
+             securite_sociale=per_securite_sociale,
+             irg =per_IRG,
+             montant_debite =montant_debite,
+             montant_net =montant_net,
+             periode = periode,
          )
          return infos
      Teachers = Enseignant.objects.all()
@@ -1519,3 +1591,54 @@ def calculer_montant(request,debut_semestre,fin_semestre,PU_MAB,PU_MAA,PU_MCB,PU
              calculerMontant(teacher,rsup_semestre,PUProfesseur,per_securite_soc,per_IRG)
 
          return Response(rsup_monthly)
+     
+
+def export_montants_pdf(request):
+    enseignants = Enseignant.objects.all()
+    # Création du document PDF avec une taille de page personnalisée
+    custom_page_size = (900, 1200)  # Ajustez la taille selon vos besoins
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="etat_de_paiement.pdf"'
+    doc = SimpleDocTemplate(response, pagesize=custom_page_size)
+    elements = []
+
+    # Données à inclure dans le PDF
+    data = [[ 'Nom', 'Prénom', 'Grade', 'Prix unitaire', 'N des heures', 'Montant total', 'Securite sociale', 'IRG', 'Montant debite','Montant net','Periode']]
+
+    for enseignant in enseignants:
+        montants = Montant.objects.filter(matricule_id = enseignant.Matricule)
+        for montant in montants:
+            data.append([
+                enseignant.Nom,
+                enseignant.Prénom,
+                enseignant.Grade,
+                str(montant.prix_unitaire),
+                str(montant.nombre_des_heures),
+                str(montant.montant_total),
+                str(montant.securite_sociale),
+                str(montant.irg),
+                str(montant.montant_debite),
+                str(montant.montant_net),
+                montant.periode,
+            
+        ])
+
+    # Création de la table
+    table = Table(data)
+
+    # Style de la table
+    style = TableStyle([('BACKGROUND', (0,0), (-1,0), colors.grey),
+                        ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
+                        ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+                        ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+                        ('BOTTOMPADDING', (0,0), (-1,0), 12),
+                        ('BACKGROUND', (0,1), (-1,-1), colors.beige),
+                        ('GRID', (0,0), (-1,-1), 1, colors.black)])
+
+    table.setStyle(style)
+
+    # Ajouter la table au document
+    elements.append(table)
+    doc.build(elements)
+    return response
+
