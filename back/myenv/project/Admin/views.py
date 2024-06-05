@@ -307,8 +307,10 @@ def deleteAbsence(request,teacher_id,abs_id):
         return Response({'success': True, 'message': 'L absence a été supprimée avec succès.'})
 
 
-@api_view(['POST','GET'])
+from datetime import datetime, time
+from django.utils import timezone
 
+@api_view(['POST', 'GET'])
 def insertSeance(request, teacher_id, semestre):
     if request.method == 'POST':
         heure_debut = timezone.make_aware(datetime.combine(datetime.now().date(), time(8, 0)))
@@ -335,10 +337,43 @@ def insertSeance(request, teacher_id, semestre):
             if heure_fin_seance > heure_fin_limite:
                 error_messages.append("L'heure de fin doit être avant 5:30 PM.")
             if heure_fin_seance <= heure_debut_seance:
-                return Response({"error": "L'heure de debut doit etre inferieur au heure fin "}, status=400)
+                error_messages.append("L'heure de début doit être inférieure à l'heure de fin.")
 
+            # Vérification des conflits de séances pour le même enseignant et semestre
             if error_messages:
-                return Response({"message": ", ".join(error_messages)}, status=400)
+                return Response({"error": ", ".join(error_messages)}, status=400)
+
+            NouveauIdSalle = serializer.validated_data.get('idSalle')
+            NouveauJour = serializer.validated_data.get('Jour')
+            NouveauHRdeb = serializer.validated_data.get('HeureDebut')
+            NouveauHRfin = serializer.validated_data.get('HeureFin')
+            NouveauIdSection = serializer.validated_data.get('idSection')
+            NouveauIdGroupe = serializer.validated_data.get('idGroupe')
+            matr = teacher_id
+
+            # Vérification de l'heure de début et de fin
+            if NouveauHRdeb and NouveauHRdeb < time(8, 0):
+                return Response({"error": "L'heure de début doit être à partir de 08:00 am."}, status=400)
+            if NouveauHRfin and NouveauHRfin > time(17, 30):
+                return Response({"error": "L'heure de fin doit être avant 17:30 pm."}, status=400)
+
+            # Vérification des conflits de séances pour le même groupe
+            if NouveauIdGroupe:
+                seanGroup = Seance.objects.filter(idGroupe=NouveauIdGroupe, HeureDebut=NouveauHRdeb, HeureFin=NouveauHRfin, Jour=NouveauJour)
+                if seanGroup:
+                    return Response({"error": "Ce groupe a une séance à cette date."}, status=400)
+
+            # Vérification des conflits de séances pour le même jour, heure de début et fin
+            if NouveauJour and NouveauHRdeb and NouveauHRfin:
+                seanSJour = Seance.objects.filter(Matricule=matr, Jour=NouveauJour, HeureDebut=NouveauHRdeb, HeureFin=NouveauHRfin)
+                if seanSJour:
+                    return Response({"error": "Impossible."}, status=400)
+
+            # Vérification des conflits de réservation pour la salle
+            if NouveauIdSalle is not None:
+                seanSalle = Seance.objects.filter(idSalle=NouveauIdSalle, HeureDebut=NouveauHRdeb, HeureFin=NouveauHRfin, Jour=NouveauJour)
+                if seanSalle:
+                    return Response({"error": "Cette salle est déjà réservée pour une autre séance à ce moment. Veuillez choisir une autre salle pour cette séance."}, status=400)
 
             serializer.validated_data['Matricule_id'] = teacher_id
             serializer.validated_data['Semestre'] = semestre
@@ -347,13 +382,11 @@ def insertSeance(request, teacher_id, semestre):
         return Response(serializer.errors, status=400)
     elif request.method == 'GET':
         # Handle GET request if needed
-        seances = Seance.objects.filter(Matricule_id=teacher_id,Semestre = semestre)
+        seances = Seance.objects.filter(Matricule_id=teacher_id, Semestre=semestre)
         serializer = SeanceSerializer(seances, many=True)
         return Response(serializer.data, status=200)
     else:
         return Response({"message": "Method not allowed"}, status=405)
-
-
 
 
 
@@ -880,6 +913,7 @@ def updateModule(request, code):
 
 
 @api_view(['PUT'])
+  
 def updateSeance(request, idSeance):
     try:
         seance = Seance.objects.get(IdSeance=idSeance)
@@ -896,37 +930,38 @@ def updateSeance(request, idSeance):
             NouveauIdSection= serializer.validated_data.get('idSection')
             NouveauIdGroupe= serializer.validated_data.get('idGroupe')
             matr = seance.Matricule
-            
-            # Vérification de l'heure de début et de fin
+          # Vérification de l'heure de début et de fin
             if NouveauHRdeb and NouveauHRdeb < time(8, 0):
                 return Response({"error": "L'heure de début doit être à partir de 08:00 am."}, status=400)
             if NouveauHRfin and NouveauHRfin > time(17, 30):
                 return Response({"error": "L'heure de fin doit être avant 17:30 pm."}, status=400)
-            
-            if NouveauIdGroupe:
+            # if NouveauHRdeb and NouveauHRfin and NouveauHRfin <= NouveauHRdeb:
+            #     return Response({"error": "L'heure de début doit être antérieure à l'heure de fin."}, status=400)
+            if NouveauIdGroupe :
                 heure_debut = seance.HeureDebut
-                heure_fin = seance.HeureFin
+                heure_fin =seance.HeureFin
                 jour = seance.Jour
-                seanGroup = Seance.objects.filter(IdGroupe=NouveauIdGroupe, HeureDebut=heure_debut, HeureFin=heure_fin, Jour=jour).exclude(IdSeance=idSeance)
-                if seanGroup:
-                    return Response({"error": "Ce groupe a une séance à cette date."}, status=400)
+                seanGroup = Seance.objects.filter(IdGroupe = NouveauIdGroupe,HeureDebut =heure_debut ,HeureFin = heure_fin ,Jour = jour)
+                if seanGroup :
+                    return Response({"error": "Ce groupe a une seanca cette datte ."}, status=400)
                 
-            if NouveauJour and NouveauHRdeb and NouveauHRfin:
-                seanSJour = Seance.objects.filter(Matricule=matr, Jour=NouveauJour, HeureDebut=NouveauHRdeb, HeureFin=NouveauHRfin).exclude(IdSeance=idSeance)
-                if seanSJour:
+            if NouveauJour and NouveauHRdeb and NouveauHRfin :
+                seanSJour = Seance.objects.filter(Matricule=matr,Jour = NouveauJour ,HeureDebut =NouveauHRdeb ,HeureFin = NouveauHRfin)
+                if seanSJour :
                     return Response({"error": "impossible."}, status=400)
-            
-            if NouveauIdSalle is not None:
+            if NouveauIdSalle != None :
                 heure_debut = seance.HeureDebut
-                heure_fin = seance.HeureFin
+                heure_fin =seance.HeureFin
                 jour = seance.Jour
-                seanSalle = Seance.objects.filter(idSalle=NouveauIdSalle, HeureDebut=heure_debut, HeureFin=heure_fin, Jour=jour).exclude(IdSeance=idSeance)
-                if seanSalle:
+                seanSalle = Seance.objects.filter(idSalle=NouveauIdSalle,HeureDebut =heure_debut ,HeureFin = heure_fin ,Jour = jour )
+                if seanSalle :
                     return Response({"error": "Cette salle est déjà réservée pour une autre séance à ce moment. Veuillez choisir une autre salle pour cette séance."}, status=400)
+                
 
             serializer.save()
             return Response(serializer.data, status=200)
         return Response(serializer.errors, status=400)
+
 
 
 
