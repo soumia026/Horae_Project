@@ -403,8 +403,6 @@ def insertSpecialite(request):
 
 
 
-
-
 @api_view(['POST', 'GET'])
 def insertEnseignant(request):
     if request.method == 'POST':
@@ -766,8 +764,8 @@ def updateSection(request, idSection):
 
 from datetime import datetime, timedelta
 
+
 @api_view(['PUT'])
-  
 def updateEnseignant(request, matricule):
     try:
         enseignant = Enseignant.objects.get(Matricule=matricule)
@@ -783,11 +781,11 @@ def updateEnseignant(request, matricule):
                 if not email.endswith('esi-sba.dz'):
                     return Response({"error": "L'email doit se terminer par 'esi-sba.dz'."}, status=400)
 
-            # Vérifier si le champ NumeroTelephone est modifié et s'il contient uniquement des chiffres
+            # Vérifier si le champ NumeroTelephone est modifié et s'il contient uniquement des chiffres et respecte le format requis
             if 'NumeroTelephone' in serializer.validated_data:
                 numero_telephone = serializer.validated_data['NumeroTelephone']
-                if not numero_telephone.isdigit():
-                    return Response({"error": "Le numéro de téléphone ne doit contenir que des chiffres."}, status=400)
+                if not numero_telephone.isdigit() or len(numero_telephone) != 10 or not numero_telephone.startswith(('05', '06', '07')):
+                    return Response({"error": "Le numéro de téléphone doit contenir exactement 10 chiffres et commencer par '05', '06' ou '07'."}, status=400)
 
             # Vérifier si le champ DateNaissance est modifié et s'il est inférieur à 25 ans
             if 'DateNaissance' in serializer.validated_data:
@@ -801,7 +799,6 @@ def updateEnseignant(request, matricule):
             serializer.save()
             return Response(serializer.data, status=200)
         return Response(serializer.errors, status=400)
-
 
 
 @api_view(['PUT'])
@@ -883,7 +880,6 @@ def updateModule(request, code):
 
 
 @api_view(['PUT'])
-  
 def updateSeance(request, idSeance):
     try:
         seance = Seance.objects.get(IdSeance=idSeance)
@@ -900,38 +896,37 @@ def updateSeance(request, idSeance):
             NouveauIdSection= serializer.validated_data.get('idSection')
             NouveauIdGroupe= serializer.validated_data.get('idGroupe')
             matr = seance.Matricule
-          # Vérification de l'heure de début et de fin
+            
+            # Vérification de l'heure de début et de fin
             if NouveauHRdeb and NouveauHRdeb < time(8, 0):
                 return Response({"error": "L'heure de début doit être à partir de 08:00 am."}, status=400)
             if NouveauHRfin and NouveauHRfin > time(17, 30):
                 return Response({"error": "L'heure de fin doit être avant 17:30 pm."}, status=400)
-            # if NouveauHRdeb and NouveauHRfin and NouveauHRfin <= NouveauHRdeb:
-            #     return Response({"error": "L'heure de début doit être antérieure à l'heure de fin."}, status=400)
-            if NouveauIdGroupe :
+            
+            if NouveauIdGroupe:
                 heure_debut = seance.HeureDebut
-                heure_fin =seance.HeureFin
+                heure_fin = seance.HeureFin
                 jour = seance.Jour
-                seanGroup = Seance.objects.filter(IdGroupe = NouveauIdGroupe,HeureDebut =heure_debut ,HeureFin = heure_fin ,Jour = jour)
-                if seanGroup :
-                    return Response({"error": "Ce groupe a une seanca cette datte ."}, status=400)
+                seanGroup = Seance.objects.filter(IdGroupe=NouveauIdGroupe, HeureDebut=heure_debut, HeureFin=heure_fin, Jour=jour).exclude(IdSeance=idSeance)
+                if seanGroup:
+                    return Response({"error": "Ce groupe a une séance à cette date."}, status=400)
                 
-            if NouveauJour and NouveauHRdeb and NouveauHRfin :
-                seanSJour = Seance.objects.filter(Matricule=matr,Jour = NouveauJour ,HeureDebut =NouveauHRdeb ,HeureFin = NouveauHRfin)
-                if seanSJour :
+            if NouveauJour and NouveauHRdeb and NouveauHRfin:
+                seanSJour = Seance.objects.filter(Matricule=matr, Jour=NouveauJour, HeureDebut=NouveauHRdeb, HeureFin=NouveauHRfin).exclude(IdSeance=idSeance)
+                if seanSJour:
                     return Response({"error": "impossible."}, status=400)
-            if NouveauIdSalle != None :
+            
+            if NouveauIdSalle is not None:
                 heure_debut = seance.HeureDebut
-                heure_fin =seance.HeureFin
+                heure_fin = seance.HeureFin
                 jour = seance.Jour
-                seanSalle = Seance.objects.filter(idSalle=NouveauIdSalle,HeureDebut =heure_debut ,HeureFin = heure_fin ,Jour = jour )
-                if seanSalle :
+                seanSalle = Seance.objects.filter(idSalle=NouveauIdSalle, HeureDebut=heure_debut, HeureFin=heure_fin, Jour=jour).exclude(IdSeance=idSeance)
+                if seanSalle:
                     return Response({"error": "Cette salle est déjà réservée pour une autre séance à ce moment. Veuillez choisir une autre salle pour cette séance."}, status=400)
-                
 
             serializer.save()
             return Response(serializer.data, status=200)
         return Response(serializer.errors, status=400)
-
 
 
 
