@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import '../Styles/Dashboard.css';
 import ProgressBar from "@ramonak/react-progress-bar";
 import Calendar from 'react-calendar';
@@ -13,6 +13,8 @@ import {
     Tooltip,
     Legend,
 } from 'chart.js'
+import { AppContext } from "../App";
+import axios from "axios";
 
 ChartJS.register(
     CategoryScale,
@@ -43,17 +45,50 @@ export function Dashboard() {
         }
     };
 
+    const [absences, setAbsences] = useState([]);
+
+    useEffect(() => {
+
+        axios.get('http://127.0.0.1:8000/Administration/absences/')
+            .then((res) => {
+                setAbsences(res.data)
+            })
+            .catch((err) => {
+                console.log(err)
+            })
+
+    }, [])
+
+    const getAbsencesByMonth = (month) => {
+        return absences.filter(absence => {
+            const absenceMonth = absence.DateAbs.split('-')[1]; //split ghadi koul ma tl9a - t9ssm klma w mb3da troudhm fi un table w ana rani recupere fi 2eme mot
+            return absenceMonth === month;
+        }).length;
+    };
+
 
     const data = {
         labels: ["Sep", "Oct", "Nov", "Dec", "Jan", "Fev", "Mar", "Avr", "Mai", "juin", "Juill", "out"],
         datasets: [
             {
                 label: "absences",
-                data: [5, 6, 2, 10, 1, 3, 0, 2, 7, 12, 0, 1],
+                data: [
+                    getAbsencesByMonth("09"),
+                    getAbsencesByMonth("10"),
+                    getAbsencesByMonth("11"),
+                    getAbsencesByMonth("12"),
+                    getAbsencesByMonth("01"),
+                    getAbsencesByMonth("02"),
+                    getAbsencesByMonth("03"),
+                    getAbsencesByMonth("04"),
+                    getAbsencesByMonth("05"),
+                    getAbsencesByMonth("06"),
+                    getAbsencesByMonth("07"),
+                    getAbsencesByMonth("08")],
                 backgroundColor: "#B8CEF7",
                 barThickness: 30,
-                barPercentage: 0.9, // Adjust the width of the bars
-                categoryPercentage: 0.8, // Adjust the width of each category
+                barPercentage: 0.9,
+                categoryPercentage: 0.8,
                 barBorderRadius: 20,
             }
         ]
@@ -61,9 +96,9 @@ export function Dashboard() {
 
     return (
         <div className="main-container dashboard-container" >
-            <h2 className="principal-title">my Dashboard</h2>
+            <h2 className="principal-title">table du bord</h2>
             <div className="infos-container">
-                <CalculContainer pourcentage={60} />
+                <CalculContainer />
                 <EvenementContainer />
             </div>
 
@@ -102,10 +137,42 @@ export function Dashboard() {
 const CalculContainer = (props) => {
 
     useEffect(() => {
-            const remainingPercentage = 100 - props.pourcentage;
-            const progressBar = document.querySelector('[role="progressbar"] > div > div > span');
-            progressBar.style.right = `-${remainingPercentage}%`;
+        const remainingPercentage = 100 - props.pourcentage;
+        const progressBar = document.querySelector('[role="progressbar"] > div > div > span');
+        progressBar.style.right = `-${remainingPercentage}%`;
     }, [props.pourcentage]);
+
+
+    const { modeSemestriel } = useContext(AppContext);
+
+    const Dates = {
+        dateDebut: modeSemestriel.dateDebut,
+        dateFin: modeSemestriel.dateFin
+    }
+
+    const calculateRemainingPercentage = () => {
+        const currentDate = new Date();
+        const dateDebut = new Date(Dates.dateDebut);
+        const dateFin = new Date(Dates.dateFin);
+        const timeDiffTotal = dateFin - dateDebut;
+        const timeDiffRemaining = dateFin - currentDate;
+
+        let remainingPercentage;
+        if (timeDiffRemaining < 0) {
+            remainingPercentage = 100;
+        } else {
+            remainingPercentage = 100 - (timeDiffRemaining / timeDiffTotal) * 100;
+        }
+        const daysRemaining = Math.ceil(timeDiffRemaining / (1000 * 60 * 60 * 24));
+        console.log(remainingPercentage);
+        return {
+            percentage: remainingPercentage.toFixed(1),
+            daysRemaining
+        };
+    };
+
+    const remainingPercentage = calculateRemainingPercentage().percentage;
+    const daysRemaining = calculateRemainingPercentage().daysRemaining;
 
     return (
         <div className="calcul-infos">
@@ -121,10 +188,10 @@ const CalculContainer = (props) => {
             </div>
 
             <div className="progress-bar">
-                <ProgressBar completed={props.pourcentage} customLabel="75 jours restants" />
+                <ProgressBar completed={remainingPercentage} customLabel={remainingPercentage != 100 ? `${daysRemaining} jours restants` : 'complet'} />
                 <div className="dates">
-                    <span>06/06/2024</span>
-                    <span>02/03/2024</span>
+                    <span>{Dates.dateDebut}</span>
+                    <span>{Dates.dateFin}</span>
                 </div>
             </div>
         </div>
@@ -132,33 +199,56 @@ const CalculContainer = (props) => {
 }
 
 const EvenementContainer = () => {
+
+    const { evenements } = useContext(AppContext);
+
+    const currentDate = new Date();
+
+    const evenementAVenir = evenements
+        .filter(event => new Date(event.dateDebut) >= currentDate)
+        .sort((a, b) => new Date(a.dateDebut) - new Date(b.dateDebut));
+
     return (
         <div className="evenements-container">
             <h2>Evénements à venir!</h2>
             <div className="les-evenements">
-                <div className="un-evenement">
-                    <div className="title">eid el fitre</div>
-                    <div className="date-line">
-                        <p>date debut:</p>
-                        <span>06/06/2024</span>
-                    </div>
-                    <div className="date-line">
-                        <p>date debut:</p>
-                        <span>06/06/2024</span>
-                    </div>
-                </div>
+                {evenementAVenir.length > 0
+                    &&
+                    <>
+                        {evenementAVenir[0] &&
+                            <div className="un-evenement">
+                                <div className="title">{evenementAVenir[0].nomEvenement}</div>
+                                <div className="date-line">
+                                    <p>date debut:</p>
+                                    <span>{evenementAVenir[0].dateDebut}</span>
+                                </div>
+                                <div className="date-line">
+                                    <p>date fin:</p>
+                                    <span>{evenementAVenir[0].dateFin}</span>
+                                </div>
+                            </div>
+                        }
 
-                <div className="un-evenement">
-                    <div className="title">eid el fitre</div>
-                    <div className="date-line">
-                        <p>date debut:</p>
-                        <span>06/06/2024</span>
-                    </div>
-                    <div className="date-line">
-                        <p>date debut:</p>
-                        <span>06/06/2024</span>
-                    </div>
-                </div>
+                        {evenementAVenir[1] &&
+                            <div className="un-evenement">
+                                <div className="title">{evenementAVenir[1].nomEvenement}</div>
+                                <div className="date-line">
+                                    <p>date debut:</p>
+                                    <span>{evenementAVenir[1].dateDebut}</span>
+                                </div>
+                                <div className="date-line">
+                                    <p>date fin:</p>
+                                    <span>{evenementAVenir[1].dateFin}</span>
+                                </div>
+                            </div>
+                        }
+                    </>
+                }
+                {evenementAVenir.length === 0 &&
+                    <p>Aucun évenement pour le moument</p>
+                }
+
+
             </div>
         </div>
     )

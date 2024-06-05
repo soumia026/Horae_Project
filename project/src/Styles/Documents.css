@@ -1,5 +1,5 @@
 .document-btn,
-.select-btn {
+.select-btn, .telecharger-btn {
     width: 150px;
     height: 33px;
     border-radius: 1rem;
@@ -11,6 +11,23 @@
     cursor: pointer;
     text-transform: capitalize;
     font-family: 'DM sans', sans-serif;
+    border: 3px solid transparent;
+    transition: background-color 0.3s ease, border 0.3s ease, transform 0.3s ease;
+}
+
+.telecharger-btn{
+    opacity: 0;
+    transition: opacity 0.1s ease;
+    align-self: center;
+    position: absolute;
+    bottom: 0px;
+    z-index: 10;
+}
+
+.active{
+    background-color: transparent;
+    border: 3px solid #B8CEF7;
+    transform: scale(1.05); 
 }
 
 .filtrage-container .document-select {
@@ -104,4 +121,8 @@
     width: 100%;
     padding: 0 1rem;
     margin-top: 0.7rem;
+}
+
+.telecharger-active{
+    opacity: 1;
 }

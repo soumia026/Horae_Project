@@ -20,7 +20,18 @@ from django.utils import timezone
 from datetime import datetime, time
 from django.db import IntegrityError
 # import datetime 
+import pandas as pd
+from django.apps import apps
 
+# import datetime 
+import schedule
+
+# export  pdf
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import letter, landscape
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
+
+from io import BytesIO
 
 @api_view(['GET'])
 def teacher_list(request):
@@ -35,13 +46,18 @@ def delete_enseignants(request, matricule):
             try:
                 with transaction.atomic():
                     # Supprimer les lignes correspondantes dans la table 'enseigne'
-                    Enseigne.objects.filter(Matric_id__in=matricule).delete()
+                    Enseigne.objects.filter(Matric_id=matricule).delete()
                     # Supprimer les enseignants
                     
                     Abcence.objects.filter(IdProf__in=matricule).delete()
                     
-                    Seance.objects.filter(Matricule__in=matricule).delete()
-
+                    seances = Seance.objects.filter(Matricule_id=matricule)
+                    Montant.objects.filter(matricule_id__in=matricule).delete()
+                    for seance in seances :
+                        heure.objects.filter(idSeance_id= seance.IdSeance).delete()
+                        Seances.objects.filter(idSeance_id =seance.IdSeance).delete()
+                        seance.delete()
+                    
                     Enseignant.objects.filter(Matricule=matricule).delete()
                 return Response({'success': True, 'message': 'Les enseignants ont été supprimés avec succès.'})
             except Exception as e:
@@ -496,7 +512,7 @@ def inscription(request):
 
 
 
-    return Response({'message': 'Inscription réussie.', 'Matricule' : enseignant.Matricule}, status=status.HTTP_201_CREATED)
+    return Response({'message': 'Inscription réussie.', 'Matricule' : enseignant.Matricule, 'Nom' : enseignant.Nom, 'Prénom': enseignant.Prénom}, status=status.HTTP_201_CREATED)
 
 
 
@@ -519,7 +535,7 @@ def inscription_ecole_administration(request):
         # Si aucun EcoleAdministration correspondant n'est trouvé, retourne une réponse d'erreur
         return Response({'message': 'L\'email fourni n\'existe pas.'}, status=status.HTTP_400_BAD_REQUEST)
 
-    return Response({'message': 'Inscription réussie.'}, status=status.HTTP_201_CREATED)
+    return Response({'message': 'Inscription réussie.', 'nom': ecole_administration.nom, 'prenom': ecole_administration.prenom}, status=status.HTTP_201_CREATED)
 
 
 
@@ -942,6 +958,9 @@ def updateSeance(request, idSeance):
 
 from threading import Timer
 import locale
+import schedule
+import time
+from datetime import datetime
 locale.setlocale(locale.LC_TIME, 'fr_FR.UTF-8')
    
 def createDate():
@@ -960,21 +979,24 @@ current_time = datetime.now()
 target_time = datetime.strptime("01:00:00", "%H:%M:%S")
 
 
-while  current_time.hour == target_time.hour and current_time.minute == target_time.minute and current_time.second == target_time.second:
-        createDate()  
+ # Schedule the createDate function to run every day at 14:00
+schedule.every().day.at("13:57").do(createDate)
+
+# Keep the script running to maintain the schedule
+# while True:
+#     schedule.run_pending()
+#     time.sleep(1)
 
 
 
 @api_view(['GET'])
-def calculerHeuresSup(request,nbrHeuresCharge,TauxCours,TauxTd,TauxTp):
-    nbrHeuresCharge = float(nbrHeuresCharge)
-    TauxCours = float(TauxCours)
-    TauxTd = float(TauxTd)
-    TauxTp = float(TauxTp)
-    Teachers = Enseignant.objects.all()
+def calculerHeuresSup(request,matricule,nbrHeuresCharge,TauxCours,TauxTd,TauxTp):
+        nbrHeuresCharge = float(nbrHeuresCharge)
+        TauxCours = float(TauxCours)
+        TauxTd = float(TauxTd)
+        TauxTp = float(TauxTp)
+        teacher = Enseignant.objects.get(Matricule = matricule)
   
-    for teacher in Teachers :
-       
         seancesCours = Seance.objects.filter(Matricule_id = teacher.Matricule,Type= 'Cours')
         seancesTd = Seance.objects.filter(Matricule_id = teacher.Matricule,Type= 'Td')
         seancesTp = Seance.objects.filter(Matricule_id = teacher.Matricule,Type= 'Tp')
@@ -1025,8 +1047,7 @@ def calculerHeuresSup(request,nbrHeuresCharge,TauxCours,TauxTd,TauxTp):
                     nbrHeuresSup += nbrHeuresSupTp
 
 
-        return Response({'R-Sup':nbrHeuresSup})
-    
+        return Response({'RSup':nbrHeuresSup})
 
 # # @api_view(['POST'])
 # # def ajouterEnseigne(request,id_teacher,id_modules):
@@ -1268,4 +1289,585 @@ def add_salle(request):
 
     return Response({"error": "Méthode non autorisée"}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
+@api_view(['GET'])
+def exporter_donnees_excel(request):
+    # Récupérer tous les modèles de l'application Django
+    models = apps.get_models()
 
+    # Créer un fichier Excel en mémoire
+    with BytesIO() as buffer:
+        with pd.ExcelWriter(buffer, engine='xlsxwriter') as excel_writer:
+            # Parcourir tous les modèles
+            for model in models:
+                # Récupérer toutes les données du modèle
+                donnees = model.objects.all()
+
+                if donnees.exists():  # Vérifier s'il y a des données
+                    # Créer un DataFrame pandas pour les données du modèle
+                    df = pd.DataFrame(list(donnees.values()))
+                else:
+                    # Créer un DataFrame pandas vide avec les colonnes du modèle
+                    df = pd.DataFrame(columns=[field.name for field in model._meta.fields])
+
+                # Convertir les colonnes datetime avec timezone en datetime sans timezone
+                for column in df.select_dtypes(include=['datetimetz']).columns:
+                    df[column] = df[column].apply(lambda x: x.tz_localize(None) if pd.notnull(x) else x)
+
+                # Écrire les données dans une feuille Excel portant le nom du modèle
+                df.to_excel(excel_writer, sheet_name=model.__name__, index=False)
+
+                # Ajuster la largeur des colonnes
+                worksheet = excel_writer.sheets[model.__name__]
+                for idx, col in enumerate(df.columns):
+                    max_len = max(
+                        df[col].astype(str).map(len).max(),  # Find the max length in the column
+                        len(str(col))  # Length of the column name/header
+                    ) + 2  # Adding a little extra space
+                    worksheet.set_column(idx, idx, max_len)  # Set the column width
+
+        # Déplacer le curseur au début du buffer
+        buffer.seek(0)
+
+        # Créer une réponse HTTP pour télécharger le fichier Excel
+        response = HttpResponse(buffer, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = 'attachment; filename="archivageDesDonnees.xlsx"'
+
+        return response
+
+@api_view(['GET'])
+def export_enseignants_pdf(request):
+    enseignants = Enseignant.objects.all()
+
+    # Création du document PDF avec une taille de page personnalisée
+    custom_page_size = (900, 1200)  # Ajustez la taille selon vos besoins
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="enseignants.pdf"'
+    doc = SimpleDocTemplate(response, pagesize=custom_page_size)
+    elements = []
+
+    # Données à inclure dans le PDF
+    data = [['Matricule', 'Nom', 'Prénom', 'Date de Naissance', 'Adresse', 'Email', 'Numéro de Téléphone', 'Fonction', 'Grade', 'Etablissement']]
+
+    for enseignant in enseignants:
+        data.append([
+            enseignant.Matricule,
+            enseignant.Nom,
+            enseignant.Prénom,
+            str(enseignant.DateNaissance),
+            enseignant.Adresse,
+            enseignant.Email,
+            enseignant.NumeroTelephone,
+            enseignant.Fonction,
+            enseignant.Grade,
+            enseignant.Etablissement,
+        ])
+
+    # Création de la table
+    table = Table(data)
+
+    # Style de la table
+    style = TableStyle([('BACKGROUND', (0,0), (-1,0), colors.grey),
+                        ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
+                        ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+                        ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+                        ('BOTTOMPADDING', (0,0), (-1,0), 12),
+                        ('BACKGROUND', (0,1), (-1,-1), colors.beige),
+                        ('GRID', (0,0), (-1,-1), 1, colors.black)])
+
+    table.setStyle(style)
+
+    # Ajouter la table au document
+    elements.append(table)
+    doc.build(elements)
+    return response
+
+
+
+
+
+def export_groupes_pdf(request):
+    groupes = Groupe.objects.all()
+
+    # Création du document PDF en mode paysage
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="groupes.pdf"'
+    doc = SimpleDocTemplate(response, pagesize=landscape(letter))
+    elements = []
+
+    # Données à inclure dans le PDF
+    data = [['ID Groupe', 'Numéro', 'Spécialité', 'ID Section']]
+
+    for groupe in groupes:
+        data.append([
+            groupe.idGroupe,
+            groupe.Numero,
+            groupe.Specialite,
+            groupe.idSection_id,
+        ])
+
+    # Création de la table
+    table = Table(data)
+
+    # Style de la table
+    style = TableStyle([('BACKGROUND', (0,0), (-1,0), colors.grey),
+                        ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
+                        ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+                        ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+                        ('BOTTOMPADDING', (0,0), (-1,0), 12),
+                        ('BACKGROUND', (0,1), (-1,-1), colors.beige),
+                        ('GRID', (0,0), (-1,-1), 1, colors.black)])
+
+    table.setStyle(style)
+
+    # Ajouter la table au document
+    elements.append(table)
+    doc.build(elements)
+    return response
+
+
+
+def export_specialites_pdf(request):
+    specialites = Specialite.objects.all()
+
+    # Création du document PDF en mode paysage
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="specialites.pdf"'
+    doc = SimpleDocTemplate(response, pagesize=landscape(letter))
+    elements = []
+
+    # Données à inclure dans le PDF
+    data = [['ID Spécialité', 'Nom Spécialité']]
+
+    for specialite in specialites:
+        data.append([
+            specialite.idSpecialite,
+            specialite.NomSpecialite,
+        ])
+
+    # Création de la table
+    table = Table(data)
+
+    # Style de la table
+    style = TableStyle([('BACKGROUND', (0,0), (-1,0), colors.grey),
+                        ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
+                        ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+                        ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+                        ('BOTTOMPADDING', (0,0), (-1,0), 12),
+                        ('BACKGROUND', (0,1), (-1,-1), colors.beige),
+                        ('GRID', (0,0), (-1,-1), 1, colors.black)])
+
+    table.setStyle(style)
+
+    # Ajouter la table au document
+    elements.append(table)
+    doc.build(elements)
+    return response
+
+
+
+def export_modules_pdf(request):
+    modules = Module.objects.all()
+
+    # Création du document PDF en mode paysage
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="modules.pdf"'
+    doc = SimpleDocTemplate(response, pagesize=landscape(letter))
+    elements = []
+
+    # Données à inclure dans le PDF
+    data = [['Code', 'Nom du Module', 'Coefficient', 'Nombre d\'heures', 'Semestre', 'ID Promotion']]
+
+    for module in modules:
+        data.append([
+            module.Code,
+            module.NomModule,
+            module.Coefficient,
+            module.NbrHeures,
+            module.Semestre,
+            module.nomP_id,
+        ])
+
+    # Création de la table
+    table = Table(data)
+
+    # Style de la table
+    style = TableStyle([('BACKGROUND', (0,0), (-1,0), colors.grey),
+                        ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
+                        ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+                        ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+                        ('BOTTOMPADDING', (0,0), (-1,0), 12),
+                        ('BACKGROUND', (0,1), (-1,-1), colors.beige),
+                        ('GRID', (0,0), (-1,-1), 1, colors.black)])
+
+    table.setStyle(style)
+
+    # Ajouter la table au document
+    elements.append(table)
+    doc.build(elements)
+    return response
+
+
+def export_absences_pdf(request):
+    absences = Abcence.objects.all()
+
+    # Création du document PDF en mode paysage
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="absences.pdf"'
+    doc = SimpleDocTemplate(response, pagesize=landscape(letter))
+    elements = []
+
+    # Données à inclure dans le PDF
+    data = [['ID Absence', 'Date Absence', 'Heure Début', 'Heure Fin', 'Motif', 'ID Prof']]
+
+    for absence in absences:
+        data.append([
+            absence.IdAbs,
+            absence.DateAbs,
+            absence.HeureDebut,
+            absence.HeureFin,
+            absence.Motif,
+            absence.IdProf_id,
+        ])
+
+    # Création de la table
+    table = Table(data)
+
+    # Style de la table
+    style = TableStyle([('BACKGROUND', (0,0), (-1,0), colors.grey),
+                        ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
+                        ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+                        ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+                        ('BOTTOMPADDING', (0,0), (-1,0), 12),
+                        ('BACKGROUND', (0,1), (-1,-1), colors.beige),
+                        ('GRID', (0,0), (-1,-1), 1, colors.black)])
+
+    table.setStyle(style)
+
+    # Ajouter la table au document
+    elements.append(table)
+    doc.build(elements)
+    return response
+
+
+
+def export_sections_pdf(request):
+    Sections = section.objects.all()
+
+    # Création du document PDF en mode paysage
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="sections.pdf"'
+    doc = SimpleDocTemplate(response, pagesize=landscape(letter))
+    elements = []
+
+    # Données à inclure dans le PDF
+    data = [['ID Section', 'Nom de la Section', 'ID Promotion']]
+
+    for Section in Sections:
+        data.append([
+            Section.idSection,
+            Section.NomSection,
+            Section.nomP_id,
+        ])
+
+    # Création de la table
+    table = Table(data)
+
+    # Style de la table
+    style = TableStyle([('BACKGROUND', (0,0), (-1,0), colors.grey),
+                        ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
+                        ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+                        ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+                        ('BOTTOMPADDING', (0,0), (-1,0), 12),
+                        ('BACKGROUND', (0,1), (-1,-1), colors.beige),
+                        ('GRID', (0,0), (-1,-1), 1, colors.black)])
+
+    table.setStyle(style)
+
+    # Ajouter la table au document
+    elements.append(table)
+    doc.build(elements)
+    return response
+
+
+
+def export_seances_pdf(request):
+    seances = Seance.objects.all()
+
+    # Création du document PDF en mode paysage
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="seances.pdf"'
+    doc = SimpleDocTemplate(response, pagesize=landscape(letter))
+    elements = []
+
+    # Données à inclure dans le PDF
+    data = [['ID Séance', 'Nom de la Séance', 'Type', 'Jour', 'Heure Début', 'Heure Fin', 'Semestre', 'Code', 'Matricule', 'ID Groupe', 'ID Promotion', 'ID Salle', 'ID Section']]
+
+    for seance in seances:
+        data.append([
+            seance.IdSeance,
+            seance.NomS,
+            seance.Type,
+            seance.Jour,
+            seance.HeureDebut,
+            seance.HeureFin,
+            seance.Semestre,
+            seance.Code_id,
+            seance.Matricule_id,
+            seance.idGroupe_id,
+            seance.idPromo_id,
+            seance.idSalle_id,
+            seance.idSection_id,
+        ])
+
+    # Création de la table
+    table = Table(data)
+
+    # Style de la table
+    style = TableStyle([('BACKGROUND', (0,0), (-1,0), colors.grey),
+                        ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
+                        ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+                        ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+                        ('BOTTOMPADDING', (0,0), (-1,0), 12),
+                        ('BACKGROUND', (0,1), (-1,-1), colors.beige),
+                        ('GRID', (0,0), (-1,-1), 1, colors.black)])
+
+    table.setStyle(style)
+
+    # Ajouter la table au document
+    elements.append(table)
+    doc.build(elements)
+    return response
+
+@api_view(['GET'])
+@api_view(['GET'])
+def calculer_montant(request,debut_semestre,fin_semestre,PU_MAB,PU_MAA,PU_MCB,PU_MCA,PU_Professeur,per_securite_social,per_irg):
+     per_securite_soc = float(per_securite_social)
+     per_IRG = float(per_irg)
+     
+     def calculerMontant(teacher,rsup,Pu,per_securite_sociale,per_IRG):
+         montant = rsup * Pu
+         securite_sociale = montant * (per_securite_sociale/100)
+         IRG = montant * (per_IRG/100)
+         montant_debite = securite_sociale + IRG
+         montant_net = montant - montant_debite
+         debut_year = debut_semestre.year
+         fin_year = fin_semestre.year
+         infos = [("montant",montant),("securite_sociale",securite_sociale),("IRG",IRG),("montant debite",montant_debite),("montant net",montant_net)]
+         periode = f"du {debut_semestre} au {fin_semestre}"
+     # Test if debut_semestre year differs from fin_semestre year
+         if debut_year != fin_year:
+             semestre = 'S1'
+         else:
+             semestre = 'S2'
+         if debut_year != fin_year:
+             anneuniversitaire = f"{debut_year}/{fin_year}"
+         else:
+             anneuniversitaire = f"{debut_year}/{debut_year - 1}"
+
+         montant_instance = Montant.objects.create(
+             montant_total=montant,
+             anneeUniversiatire = anneuniversitaire,
+             semestre=semestre,
+             matricule= teacher,  
+             prix_unitaire =Pu,
+             nombre_des_heures =rsup,
+             securite_sociale=per_securite_sociale,
+             irg =per_IRG,
+             montant_debite =montant_debite,
+             montant_net =montant_net,
+             periode = periode,
+         )
+         return infos
+     Teachers = Enseignant.objects.all()
+     PUMAB = float(PU_MAB)
+     PUMAA = float(PU_MAA)
+     PUMCB = float(PU_MCB)
+     PUMCA = float(PU_MCA)
+     PUProfesseur = float(PU_Professeur)
+     for teacher in Teachers:
+         # Récupérer les séances de l'enseignant pour le mois en cours
+         emploi_enseignant = Seance.objects.filter(Matricule_id= teacher.Matricule)
+
+         # Récupérer les heures supplémentaires pour les séances de l'enseignant
+         seances_rsup = heure.objects.filter(defType='HeuresSup', idSeance_id__in=emploi_enseignant.values_list('IdSeance', flat=True))
+
+         # Récupérer les présences aux séances des heures supplémentaires
+         seances_rsup_presents = Seances.objects.filter(idSeance_id__in=seances_rsup.values_list('idSeance_id', flat=True), present=True )
+         rsup_monthly = {}
+         debut_semestre = datetime.strptime(debut_semestre, '%Y-%m-%d')
+         fin_semestre = datetime.strptime(fin_semestre, '%Y-%m-%d')
+         duree_semestre = (fin_semestre.year - debut_semestre.year) * 12 + fin_semestre.month - debut_semestre.month + 1
+
+         seances_par_semestre = DateSeance.objects.filter(IddatteS__in=seances_rsup_presents.values_list('date_id', flat=True), date__range=[debut_semestre, fin_semestre])
+         rsup_semestre = 0
+         for mois in range(debut_semestre.month, debut_semestre.month + duree_semestre):
+             rsup = 0
+             if mois > 12:
+                 mois = mois % 12
+             seances_par_mois = seances_par_semestre.filter(date__month=mois)
+             id_seances_par_mois = Seances.objects.filter(date_id__in = seances_par_mois.values_list('IddatteS', flat=True))
+             for seance in id_seances_par_mois:
+                 hours= heure.objects.filter(defType='HeuresSup',idSeance_id = seance.idSeance_id)
+                 for hour in hours:
+                     rsup += hour.duree.total_seconds() / 3600  # Convert timedelta to hours
+       
+             rsup_monthly[mois] = rsup
+             rsup_semestre += rsup
+        
+         if teacher.Grade == 'MAA' :
+             calculerMontant(teacher,rsup_semestre,PUMAA,per_securite_soc,per_IRG)
+         elif teacher.Grade == 'MAB' :
+             calculerMontant(teacher,rsup_semestre,PUMAB,per_securite_soc,per_IRG)
+         elif teacher.Grade == 'MCA' :
+             calculerMontant(teacher,rsup_semestre,PUMCA,per_securite_soc,per_IRG)
+         elif teacher.Grade == 'MCB' :
+             calculerMontant(teacher,rsup_semestre,PUMCB,per_securite_soc,per_IRG)
+         elif teacher.Grade == 'Professeur' :
+             calculerMontant(teacher,rsup_semestre,PUProfesseur,per_securite_soc,per_IRG)
+
+         return Response(rsup_monthly)
+
+def get_montant(request, matricule):
+    try:
+        montant = Montant.objects.filter(matricule__Matricule=matricule).order_by('-idMontant').first()
+
+        if montant:
+            montant_detail = {
+                'id': montant.idMontant,
+                'somme': montant.somme,
+                'anneeUniversiatire': montant.anneeUniversiatire,
+                'semestre': montant.semestre,
+                'matricule': montant.matricule.Matricule
+            }
+            return JsonResponse({'montant': montant_detail})
+        else:
+            return JsonResponse({'error': 'Aucun montant trouvé pour ce matricule'}, status=404)
+
+    except Montant.DoesNotExist:
+        return JsonResponse({'error': 'Aucun montant trouvé pour ce matricule'}, status=404)  
+
+@api_view(['GET'])
+def get_all_abscences(request):
+        absences = Abcence.objects.all()
+        serializer = AbcenceSerializer(absences,context={'request': request}, many=True)
+        return Response(serializer.data)  
+
+
+def export_montants_pdf(request):
+    enseignants = Enseignant.objects.all()
+    # Création du document PDF avec une taille de page personnalisée
+    custom_page_size = (900, 1200)  # Ajustez la taille selon vos besoins
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="etat_de_paiement.pdf"'
+    doc = SimpleDocTemplate(response, pagesize=custom_page_size)
+    elements = []
+
+    # Données à inclure dans le PDF
+    data = [[ 'Nom', 'Prénom', 'Grade', 'Prix unitaire', 'N des heures', 'Montant total', 'Securite sociale', 'IRG', 'Montant debite','Montant net','Periode']]
+
+    for enseignant in enseignants:
+        montants = Montant.objects.filter(matricule_id = enseignant.Matricule)
+        for montant in montants:
+            data.append([
+                enseignant.Nom,
+                enseignant.Prénom,
+                enseignant.Grade,
+                str(montant.prix_unitaire),
+                str(montant.nombre_des_heures),
+                str(montant.montant_total),
+                str(montant.securite_sociale),
+                str(montant.irg),
+                str(montant.montant_debite),
+                str(montant.montant_net),
+                montant.periode,
+            
+        ])
+
+    # Création de la table
+    table = Table(data)
+
+    # Style de la table
+    style = TableStyle([('BACKGROUND', (0,0), (-1,0), colors.grey),
+                        ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
+                        ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+                        ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+                        ('BOTTOMPADDING', (0,0), (-1,0), 12),
+                        ('BACKGROUND', (0,1), (-1,-1), colors.beige),
+                        ('GRID', (0,0), (-1,-1), 1, colors.black)])
+
+    table.setStyle(style)
+
+    # Ajouter la table au document
+    elements.append(table)
+    doc.build(elements)
+    return response
+
+
+def get_heure_by_seance(request, idSeance):
+    try:
+        # Retrieve the heure record by idSeance
+        h = get_object_or_404(heure, idSeance=idSeance)
+
+        # Create a dictionary containing the details of the heure
+        heure_details = {
+            'idHeure': h.idHeure,
+            'defType': h.defType,
+            'duree': h.duree,
+        }
+
+        # Return the details of the heure as a JSON response
+        return JsonResponse({'heure': heure_details})
+
+    except Exception as e:
+        # If an error occurs, return a response with a 500 status
+        return JsonResponse({'error': str(e)}, status=500)
+    
+    
+def export_montant_enseignant_pdf(request,matricule):
+        enseignant = Enseignant.objects.get(Matricule = matricule)
+    # Création du document PDF avec une taille de page personnalisée
+        custom_page_size = (900, 1200)  # Ajustez la taille selon vos besoins
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="etat_de_paiement_de_{enseignant.Nom} {enseignant.Prénom}.pdf"'
+        doc = SimpleDocTemplate(response, pagesize=custom_page_size)
+        elements = []
+
+    # Données à inclure dans le PDF
+        data = [[ 'Nom', 'Prénom', 'Grade', 'Prix unitaire', 'N des heures', 'Montant total', 'Securite sociale', 'IRG', 'Montant debite','Montant net','Periode']]
+
+    
+        montants = Montant.objects.filter(matricule_id = enseignant.Matricule)
+        for montant in montants:
+            data.append([
+                enseignant.Nom,
+                enseignant.Prénom,
+                enseignant.Grade,
+                str(montant.prix_unitaire),
+                str(montant.nombre_des_heures),
+                str(montant.montant_total),
+                str(montant.securite_sociale),
+                str(montant.irg),
+                str(montant.montant_debite),
+                str(montant.montant_net),
+                montant.periode,
+            
+        ])
+
+    # Création de la table
+        table = Table(data)
+
+    # Style de la table
+        style = TableStyle([('BACKGROUND', (0,0), (-1,0), colors.grey),
+                        ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
+                        ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+                        ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+                        ('BOTTOMPADDING', (0,0), (-1,0), 12),
+                        ('BACKGROUND', (0,1), (-1,-1), colors.beige),
+                        ('GRID', (0,0), (-1,-1), 1, colors.black)])
+
+        table.setStyle(style)
+
+    # Ajouter la table au document
+        elements.append(table)
+        doc.build(elements)
+        return response

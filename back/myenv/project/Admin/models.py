@@ -251,6 +251,7 @@ class EcoleAdministration(models.Model):
     def __str__(self) -> str:
         return self.Nom
 
+
 class Montant(models.Model):
     idMontant = models.AutoField(primary_key=True)
 
@@ -259,16 +260,23 @@ class Montant(models.Model):
             ('S2','S2'),
 
     )
-    
-    somme = models.FloatField(default = None)
+    montant_total = models.FloatField(default = None)
     anneeUniversiatire = models.CharField(max_length=50, default = None) 
     semestre = models.CharField(max_length=20, choices=SEMESTRE_CHOICES)
     matricule = models.ForeignKey(Enseignant, on_delete=models.DO_NOTHING , default = None)
+    prix_unitaire = models.FloatField(default = None)
+    nombre_des_heures = models.FloatField(default = None)
+    securite_sociale = models.FloatField(default = None)
+    irg = models.FloatField(default = None)
+    montant_debite = models.FloatField(default = None)
+    montant_net = models.FloatField(default = None)
+    periode = models.CharField(default = None,max_length=20, choices=SEMESTRE_CHOICES)
     class Meta:
         db_table =  "Montant"
 
     def __str__(self):
         return str(self.idMontant)
+
 
 
 

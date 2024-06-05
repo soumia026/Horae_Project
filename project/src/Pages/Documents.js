@@ -47,7 +47,7 @@ export function Documents() {
                 </span>
               </span>
             </button>
-            <select style={{ fontSize:'15.5px' }} onChange={(e) => setDocumentChoice(e.target.value)}>
+            <select style={{ fontSize: '15.5px' }} onChange={(e) => setDocumentChoice(e.target.value)}>
               <option value={'enseignant'}>Enseignant</option>
               <option value={'tous'}>Tous</option>
             </select>
@@ -98,65 +98,92 @@ const EnseignantsTable = (props) => {
 
   });
 
+    const [activeButtons, setActiveButtons] = useState([]);
 
-  return (
-    <div className="data-table-container">
-      <table className="data-table">
-        <thead>
-          <tr>
-            <th>Num</th>
-            <th>Num Compte</th>
-            <th>Nom & Prenom</th>
-            <th>Grade</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody className="data-table-body">
-          {filteredData.map((enseignant, index) => (
+    const handleButtonClick = (index) => {
+      setActiveButtons(prevState =>
+        prevState.includes(index)
+          ? prevState.filter(i => i !== index)
+          : [...prevState, index]
+      );
+    };
+
+    const [lisetEnseignants, setListeEnseignants] = useState([]);
+
+    const handleListeEnseignats = (matricule) => {
+      setListeEnseignants(prevState =>
+        prevState.includes(matricule)
+          ? prevState.filter(i => i !== matricule)
+          : [...prevState, matricule]
+      );
+    };
+
+    console.log(lisetEnseignants)
+
+    return (
+      <div className="data-table-container">
+        <table className="data-table">
+          <thead>
             <tr>
-              <td>{index + 1}</td>
-              <td style={{ textTransform: 'uppercase' }}>{enseignant.Matricule}</td>
-              <td style={{ textTransform: 'capitalize' }}>{enseignant.Nom} {enseignant.Prénom}</td>
-              <td style={{ textTransform: 'capitalize' }}>{enseignant.Grade}</td>
-              <td>
-
-                <button className="document-btn">Générer</button>
-
-              </td>
+              <th>Num</th>
+              <th>Num Compte</th>
+              <th>Nom & Prenom</th>
+              <th>Grade</th>
+              <th></th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  )
-}
+          </thead>
+          <tbody className="data-table-body">
+            {filteredData.map((enseignant, index) => (
+              <tr>
+                <td>{index + 1}</td>
+                <td style={{ textTransform: 'uppercase' }}>{enseignant.Matricule}</td>
+                <td style={{ textTransform: 'capitalize' }}>{enseignant.Nom} {enseignant.Prénom}</td>
+                <td style={{ textTransform: 'capitalize' }}>{enseignant.Grade}</td>
+                <td>
 
-const FichePaiement = () => {
-  return (
-    <div className="paiement-container">
-      <div className="type-paiement">
-        <h2>Fiche d’état de Paiement</h2>
-        <form>
-          <div className="input-line">
-            <label htmlFor="type">Type</label>
-            <select>
-              <option value={'ccp'}>CCP</option>
-              <option value={'virement'}>Virement Banckaire</option>
-            </select>
-          </div>
-          <div className="input-line">
-            <label htmlFor="semestre">semestre</label>
-            <select>
-              <option value={'S1'}>1er</option>
-              <option value={'S2'}>2éme</option>
-            </select>
-          </div>
+                  <button
+                    className={`document-btn ${activeButtons.includes(index) ? 'active' : ''}`}
+                    onClick={() => {handleButtonClick(index); handleListeEnseignats(enseignant.Matricule)}}
+                  >
+                    Générer
+                  </button>
 
-          <div className="btn-container">
-            <button className="document-btn">Générer</button>
-          </div>
-        </form>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <button className={`telecharger-btn ${activeButtons.length > 0 ? 'telecharger-active' : ''}`}>Télécharger</button>
       </div>
-    </div>
-  )
-}
+    )
+  }
+
+  const FichePaiement = () => {
+    return (
+      <div className="paiement-container">
+        <div className="type-paiement">
+          <h2>Fiche d’état de Paiement</h2>
+          <form>
+            <div className="input-line">
+              <label htmlFor="type">Type</label>
+              <select>
+                <option value={'ccp'}>CCP</option>
+                <option value={'virement'}>Virement Banckaire</option>
+              </select>
+            </div>
+            <div className="input-line">
+              <label htmlFor="semestre">semestre</label>
+              <select>
+                <option value={'S1'}>1er</option>
+                <option value={'S2'}>2éme</option>
+              </select>
+            </div>
+
+            <div className="btn-container">
+              <button className="document-btn">Générer</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    )
+  }

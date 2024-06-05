@@ -1,21 +1,6 @@
 import React from "react";
-import axios from "axios";
 
 export const AbsenceLine = (props) => {
-
-    
-    const handleDelete = (id) => {
-        axios.get(`http://127.0.0.1:8000/Administration/delete_absences/${id}/`)
-        .then(res => {
-            console.log(res.data);
-            window.location.reload();
-        })
-        .catch(err => console.log(err));
-    }
-
-    const handleReload = () => {
-      
-    }
 
     return (
 
@@ -48,7 +33,7 @@ export const AbsenceLine = (props) => {
                             </clipPath>
                         </defs>
                     </svg>
-                    <svg onClick={() => handleDelete(props.deletedObject)}  cursor={'pointer'} width="1rem" height="1rem" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <svg onClick={() => props.handleDeleteAbsence()}  cursor={'pointer'} width="1rem" height="1rem" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M2.125 4.25H3.54167H14.875" stroke="black" stroke-width="1.41667" stroke-linecap="round" stroke-linejoin="round" />
                         <path d="M13.4577 4.25001V14.1667C13.4577 14.5424 13.3084 14.9027 13.0428 15.1684C12.7771 15.4341 12.4167 15.5833 12.041 15.5833H4.95768C4.58196 15.5833 4.22162 15.4341 3.95595 15.1684C3.69027 14.9027 3.54102 14.5424 3.54102 14.1667V4.25001M5.66602 4.25001V2.83334C5.66602 2.45762 5.81527 2.09728 6.08095 1.8316C6.34662 1.56593 6.70696 1.41667 7.08268 1.41667H9.91602C10.2917 1.41667 10.6521 1.56593 10.9178 1.8316C11.1834 2.09728 11.3327 2.45762 11.3327 2.83334V4.25001" stroke="black" stroke-width="1.41667" stroke-linecap="round" stroke-linejoin="round" />
                         <path d="M7.08398 7.79167V12.0417" stroke="black" stroke-width="1.41667" stroke-linecap="round" stroke-linejoin="round" />

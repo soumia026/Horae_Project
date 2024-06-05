@@ -15,7 +15,7 @@ export const NavBar = (props) =>{
   return(
     <div className="nav-container">
         <div className="logo-container">
-          <span>Logo</span>
+          <img className="logo-img" src="../../logo2.png" alt="logo" />
         </div>
         <nav>
           <ul>

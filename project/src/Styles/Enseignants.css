@@ -94,6 +94,7 @@
   margin-top: auto;
   margin-left: 50px;
   margin-right: 50px;
+  position: relative;
 }
 
 .data-table-container::-webkit-scrollbar {
@@ -202,7 +203,7 @@
 
 .search-icon {
   position: relative;
-  right: 60px;
+  right: 30px;
   top: 7px;
 }
 
@@ -216,7 +217,8 @@
 
 .ens {
   font-family: 'DM sans', sans-serif;
-  font-size: 2.1em;
+  font-size: 1.9rem;
+  text-transform: capitalize;
   font-weight: 500;
 }
 
@@ -241,8 +243,8 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  max-width: 500px;
-  min-width: 430px;
+  max-width: 510px;
+  min-width: 460px;
   background-color: #D9D9D9;
   padding: 1rem 1.5rem;
   display: flex;
@@ -368,7 +370,7 @@
   overflow-y: auto;
 }
 
-.ajouter-enseignant-form::-webkit-scrollbar{
+.ajouter-enseignant-form::-webkit-scrollbar {
   display: none;
 }
 
@@ -387,7 +389,8 @@
   font-size: 0.9rem;
 }
 
-.ajouter-container form .input-line input,.ajouter-container .input-line select {
+.ajouter-container form .input-line input,
+.ajouter-container .input-line select {
   border-radius: 9px;
   outline: none;
   border: none;

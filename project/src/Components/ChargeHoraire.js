@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import "../Styles/Emploi.css"
 import axios from "axios";
+import { AppContext } from "../App";
 
 export const ChargeHoraire = (props) => {
 
@@ -131,26 +132,50 @@ export const ChargeHoraire = (props) => {
 
     const [modiferSeanceClicked, setModifiedSeanceClicked] = useState(null);
 
+    //seance a supprimer
+
+    const [supprimerSeanceClicked, setSupprimerSeanceClicked] = useState(null);
+
+    const { modeSemestriel } = useContext(AppContext);
+
+    const [warning, setWarning] = useState(false);
+
+    const [message, setMessage] = useState(0);
+
+    const lancerHeuresSup = () => {
+        axios.get(`http://127.0.0.1:8000/Administration/calculerHeuresSup/${props.matricule}/${modeSemestriel.chargeTD}/${modeSemestriel.tauxCours}/${modeSemestriel.tauxTD}/${modeSemestriel.tauxTP}/`)
+            .then((res) => {
+                setWarning(true);
+                setMessage(res.data.RSup);
+            })
+            .catch((err) => {
+                console.log(err)
+            })
+    }
     return (
         <div className="infos-emploi-box">
             <div className="data-container">
                 <div className="title-container">
                     <p className='title'>emploi du temps</p>
-                    <div className="select-container">
-                        <button className="select-btn">
-                            {semestre}
-                            <span>
-                                <span><svg width="9" height="7" viewBox="0 0 9 7" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M0.131552 0.449026L4.2945 4.83737L8.42944 0.405733L8.43949 2.33171L4.30446 6.74534L0.1416 2.375L0.131552 0.449026Z" fill="black" />
-                                </svg>
+                    <div className="heure-btns">
+                        <button className="heures-plus" onClick={() => lancerHeuresSup()}>clacul Heures Supplémentaire</button>
+                        <div className="select-container">
+                            <button className="select-btn">
+                                {semestre}
+                                <span>
+                                    <span><svg width="9" height="7" viewBox="0 0 9 7" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M0.131552 0.449026L4.2945 4.83737L8.42944 0.405733L8.43949 2.33171L4.30446 6.74534L0.1416 2.375L0.131552 0.449026Z" fill="black" />
+                                    </svg>
+                                    </span>
                                 </span>
-                            </span>
-                        </button>
-                        <select style={{ fontSize: '15.5px' }} onChange={(e) => setSemestre(e.target.value)}>
-                            <option value={'Semestre 01'}>Semestre 01</option>
-                            <option value={'Semestre 02'}>Semestre 02</option>
-                        </select>
+                            </button>
+                            <select style={{ fontSize: '15.5px' }} onChange={(e) => setSemestre(e.target.value)}>
+                                <option value={'Semestre 01'}>Semestre 01</option>
+                                <option value={'Semestre 02'}>Semestre 02</option>
+                            </select>
+                        </div>
                     </div>
+
                 </div>
 
                 <div className="table-emploi-container">
@@ -169,6 +194,8 @@ export const ChargeHoraire = (props) => {
                                     Salle={salles[seance.idSalle]}
                                     modiferSeance={props.modiferSeanceOn}
                                     modiferSeanceOn={() => setModifiedSeanceClicked(seance)}
+                                    handleSupprimerSeance={() => setSupprimerSeanceClicked(seance.IdSeance)}
+                                    id={seance.IdSeance}
                                 />
                             ))}
                         </table>
@@ -182,6 +209,15 @@ export const ChargeHoraire = (props) => {
                     modules={modules}
                 />
             }
+
+            {supprimerSeanceClicked &&
+                <SupprimerSeance anullerSupprimerSeance={() => setSupprimerSeanceClicked(null)} IdSeance={supprimerSeanceClicked} />
+            }
+
+            {warning &&
+                <Warning nombre={message} compris={() => setWarning(false)} />
+            }
+
         </div>
     )
 }
@@ -189,6 +225,55 @@ export const ChargeHoraire = (props) => {
 //---------components-------
 
 const SeanceLine = (props) => {
+    const calculateTimeDifferenceInSeconds = (startTime, endTime) => {
+        const [startHour, startMinute] = startTime.split(':').map(Number);
+        const [endHour, endMinute] = endTime.split(':').map(Number);
+
+        const startTotalMinutes = startHour * 60 + startMinute;
+        const endTotalMinutes = endHour * 60 + endMinute;
+
+        const differenceInMinutes = endTotalMinutes - startTotalMinutes;
+
+        const differenceInSeconds = differenceInMinutes * 60;
+
+        return differenceInSeconds;
+    }
+
+    const [heure, setHeure] = useState(false);
+
+
+    useEffect(() => {
+        const getHeure = (id) => {
+            axios.get(`http://127.0.0.1:8000/Administration/heure/${id}/`)
+                .then((res) => {
+                    if (res.data.heure) {
+                        setHeure(true)
+                    } else {
+                        setHeure(false)
+                    }
+                })
+                .catch((err) => {
+                    console.log(err)
+                    setHeure(false)
+                })
+        }
+
+        getHeure(props.id);
+    }, [])
+
+    const ajouterHeure = (id, diff) => {
+        axios.post(`http://127.0.0.1:8000/Administration/insertHeure/${id}/`, {
+            defType: 'HeuresSup',
+            idSeance: id,
+            duree: diff
+        })
+            .then(
+                window.location.reload()
+            )
+            .catch((err) => {
+                console.log(err)
+            })
+    }
     return (
         <tr>
             <td>
@@ -270,7 +355,7 @@ const SeanceLine = (props) => {
                                 </clipPath>
                             </defs>
                         </svg>
-                        <svg cursor={'pointer'} width="1rem" height="1rem" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <svg cursor={'pointer'} onClick={() => props.handleSupprimerSeance()} width="1rem" height="1rem" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M2.125 4.25H3.54167H14.875" stroke="black" stroke-width="1.41667" stroke-linecap="round" stroke-linejoin="round" />
                             <path d="M13.4577 4.25001V14.1667C13.4577 14.5424 13.3084 14.9027 13.0428 15.1684C12.7771 15.4341 12.4167 15.5833 12.041 15.5833H4.95768C4.58196 15.5833 4.22162 15.4341 3.95595 15.1684C3.69027 14.9027 3.54102 14.5424 3.54102 14.1667V4.25001M5.66602 4.25001V2.83334C5.66602 2.45762 5.81527 2.09728 6.08095 1.8316C6.34662 1.56593 6.70696 1.41667 7.08268 1.41667H9.91602C10.2917 1.41667 10.6521 1.56593 10.9178 1.8316C11.1834 2.09728 11.3327 2.45762 11.3327 2.83334V4.25001" stroke="black" stroke-width="1.41667" stroke-linecap="round" stroke-linejoin="round" />
                             <path d="M7.08398 7.79167V12.0417" stroke="black" stroke-width="1.41667" stroke-linecap="round" stroke-linejoin="round" />
@@ -278,6 +363,22 @@ const SeanceLine = (props) => {
                         </svg>
                     </div>
 
+                </td>
+            }
+
+            {heure &&
+                <td>
+                    <div className="charge-container">
+                        <button className="charge-btn heureSupp-btn" style={{backgroundColor: '#B8CEF7'}}>Heure+</button>
+                    </div>
+                </td>
+            }
+
+            {!heure &&
+                <td>
+                    <div className="charge-container">
+                        <button className="charge-btn heureSupp-btn" onClick={() => ajouterHeure(props.id, calculateTimeDifferenceInSeconds(props.HeureDebut, props.HeureFin))}>Charge</button>
+                    </div>
                 </td>
             }
 
@@ -340,7 +441,7 @@ const ModifierSeance = (props) => {
         };
 
         handleSelectChange();
-    }, []);
+    }, [selectedPromo]);
 
     const handleZoneChange = (e) => {
         const selectedValue = e.target.value;
@@ -431,12 +532,12 @@ const ModifierSeance = (props) => {
     const handleSubmit = (e) => {
         e.preventDefault();
         axios.put(`http://127.0.0.1:8000/Administration/updateSeance/${modifiedSeance.IdSeance}/`, modifiedSeance)
-        .then((res) => {
-            window.location.reload();
-        })
-        .catch((err) => {
-            alert(err.response.data.error)
-        })
+            .then((res) => {
+                window.location.reload();
+            })
+            .catch((err) => {
+                alert(err.response.data.error)
+            })
     }
 
     return (
@@ -488,7 +589,7 @@ const ModifierSeance = (props) => {
                     <label htmlFor="heureDebut">heure debut</label>
                     <input
                         required
-                        value={modifiedSeance.HeureDebut.substring(0,5)}
+                        value={modifiedSeance.HeureDebut.substring(0, 5)}
                         onChange={(e) => setModifiedSeance({ ...modifiedSeance, HeureDebut: e.target.value })}
                         type={inputType} placeholder=""
                         onFocus={handleFocus}
@@ -500,7 +601,7 @@ const ModifierSeance = (props) => {
                     <label htmlFor="HeureFin">heure fin</label>
                     <input
                         required
-                        value={modifiedSeance.HeureFin.substring(0,5)}
+                        value={modifiedSeance.HeureFin.substring(0, 5)}
                         onChange={(e) => setModifiedSeance({ ...modifiedSeance, HeureFin: e.target.value })}
                         type={inputType1} placeholder=""
                         onFocus={handleFocus1}
@@ -513,7 +614,7 @@ const ModifierSeance = (props) => {
                     <select
                         required
                         value={modifiedSeance.idPromo}
-                        onChange={(e) => { setSeelctedPromo(e.target.value); handleZoneChange(e); setModifiedSeance({...modifiedSeance, idPromo: e.target.value}) }}
+                        onChange={(e) => { setSeelctedPromo(e.target.value); handleZoneChange(e); setModifiedSeance({ ...modifiedSeance, idPromo: e.target.value }) }}
                     >
                         <option value={"default"}> </option>
                         <option value={"1CPI"}>1CPI</option>
@@ -556,7 +657,7 @@ const ModifierSeance = (props) => {
                     <select
                         required
                         value={modifiedSeance.idSection}
-                        onChange={(e) => { setModifiedSeance({ ...modifiedSeance, idSection: e.target.value }); setSelectedSection(e.target.value);}}
+                        onChange={(e) => { setModifiedSeance({ ...modifiedSeance, idSection: e.target.value }); setSelectedSection(e.target.value); }}
                     >
                         <option value={"-1"}> </option>
                         {filteredSections.map((section) => (
@@ -602,6 +703,58 @@ const ModifierSeance = (props) => {
                         type="submit"  > Sauvegarder</button>
                 </div>
             </form>
+        </div>
+    )
+}
+
+//------------Supprimer Seance
+
+const SupprimerSeance = (props) => {
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        axios.delete(`http://127.0.0.1:8000/Administration/delete_seance/${props.IdSeance}/`)
+            .then((res) => {
+                window.location.reload();
+            })
+            .catch((err) => {
+                console.log(err)
+            })
+    }
+
+    return (
+        <form className="form-supprimer-absence" onSubmit={handleSubmit}>
+            <div className="container-supprimer-profile">
+                <div className="warning-circle">
+                    <svg width="35" height="35" viewBox="0 0 35 35" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M17.4993 32.0832C25.5535 32.0832 32.0827 25.554 32.0827 17.4998C32.0827 9.44568 25.5535 2.9165 17.4993 2.9165C9.4452 2.9165 2.91602 9.44568 2.91602 17.4998C2.91602 25.554 9.4452 32.0832 17.4993 32.0832Z" stroke="#F80707" stroke-width="2.91667" stroke-linecap="round" stroke-linejoin="round" />
+                        <path d="M17.5 11.6667V17.5" stroke="#F80707" stroke-width="2.91667" stroke-linecap="round" stroke-linejoin="round" />
+                        <path d="M17.5 23.3333H17.5138" stroke="#F80707" stroke-width="2.91667" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                </div>
+                <p>Est ce que vous etes sur de la suppression de cette seance?</p>
+                <div className="supprimer-profile-btns">
+                    <button className="annuler" onClick={() => props.anullerSupprimerSeance()}>Annuler</button>
+                    <button type="submit" className="supprimer">Supprimer</button>
+                </div>
+            </div>
+        </form>
+    )
+}
+
+const Warning = (props) => {
+    return (
+        <div className="warning-container">
+            <div className="warning-circle">
+                <svg width="35" height="35" viewBox="0 0 35 35" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M17.4993 32.0832C25.5535 32.0832 32.0827 25.554 32.0827 17.4998C32.0827 9.44568 25.5535 2.9165 17.4993 2.9165C9.4452 2.9165 2.91602 9.44568 2.91602 17.4998C2.91602 25.554 9.4452 32.0832 17.4993 32.0832Z" stroke="#F80707" stroke-width="2.91667" stroke-linecap="round" stroke-linejoin="round" />
+                    <path d="M17.5 11.6667V17.5" stroke="#F80707" stroke-width="2.91667" stroke-linecap="round" stroke-linejoin="round" />
+                    <path d="M17.5 23.3333H17.5138" stroke="#F80707" stroke-width="2.91667" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+            </div>
+            <p>Cet enseignant a {props.nombre} heures supplimentaire </p>
+            <div className="warning-btns">
+                <button onClick={() => props.compris()}>OK</button>
+            </div>
         </div>
     )
 }

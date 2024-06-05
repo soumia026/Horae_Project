@@ -7,7 +7,7 @@ import { Link } from 'react-router-dom';
 
 
 
-const FilterButton = ({ name, options, FilterCategory, onFilter, onCancel, className, onFilter2 }) => {
+const FilterButton = ({ name, options, FilterCategory, onFilter, onCancel, className, onFilter2}) => {
     const [isOpen, setIsOpen] = useState(false);
     const [selectedOption, setSelectedOption] = useState("");
 
@@ -110,9 +110,18 @@ function DataTable() {
 
     }, []);
 
+    
+    const [selectedGroupe, setSelectedGroupe] = useState(null);
+
+    const handleFilter3 = (section) => {
+        setSelectedGroupe(section)
+    }
+
 
     // Create options array using constructor function
-    const groupesList = groupes.map(({ idGroupe: value, Numero: content }) => ({ value: value.toString(), content }));
+    const filteredGroupe = groupes.filter((groupe) => groupe.idSection == selectedGroupe)
+    const groupesList = filteredGroupe.map(({ idGroupe: value, Numero: content }) => ({ value: value.toString(), content }));
+    console.log(groupesList)
 
     const [sections, setSections] = useState([]);
 
@@ -136,7 +145,6 @@ function DataTable() {
     const filteredSections = sections.filter((section) => section.nomP === selectedPromo);
 
     const sectionsList = filteredSections.map(({ idSection: value, NomSection: content }) => ({ value: value.toString(), content }));
-
 
     const filteredData = enseignants.filter((item) => {
         if (selectedFilter) {
@@ -172,6 +180,7 @@ function DataTable() {
         const handleClickOutside = (event) => {
             if (filterRef.current && !filterRef.current.contains(event.target)) {
                 setFilterOpen(false);
+                setSelectedFilter(null)
             }
         };
 
@@ -196,12 +205,12 @@ function DataTable() {
     return (
         <div className="main-container dynamic-container Whole">
             <div className="Bandd">
-                <p className="ens">All Profiles</p>
+                <p className="ens">Enseignants & Charge</p>
                 <div className="filtrage-container" ref={filterRef}>
                     <div className="filtB">
                         <div className="filtH" onClick={() => setFilterOpen(!filterOpen)}>
                             <img src={FIcon} alt="filter icon" style={{ margin: "2px" }} />
-                            Filter
+                            Filtrer
                         </div>
                         {filterOpen && (
                             <div
@@ -214,8 +223,8 @@ function DataTable() {
                                         options={
                                             [
                                                 {
-                                                    content: 'Professor',
-                                                    value: 'Professor'
+                                                    content: 'Professeur',
+                                                    value: 'Professeur'
                                                 },
                                                 {
                                                     content: 'MCA',
@@ -327,7 +336,7 @@ function DataTable() {
                                         FilterCategory={() => handleCategory('Sections')}
                                         onFilter={handleFilter}
                                         onCancel={handleCancel}
-                                        onFilter2={() => console.log("there is no filters")}
+                                        onFilter2={handleFilter3}
                                         className="custom-filter-button"
                                     />
                                 </div>
@@ -337,7 +346,7 @@ function DataTable() {
                     <div className="search-container">
                         <input
                             type="text"
-                            placeholder="Search by anything ..."
+                            placeholder="Rechercher par n'importe quoi..."
                             value={searchTerm}
                             onChange={handleSearch}
                             className="search-input"
@@ -346,7 +355,7 @@ function DataTable() {
                             <img src={SearchIcon} alt="search icon" />
                         </span>
                     </div>
-                    <button className="ajouter-btn" onClick={() => ajouterClicked()} >Ajouter</button>
+                    <button className="ajouter-btn" onClick={() => ajouterClicked()} >Gestion D'Ajout</button>
                 </div>
 
             </div>
@@ -355,7 +364,7 @@ function DataTable() {
                     <thead>
                         <tr>
                             <th>Num</th>
-                            <th>Num Compte</th>
+                            <th>Matricule</th>
                             <th>Nom & Prenom</th>
                             <th>Grade</th>
                             <th></th>
@@ -398,6 +407,21 @@ export default DataTable;
 
 const Ajouter = (props) => {
 
+    const ajouterRef = useRef(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (ajouterRef.current && !ajouterRef.current.contains(event.target)) {
+                props.ajouterAnuller();
+            }
+        };
+
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, [ajouterRef]);
+
     const [step, setStep] = useState(1);
 
     const handleChange = () => {
@@ -406,7 +430,7 @@ const Ajouter = (props) => {
 
     const btns = [
         {
-            title: 'enseignant',
+            title: 'enseignement',
             component: <AjouterEnseignant ajouterAnuller={props.ajouterAnuller} />
         },
         {
@@ -438,7 +462,7 @@ const Ajouter = (props) => {
     }
 
     return (
-        <div className="ajouter-container">
+        <div className="ajouter-container" ref={ajouterRef}>
             <div className="progress-bar">
                 <div className="progress-part" style={{ borderRadius: '4px', width: '50%', backgroundColor: step >= 1 ? 'transparent' : '#00000020' }}>
                     <span style={{ width: step >= 1 ? '100%' : '0px' }}></span>
@@ -670,6 +694,7 @@ const AjouterModule = (props) => {
                 } else {
                     alert(err.response.data.error)
                 }
+                console.log(err.response.data)
 
             })
     }

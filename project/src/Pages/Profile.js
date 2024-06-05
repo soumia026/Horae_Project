@@ -6,6 +6,7 @@ import { useParams } from 'react-router-dom';
 import { ChargeHoraire } from "../Components/ChargeHoraire";
 import { LineInfos } from "../Components/LineInfos";
 import { Modules } from "../Components/Modules";
+import { Comptabilite } from "../Components/Comptabilite";
 
 export function Profile() {
 
@@ -45,7 +46,7 @@ export function Profile() {
         };
 
         fetchData();
-    }, []);
+    }, [matricule]);
 
 
     const btns = [
@@ -59,7 +60,7 @@ export function Profile() {
         },
         {
             title: "comptabilité",
-            component: null,
+            component:<Comptabilite Matricule = {enseignant.Matricule} Nom = {enseignant.Nom} Prenom = {enseignant.Prénom} Grade = {enseignant.Grade} />,
         },
     ]
 
@@ -74,7 +75,6 @@ export function Profile() {
     return (
         <div className="main-container dynamic-container prof-infos-container">
             <div className="profile-flex-container">
-                <h2>{`${enseignant.Nom} ${enseignant.Prénom}`}</h2>
             </div>
             <div className="buttons-container">
                 <div className="infos-butns">

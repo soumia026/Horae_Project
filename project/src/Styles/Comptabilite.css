@@ -1,9 +1,8 @@
 .comptabilite-container{
-    padding: 0 2.5rem;
+    padding: 0 2.5rem 2rem 2.5rem;
     width: 100%;
     display: flex;
     flex-direction: column;
- 
     position: relative;
     z-index: 1;
     align-items: center;
@@ -15,7 +14,7 @@
     padding: 0 3rem;
     display: flex;
     flex-direction: column;
-    gap: 3rem;
+    gap: 1.5rem;
 }
 
 .comptabilite-container table{
@@ -84,7 +83,7 @@
     align-items: center;
 }
 
-.telecharger-container .telecharger-btn{
+.telecharger-container .telecharger-btn1{
     width: 130px;
     height: 100%;
     background-color: #B8CEF7;
@@ -94,4 +93,8 @@
     align-items: center;
     color: #000;
     font-size: 15px;
+}
+
+#comptabilite-infos{
+    width: 100%;
 }

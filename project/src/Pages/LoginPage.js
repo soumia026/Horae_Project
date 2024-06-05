@@ -20,6 +20,8 @@ function LoginPage() {
         MotDePasse: ''
     });
 
+    const {setUserName} = useContext(AppContext);
+
     const {setEnseignantMat} = useContext(AppContext);
     
     const navigate = useNavigate();
@@ -31,8 +33,16 @@ function LoginPage() {
                 if (res.status === 201) {
                     if(userType === 'enseignant'){
                         setEnseignantMat(res.data.Matricule)
+                        setUserName({
+                            name: res.data.Nom,
+                            prenom: res.data.Prénom
+                        })
                         navigate(`/enseignant/${res.data.Matricule}`);
                     }else{
+                        setUserName({
+                            name: res.data.nom,
+                            prenom: res.data.prenom
+                        })
                         navigate(`/admin`);
                     }
                 }
@@ -40,6 +50,12 @@ function LoginPage() {
             .catch((err) => {
                 console.log(err.response.data)
             })
+    }
+
+    const [admin, setAdmin] = useState(false);
+
+    const handleAdmin = () => {
+        setAdmin(true);
     }
 
     return (
@@ -95,7 +111,7 @@ function LoginPage() {
                         </div>
                     </div>
                     <div className="forgot-password-link">
-                        <a href="#" onClick={() => setUserType('admin')}>Etes-vous un admin?</a>
+                        <p className={admin ? 'admin-login' : ''} onClick={() => {setUserType('admin'); handleAdmin()}}>Etes-vous un admin?</p>
                     </div>
                     <button type="submit" className="submit-button">Se connecter</button>
                 </form>

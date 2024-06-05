@@ -80,7 +80,7 @@
     border-radius: 30px;
     background-color: #B8CEF7;
     font-weight: 400;
-    font-size: 14px;
+    font-size: 16px;
     border: none;
     color: #000;
 }
@@ -174,4 +174,37 @@
 
  .modifier-seance-container .ajouter-btns .sauvegarder-ajouter-btn {
     background-color: var(--main-color);
+}
+
+.charge-container{
+    display: flex;
+    justify-content: space-evenly;
+    align-items: center;
+    gap: 6px;
+}
+
+.emploi-temps-table .charge-container .charge-btn{
+    background-color: transparent;
+    border: 2px solid #B8CEF7;
+    color: #000;
+    min-width:50px;
+    padding: 6px;
+}
+
+.heure-btns{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+}
+
+.heure-btns .heures-plus{
+    height: 40px;
+    background-color: #B8CEF7;
+    color: #000;
+}
+
+.infos-emploi-box .warning-container button{
+    background-color: #fff;
+    color: #000;
 }

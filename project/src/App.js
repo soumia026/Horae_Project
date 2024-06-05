@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Outlet, Link } from "react-router-dom"
+import { BrowserRouter as Router, Routes, Route, Outlet } from "react-router-dom"
 import { NavBar } from './Components/NavBar';
 import { WelcomeBar } from "./Components/WelcomeBar";
 import './App.css'
@@ -11,7 +11,7 @@ import { Documents } from "./Pages/Documents";
 import { ProfInfos } from "./Pages/ProfInfos";
 import { Profile } from "./Pages/Profile";
 import LoginPage from "./Pages/LoginPage";
-import { useState, createContext, useContext } from "react";
+import { useState, createContext, useContext, useEffect } from "react";
 
 export const AppContext = createContext();
 
@@ -19,9 +19,90 @@ function App() {
 
   const [enseignantMat, setEnseignantMat] = useState('')
 
+  const [evenements, setEvenements] = useState(() => {
+    // Initialiser l'état avec les événements stockés dans localStorage ou un tableau vide
+    const savedEvenements = localStorage.getItem('evenements');
+    return savedEvenements ? JSON.parse(savedEvenements) : [];
+  });
+
+  useEffect(() => {
+    // Sauvegarder les événements dans localStorage chaque fois qu'ils changent
+    localStorage.setItem('evenements', JSON.stringify(evenements));
+  }, [evenements]);
+
+  const [modeSemestriel, setModeSemestriel] = useState(() => {
+    const savedModeSemestriel = localStorage.getItem('modeSemestriel');
+    return savedModeSemestriel ? JSON.parse(savedModeSemestriel) : {
+      dateDebut: '',
+      dateFin: '',
+      chargeCours: '',
+      chargeTD: '',
+      chargeTP: '',
+      tauxCours: '',
+      tauxTD: '',
+      tauxTP: '',
+      PUProf: '',
+      PUMCA: '',
+      PUMCB: '',
+      PUMAA: '',
+      PUMAB: '',
+      PSec: '',
+      PIRG: '',
+    };
+  });
+
+  useEffect(() => {
+    localStorage.setItem('modeSemestriel', JSON.stringify(modeSemestriel));
+  }, [modeSemestriel]);
+
+  const [userName, setUserName] = useState(() => {
+    const savedUserName = localStorage.getItem('userName');
+    return savedUserName ? JSON.parse(savedUserName) : { nom: '', prenom: '' };
+  });
+
+  useEffect(() => {
+    const savedUserName = localStorage.getItem('userName');
+    if (savedUserName) {
+      setUserName(JSON.parse(savedUserName));
+    }
+  }, []);
+
+  const [index, setIndex] = useState(() => {
+    const savedIndex = localStorage.getItem('index');
+    return savedIndex ? parseInt(savedIndex) : 0;
+  });
+  
+  useEffect(() => {
+    const savedIndex = localStorage.getItem('index');
+    if (savedIndex) {
+      setIndex(parseInt(savedIndex));
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('index', index);
+  }, [index]);
+
+  const [modeType, setModeType] = useState(() => {
+    const savedModeType = localStorage.getItem('modeType');
+    return savedModeType || 'semestre';
+  });
+
+  useEffect(() => {
+    const savedModeType = localStorage.getItem('modeType');
+    if (savedModeType) {
+      setModeType(savedModeType);
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('modeType', modeType);
+  }, [modeType]);
+
+
   return (
     <div className="App">
-      <AppContext.Provider value={{enseignantMat, setEnseignantMat}}>
+      <AppContext.Provider value={{ enseignantMat, setEnseignantMat, evenements, setEvenements, modeSemestriel, setModeSemestriel, userName, setUserName, modeType, setModeType, index, setIndex }}>
         <Router>
           <Routes>
             <Route path='/' element={<LoginPage />} />
@@ -32,15 +113,12 @@ function App() {
               <Route path="enseignants" element={<Enseignants />} />
               <Route path="enseignants/:matricule" element={<ProfInfos />} />
               <Route path="documents" element={<Documents />} />
-              <Route path="reclamations" element={<Reclamations />} />
               <Route path="archive" element={<Archive />} />
             </Route>
 
             <Route path="/enseignant" element={<ProfLayout />}>
               <Route path=":matricule" element={<Profile />} />
-              <Route path="documents" element={<Documents />} />
               <Route path="reclamations" element={<Reclamations />} />
-              <Route path="archive" element={<Archive />} />
             </Route>
 
           </Routes>
@@ -54,11 +132,10 @@ function App() {
 
 const AdminLayout = () => {
   const navAdmin = [
-    { name: 'dashboard', path: 'admin' },
-    { name: 'calcul', path: 'admin/calendrier' },
+    { name: 'table du bord', path: 'admin' },
     { name: 'enseignants', path: 'admin/enseignants' },
+    { name: 'calcul', path: 'admin/calendrier' },
     { name: 'documents', path: 'admin/documents' },
-    { name: 'reclamations', path: 'admin/reclamations' },
     { name: 'Archive', path: 'admin/archive' }
   ];
   return (
@@ -76,13 +153,10 @@ const AdminLayout = () => {
 
 const ProfLayout = () => {
 
-  const {enseignantMat} = useContext(AppContext)
+  const { enseignantMat } = useContext(AppContext)
 
   const navProf = [
     { name: 'profile', path: `enseignant/${enseignantMat}` },
-    { name: 'documents  ', path: 'enseignant/documents' },
-    { name: 'reclamations', path: 'enseignant/reclamations' },
-    { name: 'Archive', path: 'enseignant/archive' }
   ];
   return (
 
@@ -95,17 +169,6 @@ const ProfLayout = () => {
     </>
   )
 
-}
-
-// Links : C'est optionel il n'est pas inclus dans le projet juste pour le prvisionemment
-
-const Links = () => {
-  return (
-    <div className="links">
-      <Link className='btn' to='/admin' style={{ marginRight: '1rem' }}> Admin</Link>
-      <Link className='btn' to='/enseignant'> Enseignant </Link>
-    </div>
-  )
 }
 
 export default App;

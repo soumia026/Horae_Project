@@ -115,15 +115,16 @@
     width: 100%;
 }
 
-.forgot-password-link a {
+.forgot-password-link p {
     font-family: 'DM Sans', sans-serif;
     font-weight: bold;
     color: #042C54;
     text-decoration: none;
     font-size: 14px;
+    cursor: pointer;
 }
 
-.forgot-password-link a:hover {
+.forgot-password-link p:hover {
     text-decoration: underline;
 }
 
@@ -150,4 +151,8 @@
     font-weight: 200;
     color: #FFF;
     margin-left: 1rem;
+}
+
+.admin-login{
+    opacity: 0;
 }

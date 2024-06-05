@@ -1,15 +1,13 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import '../Styles/Profinfos.css'
 import { InfosPersonnelles } from "../Components/InfosPersonnelles";
 import axios from "axios";
 import { teacher } from "../Constructors";
-import { useForm } from "react-hook-form";
-import { yupResolver } from '@hookform/resolvers/yup';
-import * as yup from 'yup';
 import { useRef } from "react";
 import { useNavigate, useParams } from 'react-router-dom';
 import { ChargeHoraire } from "../Components/ChargeHoraire";
 import { Comptabilite } from "../Components/Comptabilite";
+import { AppContext } from "../App";
 
 export function ProfInfos() {
 
@@ -49,29 +47,28 @@ export function ProfInfos() {
         };
 
         fetchData();
-    }, []);
+    }, [matricule]);
 
 
     const btns = [
         {
-            title: "infos personnelles",
+            title: "informations",
             component: <InfosPersonnelles enseignant={enseignant} absences={absences} modules={modules} />,
         },
         {
             title: "charge horaire",
-            component: <ChargeHoraire seances={seances} modiferSeanceOn={true} />,
+            component: <ChargeHoraire seances={seances} modiferSeanceOn={true} matricule = {matricule} />,
         },
         {
             title: "comptabilité",
-            component: <Comptabilite />,
+            component: <Comptabilite Matricule = {enseignant.Matricule} Nom = {enseignant.Nom} Prenom = {enseignant.Prénom} Grade = {enseignant.Grade} />,
         },
     ]
 
+    const {index, setIndex} = useContext(AppContext);
 
-    const [clickedButton, setClickedButon] = useState(0);
-
-    const toggle = (index) => {
-        setClickedButon(index === clickedButton ? null : index)
+    const toggle = (index1) => {
+        setIndex(index1 === index ? index1 : index1)
     }
 
     //Ajouter Absence Button
@@ -136,12 +133,12 @@ export function ProfInfos() {
             </div>
             <div className="buttons-container">
                 <div className="infos-butns">
-                    {btns.map((btn, index) => (
-                        <button onClick={() => toggle(index)} className={index === clickedButton ? 'clicked' : null}>{btn.title}</button>
+                    {btns.map((btn, key) => (
+                        <button onClick={() => toggle(key)} className={key === index ? 'clicked' : null}>{btn.title}</button>
                     ))}
                 </div>
             </div>
-            {btns[clickedButton].component}
+            {btns[index].component}
             {ajouterAbsenceClicked &&
                 <AjouterAbsence matricule={matricule}
                     handleAnnuler={() => setAjouterAbscenceClicked(false)} />}
@@ -281,7 +278,7 @@ const ModifierProfile = (props) => {
     const [clickedButton, setClickedButon] = useState(0);
 
     const toggle = (index) => {
-        setClickedButon(index === clickedButton ? null : index)
+        setClickedButon(index === clickedButton ? index : index)
     }
 
     const modifierBtns = [
@@ -292,12 +289,7 @@ const ModifierProfile = (props) => {
         {
             title: "ajouter sceance",
             component: <AjouterSeance matricule={props.matricule} annulerModification={props.annulerModification} modules={props.modules} />,
-        },
-        {
-            title: "comptabilité",
-            component: null,
-        },
-
+        }
     ]
 
     return (
@@ -309,8 +301,8 @@ const ModifierProfile = (props) => {
                         <button onClick={() => toggle(index)} className={index === clickedButton ? 'clicked' : null}>{btn.title}</button>
                     ))}
                 </div>
-                {modifierBtns[clickedButton].component}
             </div>
+            {modifierBtns[clickedButton].component}
         </div>
     )
 }
@@ -343,7 +335,7 @@ const ModifierInfosProf = (props) => {
             .catch(err => console.log(err.response.data));
     }
     return (
-        <form onSubmit={handleSubmit}>
+        <form style={{overflowY: 'auto'}} onSubmit={handleSubmit}>
 
             <div className="input-line">
                 <label htmlFor="nom">nom</label>
@@ -593,6 +585,7 @@ const AjouterSeance = (props) => {
         idGroupe: null,
         idSection: 0
     })
+
     const handleSubmit = (e) => {
         e.preventDefault();
         axios.post(`http://127.0.0.1:8000/Administration/insertSeance/${newSeance.Matricule}/${newSeance.Semestre}/`, newSeance)
@@ -743,7 +736,7 @@ const SupprimerProfile = (props) => {
 
         e.preventDefault();
         axios.delete(`http://127.0.0.1:8000/Administration/delete_enseignants/${props.Matricule}/`)
-            .then(() => {
+            .then((res) => {
                 navigate('/admin/enseignants')
             })
             .catch(err => console.log(err.response.data))
@@ -751,7 +744,7 @@ const SupprimerProfile = (props) => {
     }
 
     return (
-        <form onSubmit={handleSubmit}>
+        <form className="form-supprimer-profile" onSubmit={handleSubmit}>
             <div className="container-supprimer-profile">
                 <div className="warning-circle">
                     <svg width="35" height="35" viewBox="0 0 35 35" fill="none" xmlns="http://www.w3.org/2000/svg">

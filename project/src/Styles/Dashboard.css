@@ -136,7 +136,8 @@
 .evenements-container .les-evenements{
     display: flex;
     width: 100%;
-    justify-content: space-between;
+    justify-content: center;
+    align-items: center;
 }
 
 .les-evenements .un-evenement{
@@ -147,8 +148,13 @@
     gap: 6px;
 }
 
-.les-evenements .un-evenement:first-child{
-    border-right: 2px solid #00000015;
+.les-evenements .un-evenement:nth-child(2){
+    border-left: 2px solid #00000015;
+}
+
+.les-evenements p {
+    font-size: 1.2rem;
+    color: #00000090;
 }
 
 .un-evenement .title{
