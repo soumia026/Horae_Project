@@ -176,9 +176,9 @@ const SupprimerAbsence = (props) => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        axios.delete(`http://127.0.0.1:8000/Administration/deleteAbsence/${props.Matricule}/${props.IdAbs}/`)
+        axios.delete(`http://127.0.0.1:8000/Administration/deleteAbsence/${props.IdAbs}/`)
             .then((res) => {
-                console.log('rr')
+                window.location.reload();
             })
             .catch((err) => {
                 console.log(err)

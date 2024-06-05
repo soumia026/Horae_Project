@@ -328,11 +328,18 @@ const ModifierInfosProf = (props) => {
         e.preventDefault();
         axios.put(`http://127.0.0.1:8000/Administration/updateEnseignant/${modifiedEnseignant.Matricule}/`, modifiedEnseignant)
             .then(res => {
-
                 window.location.reload(); // Reload the page after the second click
 
             })
-            .catch(err => console.log(err.response.data));
+            .catch(err => {
+                if(err.response.data.NumeroTelephone){
+                    alert(err.response.data.NumeroTelephone)
+                }else if(err.response.data.Email){
+                    alert(err.response.data.Email)
+                }else{
+                    alert(err.response.data.error)
+                }
+            });
     }
     return (
         <form style={{overflowY: 'auto'}} onSubmit={handleSubmit}>

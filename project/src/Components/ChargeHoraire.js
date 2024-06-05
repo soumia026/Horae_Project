@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import "../Styles/Emploi.css"
 import axios from "axios";
-import { AppContext } from "../App";
+import App, { AppContext } from "../App";
 
 export const ChargeHoraire = (props) => {
 
@@ -183,6 +183,7 @@ export const ChargeHoraire = (props) => {
                         <table className="emploi-temps-table">
                             {filtredSeances.map((seance) => (
                                 <SeanceLine
+                                    matricule = {props.matricule}
                                     NomS={seance.NomS}
                                     Jour={seance.Jour}
                                     HeureDebut={seance.HeureDebut.substring(0, 5)}
@@ -274,6 +275,32 @@ const SeanceLine = (props) => {
                 console.log(err)
             })
     }
+
+    const deleteHeure = (id) => {
+        axios.delete(`http://127.0.0.1:8000/Administration/deleteHeure/${id}/`)
+            .then(window.location.reload())
+            .catch((err) => {
+                console.log(err)
+            })
+    }
+
+    const {modeSemestriel} = useContext(AppContext);
+
+    const [heuresSupp, setHeuresSupp] = useState(0);
+
+    useEffect(() => {
+        const getHeures = () => {
+            axios.get(`http://127.0.0.1:8000/Administration/calculerHeuresSup/${props.matricule}/${modeSemestriel.chargeTD}/${modeSemestriel.tauxCours}/${modeSemestriel.tauxTD}/${modeSemestriel.tauxTP}/`)
+            .then((res) => {
+               setHeuresSupp(res.data.RSup)
+            })
+            .catch((err) => {
+               console.log(err)
+            })
+        }
+        getHeures();
+    }, []);
+
     return (
         <tr>
             <td>
@@ -366,15 +393,23 @@ const SeanceLine = (props) => {
                 </td>
             }
 
-            {heure &&
+            {heuresSupp === 0 &&
                 <td>
                     <div className="charge-container">
-                        <button className="charge-btn heureSupp-btn" style={{backgroundColor: '#B8CEF7'}}>Heure+</button>
+                        <button className="charge-btn heureSupp-btn">Charge</button>
                     </div>
                 </td>
             }
 
-            {!heure &&
+            {heuresSupp != 0 && heure &&
+                <td>
+                    <div className="charge-container">
+                        <button className="charge-btn heureSupp-btn" onClick={() => deleteHeure(props.id)} style={{ backgroundColor: '#B8CEF7' }}>Heure+</button>
+                    </div>
+                </td>
+            }
+
+            {heuresSupp != 0 && !heure &&
                 <td>
                     <div className="charge-container">
                         <button className="charge-btn heureSupp-btn" onClick={() => ajouterHeure(props.id, calculateTimeDifferenceInSeconds(props.HeureDebut, props.HeureFin))}>Charge</button>

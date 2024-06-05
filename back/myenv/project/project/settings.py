@@ -152,5 +152,5 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'  # Hôte de messagerie, par exemple, smtp.gmail.com pour Gmail
 EMAIL_PORT = 587  # Port de messagerie, par exemple, 587 pour Gmail
 EMAIL_USE_TLS = True  # Utilisez True si votre serveur de messagerie nécessite TLS
-EMAIL_HOST_USER = 'EMAIL TA3KOUM TESTIW BIH '  # Votre adresse e-mail d'envoi
-EMAIL_HOST_PASSWORD = 'MDP TA3KOUM'  # Le mot de passe de votre adresse e-mail d'envoi
+EMAIL_HOST_USER = 'kh_ouchene@esi.dz'  # Votre adresse e-mail d'envoi
+EMAIL_HOST_PASSWORD = 'hab17houba04'  # Le mot de passe de votre adresse e-mail d'envoi

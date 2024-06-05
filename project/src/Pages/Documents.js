@@ -98,29 +98,50 @@ const EnseignantsTable = (props) => {
 
   });
 
-    const [activeButtons, setActiveButtons] = useState([]);
+  const [activeButtons, setActiveButtons] = useState([]);
 
-    const handleButtonClick = (index) => {
-      setActiveButtons(prevState =>
-        prevState.includes(index)
-          ? prevState.filter(i => i !== index)
-          : [...prevState, index]
-      );
-    };
+  const handleButtonClick = (index) => {
+    setActiveButtons(prevState =>
+      prevState.includes(index)
+        ? prevState.filter(i => i !== index)
+        : [...prevState, index]
+    );
+  };
 
-    const [lisetEnseignants, setListeEnseignants] = useState([]);
+  const [lisetEnseignants, setListeEnseignants] = useState([]);
 
-    const handleListeEnseignats = (matricule) => {
-      setListeEnseignants(prevState =>
-        prevState.includes(matricule)
-          ? prevState.filter(i => i !== matricule)
-          : [...prevState, matricule]
-      );
-    };
+  const handleListeEnseignats = (matricule) => {
+    setListeEnseignants(prevState =>
+      prevState.includes(matricule)
+        ? prevState.filter(i => i !== matricule)
+        : [...prevState, matricule]
+    );
+  };
 
-    console.log(lisetEnseignants)
+  const handleSubmit = async (event) => {
+    event.preventDefault();
 
-    return (
+    for (const matricule of lisetEnseignants) {
+      try {
+        const url = `http://127.0.0.1:8000/Administration/export_montant_enseignant_pdf/${matricule}/`;
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', '');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        // Attendre un petit délai pour éviter que les téléchargements se chevauchent
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+      } catch (error) {
+        console.error(`Erreur lors du téléchargement du PDF pour le matricule ${matricule}:`, error);
+      }
+    }
+  };
+  return (
+    <>
+
       <div className="data-table-container">
         <table className="data-table">
           <thead>
@@ -143,7 +164,7 @@ const EnseignantsTable = (props) => {
 
                   <button
                     className={`document-btn ${activeButtons.includes(index) ? 'active' : ''}`}
-                    onClick={() => {handleButtonClick(index); handleListeEnseignats(enseignant.Matricule)}}
+                    onClick={() => { handleButtonClick(index); handleListeEnseignats(enseignant.Matricule) }}
                   >
                     Générer
                   </button>
@@ -153,37 +174,48 @@ const EnseignantsTable = (props) => {
             ))}
           </tbody>
         </table>
-        <button className={`telecharger-btn ${activeButtons.length > 0 ? 'telecharger-active' : ''}`}>Télécharger</button>
       </div>
-    )
-  }
+      <form className="form-telecharger" onSubmit={handleSubmit}>
+        <button type="submit" className={`telecharger-btn ${activeButtons.length > 0 ? 'telecharger-active' : ''}`} >Télécharger</button>
+      </form>
+    </>
+  )
+}
 
-  const FichePaiement = () => {
-    return (
-      <div className="paiement-container">
-        <div className="type-paiement">
-          <h2>Fiche d’état de Paiement</h2>
-          <form>
-            <div className="input-line">
-              <label htmlFor="type">Type</label>
-              <select>
-                <option value={'ccp'}>CCP</option>
-                <option value={'virement'}>Virement Banckaire</option>
-              </select>
-            </div>
-            <div className="input-line">
-              <label htmlFor="semestre">semestre</label>
-              <select>
-                <option value={'S1'}>1er</option>
-                <option value={'S2'}>2éme</option>
-              </select>
-            </div>
+const FichePaiement = () => {
 
-            <div className="btn-container">
-              <button className="document-btn">Générer</button>
-            </div>
-          </form>
-        </div>
+  const handleDownload = (e) => {
+    e.preventDefault();
+    let url = '';
+
+    url = 'http://127.0.0.1:8000/Administration/export_montants_pdf/';
+
+    // Créer un lien temporaire et déclencher le téléchargement
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'archivageDesDonnees.xlsx');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  return (
+    <div className="paiement-container">
+      <div className="type-paiement">
+        <h2>Fiche d’état de Paiement</h2>
+        <form onSubmit={handleDownload} >
+          <div className="input-line">
+            <label htmlFor="type">Type</label>
+            <select>
+              <option value={'ccp'}>CCP</option>
+              <option value={'virement'}>Virement Banckaire</option>
+            </select>
+          </div>
+          <div className="btn-container">
+            <button type="submit" className="document-btn">Générer</button>
+          </div>
+        </form>
       </div>
-    )
-  }
+    </div>
+  )
+}

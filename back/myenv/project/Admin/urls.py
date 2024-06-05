@@ -11,7 +11,7 @@ path('insertEnseignant/',views.insertEnseignant,name='insertEnseignant'),
 path('attribuer_Module_Ens/',views.attribuer_Module_Ens,name='attribuer_Module_Ens'),
 
 path('inscription/', views.inscription, name='inscription'),
-path('deleteAbsence/<str:teacher_id>/<int:abs_id>/',views.deleteAbsence,name='deleteAbsence'),
+path('deleteAbsence/<int:abs_id>/',views.deleteAbsence,name='deleteAbsence'),
 
 
 
@@ -36,7 +36,7 @@ path('insertGroupe/<int:idSection>/', views.insertGroupe, name='insertGroupe'),
 
 
 path('insertHeure/<int:idSeance>/', views.insertHeure, name='insertHeure'),
-path('deleteHeure/<int:ids_Heures>/', views.deleteHeure, name='deleteHeure'),
+path('deleteHeure/<int:idSeance>/', views.deleteHeure, name='deleteHeure'),
 path('updateHeure/<int:idHeure>/',views.updateHeure, name='update_heure'),
 path('updateGroupe/<int:idGroupe>/', views.updateGroupe, name='update_groupe'),
 path('updateSpecialite/<int:idSpecialite>/', views.updateSpecialite, name='update_specialite'),
@@ -72,5 +72,7 @@ path('calculer_montant/<str:debut_semestre>/<str:fin_semestre>/<str:PU_MAB>/<str
 path('inscription_ecole_administration/', views.inscription_ecole_administration, name='inscription_ecole_administration'),
 path('get_montant/<str:matricule>/', views.get_montant, name='get_montant'),
 path('absences/', views.get_all_abscences, name='absences-list'),
- path('heure/<int:idSeance>/', views.get_heure_by_seance, name='get-heure-by-seance')
+path('heure/<int:idSeance>/', views.get_heure_by_seance, name='get-heure-by-seance'),
+path('export_montants_pdf/', views.export_montants_pdf, name='export_montants_pdf'),
+path('export_montant_enseignant_pdf/<str:matricule>/', views.export_montant_enseignant_pdf, name='export_montant_enseignant_pdf'),
 ]

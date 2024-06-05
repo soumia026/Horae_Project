@@ -33,25 +33,6 @@ export const Comptabilite = (props) => {
 
     const { modeSemestriel } = useContext(AppContext);
 
-    const [prixUnitaire, setPrixUnitaire] = useState(null);
-
-    useEffect(() => {
-        const recupereGrade = () => {
-            if (props.Grade === 'Professor') {
-                setPrixUnitaire(modeSemestriel.PUProf)
-            } else if (props.Grade === 'MCA') {
-                setPrixUnitaire(modeSemestriel.PUMCA)
-            } else if (props.Grade === 'MCB') {
-                setPrixUnitaire(modeSemestriel.PUMCB)
-            } else if (props.Grade === 'MAA') {
-                setPrixUnitaire(modeSemestriel.PUMAA)
-            } else {
-                setPrixUnitaire(modeSemestriel.PUMAB)
-            }
-        }
-        recupereGrade();
-    }, [props.Grade, modeSemestriel.PUProf, modeSemestriel.PUMCA, modeSemestriel.PUMCB, modeSemestriel.PUMAA, modeSemestriel.PUMAB])
-
     const curentDate = new Date();
     const [calculSuccess, setCalculSuccess] = useState(new Date(modeSemestriel.dateFin) <= curentDate);
 
@@ -118,10 +99,10 @@ export const Comptabilite = (props) => {
                             <tr>
                                 <td style={{ borderBottom: '1.5px #00000015 solid;' }}>
                                     <span>
-                                        Mode de paiment
+                                        période
                                     </span>
-                                    <p>
-                                        CCP
+                                    <p style={{textTransform: 'lowercase'}}>
+                                       du {montant.periode_start} au {montant.periode_end}
                                     </p>
                                 </td>
                                 <td style={{ borderBottom: '1.5px #00000015 solid;' }}>
@@ -129,7 +110,7 @@ export const Comptabilite = (props) => {
                                         prix unitaire
                                     </span>
                                     <p>
-                                        {prixUnitaire}
+                                        {montant.prix_unitaire}
                                     </p>
                                 </td>
                                 <td style={{ borderBottom: '1.5px #00000015 solid;' }}>
@@ -137,7 +118,7 @@ export const Comptabilite = (props) => {
                                         nombre d'heures
                                     </span>
                                     <p>
-                                        20
+                                        {montant.nombre_des_heures}
                                     </p>
                                 </td>
                             </tr>
@@ -147,7 +128,7 @@ export const Comptabilite = (props) => {
                                         securite SEC
                                     </span>
                                     <p>
-                                        {modeSemestriel.PSec}%
+                                        {montant.securite_sociale}%
                                     </p>
                                 </td>
                                 <td style={{ borderBottom: '1.5px #00000015 solid;' }}>
@@ -155,7 +136,7 @@ export const Comptabilite = (props) => {
                                         IRG
                                     </span>
                                     <p>
-                                        {modeSemestriel.PIRG}%
+                                        {montant.irg}%
                                     </p>
                                 </td>
                                 <td style={{ borderBottom: '1.5px #00000015 solid;' }}>
@@ -170,7 +151,7 @@ export const Comptabilite = (props) => {
                                     montant total
                                 </span>
                                 <p>
-                                    88765,0
+                                    {montant.montant_total} DZD
                                 </p>
                             </div>
                             <div className="line-deco" />
@@ -179,7 +160,7 @@ export const Comptabilite = (props) => {
                                     montant débit
                                 </span>
                                 <p>
-                                    88765,0
+                                    {montant.montant_debite} DZD
                                 </p>
                             </div>
                             <div className="line-deco" />
@@ -188,7 +169,7 @@ export const Comptabilite = (props) => {
                                     montant net
                                 </span>
                                 <p>
-                                    {montant.somme}
+                                    {montant.montant_net} DZD
                                 </p>
                             </div>
                         </div>

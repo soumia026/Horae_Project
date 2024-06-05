@@ -137,14 +137,14 @@ def delete_groupes(request, ids_groupes):
     
 
 @api_view(['DELETE'])
-def deleteHeure(request, ids_Heures):
+def deleteHeure(request, idSeance):
    
     
-    if ids_Heures:
+    if idSeance:
         try:
             with transaction.atomic():
 
-              heure.objects.filter(idHeure = ids_Heures).delete()
+              heure.objects.filter(idSeance = idSeance).delete()
             
             return JsonResponse({'success': True, 'message': 'Les groupes et les séances associées ont été supprimés avec succès.'})
         except Exception as e:
@@ -309,7 +309,7 @@ def addSeance(request, teacher_id,semestre):
    
 
 @api_view(['DELETE'])
-def deleteAbsence(request,teacher_id,abs_id):
+def deleteAbsence(request,abs_id):
     if request.method == 'DELETE':
         myAbs = get_object_or_404(Abcence, pk=abs_id)
         date = DateSeance.objects.get(date = myAbs.DateAbs)
@@ -342,14 +342,47 @@ def insertSeance(request, teacher_id, semestre):
             # Vérification des heures de début et de fin
             error_messages = []
             if heure_debut_seance < heure_debut:
-               return Response({"error": "L'heure de début doit être après 8:00 AM."}, status=400)
+                error_messages.append("L'heure de début doit être après 8:00 AM.")
             if heure_fin_seance > heure_fin_limite:
-                return Response({"error": "L'heure de fin doit être avant 5:30 PM. "}, status=400)
+                error_messages.append("L'heure de fin doit être avant 5:30 PM.")
             if heure_fin_seance <= heure_debut_seance:
-                return Response({"error": "L'heure de debut doit etre inferieur au heure fin "}, status=400)
+                error_messages.append("L'heure de début doit être inférieure à l'heure de fin.")
 
+            # Vérification des conflits de séances pour le même enseignant et semestre
             if error_messages:
-                return Response({"message": ", ".join(error_messages)}, status=400)
+                return Response({"error": ", ".join(error_messages)}, status=400)
+
+            NouveauIdSalle = serializer.validated_data.get('idSalle')
+            NouveauJour = serializer.validated_data.get('Jour')
+            NouveauHRdeb = serializer.validated_data.get('HeureDebut')
+            NouveauHRfin = serializer.validated_data.get('HeureFin')
+            NouveauIdSection = serializer.validated_data.get('idSection')
+            NouveauIdGroupe = serializer.validated_data.get('idGroupe')
+            matr = teacher_id
+
+            # Vérification de l'heure de début et de fin
+            if NouveauHRdeb and NouveauHRdeb < time(8, 0):
+                return Response({"error": "L'heure de début doit être à partir de 08:00 am."}, status=400)
+            if NouveauHRfin and NouveauHRfin > time(17, 30):
+                return Response({"error": "L'heure de fin doit être avant 17:30 pm."}, status=400)
+
+            # Vérification des conflits de séances pour le même groupe
+            if NouveauIdGroupe:
+                seanGroup = Seance.objects.filter(idGroupe=NouveauIdGroupe, HeureDebut=NouveauHRdeb, HeureFin=NouveauHRfin, Jour=NouveauJour)
+                if seanGroup:
+                    return Response({"error": "Ce groupe a une séance à cette date."}, status=400)
+
+            # Vérification des conflits de séances pour le même jour, heure de début et fin
+            if NouveauJour and NouveauHRdeb and NouveauHRfin:
+                seanSJour = Seance.objects.filter(Matricule=matr, Jour=NouveauJour, HeureDebut=NouveauHRdeb, HeureFin=NouveauHRfin)
+                if seanSJour:
+                    return Response({"error": "cette seance existe déja."}, status=400)
+
+            # Vérification des conflits de réservation pour la salle
+            if NouveauIdSalle is not None:
+                seanSalle = Seance.objects.filter(idSalle=NouveauIdSalle, HeureDebut=NouveauHRdeb, HeureFin=NouveauHRfin, Jour=NouveauJour)
+                if seanSalle:
+                    return Response({"error": "Cette salle est déjà réservée pour une autre séance à ce moment. Veuillez choisir une autre salle pour cette séance."}, status=400)
 
             serializer.validated_data['Matricule_id'] = teacher_id
             serializer.validated_data['Semestre'] = semestre
@@ -358,13 +391,11 @@ def insertSeance(request, teacher_id, semestre):
         return Response(serializer.errors, status=400)
     elif request.method == 'GET':
         # Handle GET request if needed
-        seances = Seance.objects.filter(Matricule_id=teacher_id,Semestre = semestre)
+        seances = Seance.objects.filter(Matricule_id=teacher_id, Semestre=semestre)
         serializer = SeanceSerializer(seances, many=True)
         return Response(serializer.data, status=200)
     else:
         return Response({"message": "Method not allowed"}, status=405)
-
-
 
 
 
@@ -468,8 +499,8 @@ def insertEnseignant(request):
         return Response({"message": "Method not allowed"}, status=405)
 
 def send_password_email(receiver_email, password):
-    sender_email = "EMAIL TA3KOUM TESTIW BIH "
-    sender_password = "MDP TA3KOUM"
+    sender_email = "kh_ouchene@esi.dz"
+    sender_password = "hab17houba04"
     
     message = MIMEMultipart()
     message['From'] = sender_email
@@ -959,8 +990,8 @@ def updateSeance(request, idSeance):
 from threading import Timer
 import locale
 import schedule
-import time
 from datetime import datetime
+
 locale.setlocale(locale.LC_TIME, 'fr_FR.UTF-8')
    
 def createDate():
@@ -978,9 +1009,8 @@ def createDate():
 current_time = datetime.now()
 target_time = datetime.strptime("01:00:00", "%H:%M:%S")
 
-
  # Schedule the createDate function to run every day at 14:00
-schedule.every().day.at("13:57").do(createDate)
+# schedule.every().day.at("00:00").do(createDate)
 
 # Keep the script running to maintain the schedule
 # while True:
@@ -1638,113 +1668,138 @@ def export_seances_pdf(request):
     doc.build(elements)
     return response
 
+
+
+
+
+
 @api_view(['GET'])
-@api_view(['GET'])
-def calculer_montant(request,debut_semestre,fin_semestre,PU_MAB,PU_MAA,PU_MCB,PU_MCA,PU_Professeur,per_securite_social,per_irg):
-     per_securite_soc = float(per_securite_social)
-     per_IRG = float(per_irg)
-     
-     def calculerMontant(teacher,rsup,Pu,per_securite_sociale,per_IRG):
-         montant = rsup * Pu
-         securite_sociale = montant * (per_securite_sociale/100)
-         IRG = montant * (per_IRG/100)
-         montant_debite = securite_sociale + IRG
-         montant_net = montant - montant_debite
-         debut_year = debut_semestre.year
-         fin_year = fin_semestre.year
-         infos = [("montant",montant),("securite_sociale",securite_sociale),("IRG",IRG),("montant debite",montant_debite),("montant net",montant_net)]
-         periode = f"du {debut_semestre} au {fin_semestre}"
-     # Test if debut_semestre year differs from fin_semestre year
-         if debut_year != fin_year:
-             semestre = 'S1'
-         else:
-             semestre = 'S2'
-         if debut_year != fin_year:
-             anneuniversitaire = f"{debut_year}/{fin_year}"
-         else:
-             anneuniversitaire = f"{debut_year}/{debut_year - 1}"
+def calculer_montant(request, debut_semestre, fin_semestre, PU_MAB, PU_MAA, PU_MCB, PU_MCA, PU_Professeur, per_securite_social, per_irg):
+    try:
+        per_securite_soc = float(per_securite_social)
+        per_IRG = float(per_irg)
 
-         montant_instance = Montant.objects.create(
-             montant_total=montant,
-             anneeUniversiatire = anneuniversitaire,
-             semestre=semestre,
-             matricule= teacher,  
-             prix_unitaire =Pu,
-             nombre_des_heures =rsup,
-             securite_sociale=per_securite_sociale,
-             irg =per_IRG,
-             montant_debite =montant_debite,
-             montant_net =montant_net,
-             periode = periode,
-         )
-         return infos
-     Teachers = Enseignant.objects.all()
-     PUMAB = float(PU_MAB)
-     PUMAA = float(PU_MAA)
-     PUMCB = float(PU_MCB)
-     PUMCA = float(PU_MCA)
-     PUProfesseur = float(PU_Professeur)
-     for teacher in Teachers:
-         # Récupérer les séances de l'enseignant pour le mois en cours
-         emploi_enseignant = Seance.objects.filter(Matricule_id= teacher.Matricule)
+        def calculerMontant(teacher, rsup, Pu, per_securite_sociale, per_IRG):
+            montant = rsup * Pu
+            securite_sociale = montant * (per_securite_sociale / 100)
+            IRG = montant * (per_IRG / 100)
+            montant_debite = securite_sociale + IRG
+            montant_net = montant - montant_debite
+            debut_year = debut_semestre.year
+            fin_year = fin_semestre.year
+            infos = {
+                "montant": montant,
+                "securite_sociale": securite_sociale,
+                "IRG": IRG,
+                "montant_debite": montant_debite,
+                "montant_net": montant_net,
+            }
+            periode = f"du {debut_semestre} au {fin_semestre}"
 
-         # Récupérer les heures supplémentaires pour les séances de l'enseignant
-         seances_rsup = heure.objects.filter(defType='HeuresSup', idSeance_id__in=emploi_enseignant.values_list('IdSeance', flat=True))
+            semestre = 'S1' if debut_year != fin_year else 'S2'
+            annee_universitaire = f"{debut_year}/{fin_year}" if debut_year != fin_year else f"{debut_year}/{debut_year - 1}"
 
-         # Récupérer les présences aux séances des heures supplémentaires
-         seances_rsup_presents = Seances.objects.filter(idSeance_id__in=seances_rsup.values_list('idSeance_id', flat=True), present=True )
-         rsup_monthly = {}
-         debut_semestre = datetime.strptime(debut_semestre, '%Y-%m-%d')
-         fin_semestre = datetime.strptime(fin_semestre, '%Y-%m-%d')
-         duree_semestre = (fin_semestre.year - debut_semestre.year) * 12 + fin_semestre.month - debut_semestre.month + 1
+            montant_instance = Montant.objects.create(
+                montant_total=montant,
+                anneeUniversiatire=annee_universitaire,
+                semestre=semestre,
+                matricule=teacher,
+                prix_unitaire=Pu,
+                nombre_des_heures=rsup,
+                securite_sociale=per_securite_sociale,
+                irg=per_IRG,
+                montant_debite=montant_debite,
+                montant_net=montant_net,
+                periode=periode,
+            )
+            return infos
 
-         seances_par_semestre = DateSeance.objects.filter(IddatteS__in=seances_rsup_presents.values_list('date_id', flat=True), date__range=[debut_semestre, fin_semestre])
-         rsup_semestre = 0
-         for mois in range(debut_semestre.month, debut_semestre.month + duree_semestre):
-             rsup = 0
-             if mois > 12:
-                 mois = mois % 12
-             seances_par_mois = seances_par_semestre.filter(date__month=mois)
-             id_seances_par_mois = Seances.objects.filter(date_id__in = seances_par_mois.values_list('IddatteS', flat=True))
-             for seance in id_seances_par_mois:
-                 hours= heure.objects.filter(defType='HeuresSup',idSeance_id = seance.idSeance_id)
-                 for hour in hours:
-                     rsup += hour.duree.total_seconds() / 3600  # Convert timedelta to hours
+        Teachers = Enseignant.objects.all()
+        PUMAB = float(PU_MAB)
+        PUMAA = float(PU_MAA)
+        PUMCB = float(PU_MCB)
+        PUMCA = float(PU_MCA)
+        PUProfesseur = float(PU_Professeur)
+
+        debut_semestre = datetime.strptime(debut_semestre, '%Y-%m-%d')
+        fin_semestre = datetime.strptime(fin_semestre, '%Y-%m-%d')
+        duree_semestre = (fin_semestre.year - debut_semestre.year) * 12 + fin_semestre.month - debut_semestre.month + 1
+
+        for teacher in Teachers:
+            emploi_enseignant = Seance.objects.filter(Matricule_id=teacher.Matricule)
+            seances_rsup = heure.objects.filter(defType='HeuresSup', idSeance_id__in=emploi_enseignant.values_list('IdSeance', flat=True))
+            seances_rsup_presents = Seances.objects.filter(idSeance_id__in=seances_rsup.values_list('idSeance_id', flat=True), present=True)
+            rsup_semestre = 0
+
+            seances_par_semestre = DateSeance.objects.filter(IddatteS__in=seances_rsup_presents.values_list('date_id', flat=True), date__range=[debut_semestre, fin_semestre])
+            
+            for mois in range(debut_semestre.month, debut_semestre.month + duree_semestre):
+                rsup = 0
+                if mois > 12:
+                    mois = mois % 12
+                seances_par_mois = seances_par_semestre.filter(date__month=mois)
+                id_seances_par_mois = Seances.objects.filter(date_id__in=seances_par_mois.values_list('IddatteS', flat=True))
+                for seance in id_seances_par_mois:
+                    hours = heure.objects.filter(defType='HeuresSup', idSeance_id=seance.idSeance_id)
+                    for hour in hours:
+                        rsup += hour.duree.total_seconds() / 3600  # Convert timedelta to hours
+                rsup_semestre += rsup
+
+            grade_to_PU = {
+                'MAA': PUMAA,
+                'MAB': PUMAB,
+                'MCA': PUMCA,
+                'MCB': PUMCB,
+                'Professeur': PUProfesseur,
+            }
+
+            if teacher.Grade in grade_to_PU:
+                calculerMontant(teacher, rsup_semestre, grade_to_PU[teacher.Grade], per_securite_soc, per_IRG)
+            else:
+                # Handle unexpected grade
+                continue
+
+        return Response({"message": "Montants calculés avec succès"}, status=200)
+
+    except Exception as e:
+        return Response({"error": str(e)}, status=400)
+
+
+
        
-             rsup_monthly[mois] = rsup
-             rsup_semestre += rsup
-        
-         if teacher.Grade == 'MAA' :
-             calculerMontant(teacher,rsup_semestre,PUMAA,per_securite_soc,per_IRG)
-         elif teacher.Grade == 'MAB' :
-             calculerMontant(teacher,rsup_semestre,PUMAB,per_securite_soc,per_IRG)
-         elif teacher.Grade == 'MCA' :
-             calculerMontant(teacher,rsup_semestre,PUMCA,per_securite_soc,per_IRG)
-         elif teacher.Grade == 'MCB' :
-             calculerMontant(teacher,rsup_semestre,PUMCB,per_securite_soc,per_IRG)
-         elif teacher.Grade == 'Professeur' :
-             calculerMontant(teacher,rsup_semestre,PUProfesseur,per_securite_soc,per_IRG)
-
-         return Response(rsup_monthly)
-
 def get_montant(request, matricule):
     try:
+        # Cherche le dernier montant pour le matricule donné
         montant = Montant.objects.filter(matricule__Matricule=matricule).order_by('-idMontant').first()
 
         if montant:
+            # Crée un dictionnaire avec les détails du montant
+            if montant:
+            # Formate la chaîne de texte pour la période sans les heures
+               periode_parts = montant.periode.split(' ')
+               periode_start = periode_parts[1]  # Obtient la date de début
+               periode_end = periode_parts[4]  # Obtient la date de fin
             montant_detail = {
                 'id': montant.idMontant,
-                'somme': montant.somme,
+                'montant_total': montant.montant_total,
                 'anneeUniversiatire': montant.anneeUniversiatire,
                 'semestre': montant.semestre,
-                'matricule': montant.matricule.Matricule
+                'matricule': montant.matricule.Matricule,
+                'prix_unitaire': montant.prix_unitaire,
+                'nombre_des_heures': montant.nombre_des_heures,
+                'securite_sociale': montant.securite_sociale,
+                'irg': montant.irg,
+                'montant_debite': montant.montant_debite,
+                'montant_net': montant.montant_net,
+                'periode_start': periode_start,
+                'periode_end': periode_end
             }
             return JsonResponse({'montant': montant_detail})
         else:
             return JsonResponse({'error': 'Aucun montant trouvé pour ce matricule'}, status=404)
 
     except Montant.DoesNotExist:
-        return JsonResponse({'error': 'Aucun montant trouvé pour ce matricule'}, status=404)  
+        return JsonResponse({'error': 'Aucun montant trouvé pour ce matricule'}, status=404) 
 
 @api_view(['GET'])
 def get_all_abscences(request):
@@ -1871,3 +1926,48 @@ def export_montant_enseignant_pdf(request,matricule):
         elements.append(table)
         doc.build(elements)
         return response
+
+
+# views.pyfrom django.http import JsonResponse
+
+from datetime import datetime, timedelta
+def insert_dates():    
+    start_date = datetime.strptime('2023-09-24', '%Y-%m-%d')
+    end_date = datetime.strptime('2024-01-28', '%Y-%m-%d')    
+    date_generated = [start_date + timedelta(days=x) for x in range(0, (end_date-start_date).days + 1)]
+    for date in date_generated:
+        DateSeance.objects.get_or_create(date=date.date())
+   
+
+insert_dates()
+
+
+
+import locale
+from datetime import datetime
+from django.utils.timezone import make_aware
+
+locale.setlocale(locale.LC_TIME, 'fr_FR.UTF-8')
+
+def create_all_seances():
+    # Get all DateSeance objects
+    date_seances = DateSeance.objects.all()
+
+    for date_seance in date_seances:
+        # Extract the date
+        date = date_seance.date
+
+        # Get the day of the week in French and convert to lowercase
+        day_of_week = date.strftime("%A").lower()
+
+        # Get all Seance objects that match the day of the week
+        seances = Seance.objects.filter(Jour__iexact=day_of_week)
+
+        # Create Seances for each matching Seance
+        for seance in seances:
+            # Check if a Seances record already exists to avoid duplicates
+            if not Seances.objects.filter(date=date_seance, idSeance=seance).exists():
+                Seances.objects.create(date=date_seance, idSeance=seance, present=True)
+
+# Run the function
+create_all_seances()

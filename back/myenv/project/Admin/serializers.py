@@ -7,6 +7,11 @@ class EnseignantSerializer(serializers.ModelSerializer):
     class Meta:
         model = Enseignant
         fields = '__all__'
+
+    def validate_NumeroTelephone(self, value):
+        if not value.isdigit() or len(value) != 10 or not value.startswith(('05', '06', '07')):
+            raise serializers.ValidationError("Le numéro de téléphone doit contenir exactement 10 chiffres et commencer par '05', '06' ou '07'.")
+        return value
         
 class PromotionSerializer(serializers.ModelSerializer):
     class Meta:

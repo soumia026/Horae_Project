@@ -15,13 +15,17 @@
     transition: background-color 0.3s ease, border 0.3s ease, transform 0.3s ease;
 }
 
+.form-telecharger{
+    transition: opacity 0.1s ease;
+    align-self: center;
+    position: fixed;
+    bottom: 8px;
+    z-index: 10;
+}
 .telecharger-btn{
     opacity: 0;
     transition: opacity 0.1s ease;
     align-self: center;
-    position: absolute;
-    bottom: 0px;
-    z-index: 10;
 }
 
 .active{

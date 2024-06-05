@@ -113,6 +113,7 @@ function App() {
               <Route path="enseignants" element={<Enseignants />} />
               <Route path="enseignants/:matricule" element={<ProfInfos />} />
               <Route path="documents" element={<Documents />} />
+              <Route path="reclamations" element= {<Reclamations />} />
               <Route path="archive" element={<Archive />} />
             </Route>
 
@@ -136,6 +137,7 @@ const AdminLayout = () => {
     { name: 'enseignants', path: 'admin/enseignants' },
     { name: 'calcul', path: 'admin/calendrier' },
     { name: 'documents', path: 'admin/documents' },
+    { name: 'reclamations', path: `admin/reclamations` },
     { name: 'Archive', path: 'admin/archive' }
   ];
   return (
@@ -157,6 +159,7 @@ const ProfLayout = () => {
 
   const navProf = [
     { name: 'profile', path: `enseignant/${enseignantMat}` },
+    { name: 'reclamations', path: `enseignant/${enseignantMat}/reclamations` },
   ];
   return (
 

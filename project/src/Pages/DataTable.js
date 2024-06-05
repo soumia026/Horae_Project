@@ -632,7 +632,7 @@ const AjouterEnseignant = (props) => {
                     </select>
                 </div>
                 <div className="input-line">
-                    <label htmlFor="fonction">grade</label>
+                    <label htmlFor="fonction">fonction</label>
                     <select
                         onChange={(e) => setNewTeacher({ ...newTeacher, Fonction: e.target.value })}
                         required
@@ -959,7 +959,7 @@ const AjouterGroupe = (props) => {
                 </div>
                 {(showSpecialite === '2CS' || showSpecialite === '3CS') &&
                     <div className="input-line">
-                        <label htmlFor="promo">section</label>
+                        <label htmlFor="promo">spécialité</label>
                         <select
                             required
                             onChange={(e) => setNewGroupe({...newGroupe, Specialite: e.target.value})}
