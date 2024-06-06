@@ -279,10 +279,6 @@ select {
     font-size: 0.85rem;
 }
 
-input[type='time'] {
-    max-width: 150px;
-}
-
 /* ----Modofier profile------- */
 
 .container-modifier-profile {

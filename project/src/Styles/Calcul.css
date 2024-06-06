@@ -67,6 +67,7 @@
     justify-content: center;
     align-items: center;
     border-radius: 50%;
+    position: relative;
 }
 
 .type-payment h2{
@@ -610,6 +611,51 @@
 
 .confirmation-btns{
     margin-right: 0px;
+}
+
+.circle-calcul::after{
+content: 'lancer calcul';
+position: absolute;
+top: 100%;
+font-size: 14px;
+width: 90px;
+left: 50%;
+transform: translateX(-50%);
+text-align: center;
+background-color: #B8CEF7;
+padding: 4px;
+border-radius: 8px;
+text-transform: capitalize;
+font-weight: 500;
+opacity: 0;
+transition: 0.3s;
+}
+
+
+.circle-calcul:hover::after {
+    opacity: 1;
+}
+
+.circle-modifier::after{
+content: 'Modifier';
+position: absolute;
+top: 100%;
+font-size: 14px;
+width: 90px;
+left: 50%;
+transform: translateX(-50%);
+text-align: center;
+background-color: #B8CEF7;
+padding: 4px;
+border-radius: 8px;
+text-transform: capitalize;
+font-weight: 500;
+opacity: 0;
+transition: 0.3s;
+}
+
+.circle-modifier:hover::after {
+    opacity: 1;
 }
 
 @media screen and (max-width: 700px){

@@ -1758,6 +1758,9 @@ def calculer_montant(request, debut_semestre, fin_semestre, PU_MAB, PU_MAA, PU_M
             else:
                 # Handle unexpected grade
                 continue
+            if rsup_semestre == 0:
+                calculerMontant(teacher, 0, grade_to_PU[teacher.Grade], per_securite_soc, per_IRG)
+
 
         return Response({"message": "Montants calculés avec succès"}, status=200)
 

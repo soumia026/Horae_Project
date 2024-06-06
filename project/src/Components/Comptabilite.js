@@ -45,9 +45,6 @@ export const Comptabilite = (props) => {
     })
 
     useEffect(() => {
-        if (new Date(modeSemestriel.dateFin) > curentDate) {
-            setCalculSuccess(false)
-        } else {
             axios.get(`http://127.0.0.1:8000/Administration/get_montant/${props.Matricule}/`)
                 .then((res) => {
                     setCalculSuccess(true);
@@ -56,8 +53,7 @@ export const Comptabilite = (props) => {
                 .catch((err) => {
                     console.log(err.data)
                 })
-        }
-    }, [curentDate, modeSemestriel.dateFin, props.Matricule])
+    }, [props.Matricule])
 
     return (
         <div className="comptabilite-container">

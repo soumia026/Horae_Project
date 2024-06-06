@@ -49,7 +49,7 @@ export function Calendrier() {
 
     const currentDate = new Date();
 
-    const [calculSuccess, setCalculSuccess] = useState(currentDate >= new Date(modeSemestriel.dateFin));
+    const [calculSuccess, setCalculSuccess] = useState(false);
 
     const handleCalcul = () => {
         if (currentDate >= new Date(modeSemestriel.dateFin)) {
@@ -79,12 +79,12 @@ export function Calendrier() {
                     <div className="title-line">
                         <h2>Calcul En Mode Semestriel</h2>
                         <div className="icons">
-                            <div className="circle" style={{ cursor: 'pointer' }} onClick={() => { setLancerCalcul(true); handleCalcul() }}>
+                            <div className="circle circle-calcul" style={{ cursor: 'pointer' }} onClick={() => { setLancerCalcul(true); handleCalcul() }}>
                                 <svg width="26" height="26" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M19.5 8.66671H15.1667M17.3333 6.50004V10.8334M19.5 18.9584H15.1667M19.5 15.7084H15.1667M10.8333 18.9584L8.9375 17.0625M8.9375 17.0625L7.04167 15.1667M8.9375 17.0625L10.8333 15.1667M8.9375 17.0625L7.04167 18.9584M10.8333 8.66671H6.5M23.2917 14.0292V11.9709C23.2917 7.60504 23.2917 5.42104 21.7848 4.06471C20.2778 2.70837 17.8523 2.70837 13 2.70837C8.14884 2.70837 5.72217 2.70837 4.21525 4.06471C2.70834 5.42104 2.70834 7.60504 2.70834 11.9709V14.0292C2.70834 18.395 2.70834 20.579 4.21525 21.9354C5.72217 23.2917 8.14775 23.2917 13 23.2917C17.8512 23.2917 20.2778 23.2917 21.7848 21.9354C23.2917 20.579 23.2917 18.395 23.2917 14.0292Z" stroke="black" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
                                 </svg>
                             </div>
-                            <div className="circle" style={{ cursor: 'pointer' }} onClick={() => { setModifierModeClicked(true) }} >
+                            <div className="circle circle-modifier" style={{ cursor: 'pointer' }} onClick={() => { setModifierModeClicked(true) }} >
                                 <svg width="26" height="26" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <g clip-path="url(#clip0_922_859)">
                                         <path d="M23.7399 8.2605C24.8667 7.13313 25.2958 5.48538 24.3341 4.21381C23.9689 3.73411 23.5708 3.28025 23.1428 2.85564C22.718 2.42756 22.2642 2.02933 21.7846 1.66376C20.513 0.702677 18.8653 1.13173 17.7379 2.25851L8.7626 11.2344C8.44632 11.5507 8.22944 11.9519 8.18702 12.3973C8.11374 13.152 8.0469 14.5631 8.19981 16.7526C8.23924 17.3132 8.68525 17.7592 9.24577 17.7987C11.4354 17.9516 12.8465 17.8847 13.6017 17.812C14.0465 17.769 14.4477 17.5521 14.764 17.2364L23.7399 8.2605Z" stroke="black" stroke-width="1.625" stroke-linecap="round" stroke-linejoin="round" />
@@ -130,10 +130,6 @@ export function Calendrier() {
 
                 {erreurSaisie &&
                     <Warning2 compris = {() => handleErreurSaisie()} />
-                }
-
-                {lancerCalcul && !calculSuccess &&
-                    <Warning compris={() => setLancerCalcul(false)} />
                 }
 
                 {lancerCalcul && calculSuccess &&
@@ -1168,24 +1164,6 @@ const ModifierModeAnnuel = (props) => {
 }
 
 //------------Inteface warning---------------//
-
-const Warning = (props) => {
-    return (
-        <div className="warning-container">
-            <div className="warning-circle">
-                <svg width="35" height="35" viewBox="0 0 35 35" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M17.4993 32.0832C25.5535 32.0832 32.0827 25.554 32.0827 17.4998C32.0827 9.44568 25.5535 2.9165 17.4993 2.9165C9.4452 2.9165 2.91602 9.44568 2.91602 17.4998C2.91602 25.554 9.4452 32.0832 17.4993 32.0832Z" stroke="#F80707" stroke-width="2.91667" stroke-linecap="round" stroke-linejoin="round" />
-                    <path d="M17.5 11.6667V17.5" stroke="#F80707" stroke-width="2.91667" stroke-linecap="round" stroke-linejoin="round" />
-                    <path d="M17.5 23.3333H17.5138" stroke="#F80707" stroke-width="2.91667" stroke-linecap="round" stroke-linejoin="round" />
-                </svg>
-            </div>
-            <p>Imposible de lancer le calcule avant la fin du semestre</p>
-            <div className="warning-btns">
-                <button onClick={() => props.compris()}>OK</button>
-            </div>
-        </div>
-    )
-}
 
 const Warning2 = (props) => {
     return (

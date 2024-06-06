@@ -227,6 +227,7 @@ const AjouterAbsence = (props) => {
                         onFocus={handleFocus}
                         onBlur={handleBlur}
                         onChange={(e) => setNewAbsence({ ...newAbsence, DateAbs: e.target.value })}
+                        required
                     />
                 </div>
                 <div className="input-line">
@@ -236,6 +237,7 @@ const AjouterAbsence = (props) => {
                         onFocus={handleFocus1}
                         onBlur={handleBlur1}
                         onChange={(e) => setNewAbsence({ ...newAbsence, HeureDebut: e.target.value })}
+                        required
                     />
                 </div>
                 <div className="input-line">
@@ -245,6 +247,7 @@ const AjouterAbsence = (props) => {
                         onFocus={handleFocus2}
                         onBlur={handleBlur2}
                         onChange={(e) => setNewAbsence({ ...newAbsence, HeureFin: e.target.value })}
+                        required
                     />
                 </div>
                 <div className="input-line">
@@ -256,9 +259,10 @@ const AjouterAbsence = (props) => {
                         onChange={(e) => setNewAbsence({ ...newAbsence, Motif: e.target.value })}
                     >
                         <option value=""></option>
-                        <option value="malade">maladie</option>
-                        <option value="voyage">voyage</option>
-                        <option value="etude">etude</option>
+                        <option value="maladie">maladie</option>
+                        <option value="congé">Congé</option>
+                        <option value="stage étrangère">stage étrangère</option>
+                        <option value="omra OS">omra OS</option>
                     </select>
                 </div>
                 <div className="update-absence-btns">
@@ -341,6 +345,16 @@ const ModifierInfosProf = (props) => {
                 }
             });
     }
+
+    const [inputType, setInputType] = useState('text');
+
+    const handleFocus = () => {
+        setInputType('date');
+    };
+
+    const handleBlur = () => {
+        setInputType('text');
+    };
     return (
         <form style={{overflowY: 'auto'}} onSubmit={handleSubmit}>
 
@@ -365,7 +379,9 @@ const ModifierInfosProf = (props) => {
             <div className="input-line">
                 <label htmlFor="dateNaissance">date Naissance</label>
                 <input
-                    type="date"
+                    type={inputType} placeholder=""
+                    onFocus={handleFocus}
+                    onBlur={handleBlur}
                     style={{ textTransform: 'lowercase' }}
                     value={modifiedEnseignant.DateNaissance}
                     onChange={(e) => setModifiedEnseignant({ ...modifiedEnseignant, DateNaissance: e.target.value })}

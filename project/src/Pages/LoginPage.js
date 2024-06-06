@@ -113,7 +113,7 @@ function LoginPage() {
                     <div className="forgot-password-link">
                         <p className={admin ? 'admin-login' : ''} onClick={() => {setUserType('admin'); handleAdmin()}}>Etes-vous un admin?</p>
                     </div>
-                    <button type="submit" className="submit-button">Se connecter</button>
+                    <button type="submit" className="submit-button" style={{cursor: 'pointer'}}>Se connecter</button>
                 </form>
             </div>
         </div>

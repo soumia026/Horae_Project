@@ -7,7 +7,7 @@ import { Link } from 'react-router-dom';
 
 
 
-const FilterButton = ({ name, options, FilterCategory, onFilter, onCancel, className, onFilter2}) => {
+const FilterButton = ({ name, options, FilterCategory, onFilter, onCancel, className, onFilter2 }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [selectedOption, setSelectedOption] = useState("");
 
@@ -110,7 +110,7 @@ function DataTable() {
 
     }, []);
 
-    
+
     const [selectedGroupe, setSelectedGroupe] = useState(null);
 
     const handleFilter3 = (section) => {
@@ -545,7 +545,11 @@ const AjouterEnseignant = (props) => {
             .catch((err) => {
                 if (err.response.data.Matricule) {
                     alert(err.response.data.Matricule)
-                } else {
+                } else if (err.response.data.NumeroTelephone) {
+                    alert(err.response.data.NumeroTelephone)
+                } else if (err.response.data.Email) {
+                    alert(err.response.data.Email)
+                } else if (err.response.data.error) {
                     alert(err.response.data.error)
                 }
             })
@@ -922,12 +926,12 @@ const AjouterGroupe = (props) => {
     const handleSubmit = (e) => {
         e.preventDefault();
         axios.post(`http://127.0.0.1:8000/Administration/insertGroupe/${newGroupe.idSection}/`, newGroupe)
-        .then((res) =>{
-            window.location.reload()
-        })
-        .catch((err) => {
-            alert(err.response.data.error)
-        })
+            .then((res) => {
+                window.location.reload()
+            })
+            .catch((err) => {
+                alert(err.response.data.error)
+            })
     }
 
     return (
@@ -938,7 +942,7 @@ const AjouterGroupe = (props) => {
                     <label htmlFor="Numero">numero groupe</label>
                     <input
                         style={{ textTransform: 'none' }}
-                        onChange={(e) => setNewGroupe({...newGroupe, Numero: e.target.value})}
+                        onChange={(e) => setNewGroupe({ ...newGroupe, Numero: e.target.value })}
                         required
                         type="text"
                     />
@@ -962,7 +966,7 @@ const AjouterGroupe = (props) => {
                         <label htmlFor="promo">spécialité</label>
                         <select
                             required
-                            onChange={(e) => setNewGroupe({...newGroupe, Specialite: e.target.value})}
+                            onChange={(e) => setNewGroupe({ ...newGroupe, Specialite: e.target.value })}
                         >
                             <option value={"default"}></option>
                             {specialites.map((specialite) => (
@@ -976,7 +980,7 @@ const AjouterGroupe = (props) => {
                     <label htmlFor="promo">section</label>
                     <select
                         required
-                        onChange={(e) => setNewGroupe({...newGroupe, idSection: e.target.value})}
+                        onChange={(e) => setNewGroupe({ ...newGroupe, idSection: e.target.value })}
                     >
                         <option value={"default"}></option>
                         {filteredSections.map((section) => (

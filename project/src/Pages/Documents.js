@@ -204,13 +204,6 @@ const FichePaiement = () => {
       <div className="type-paiement">
         <h2>Fiche d’état de Paiement</h2>
         <form onSubmit={handleDownload} >
-          <div className="input-line">
-            <label htmlFor="type">Type</label>
-            <select>
-              <option value={'ccp'}>CCP</option>
-              <option value={'virement'}>Virement Banckaire</option>
-            </select>
-          </div>
           <div className="btn-container">
             <button type="submit" className="document-btn">Générer</button>
           </div>
